@@ -1,0 +1,23 @@
+Help File
+
+Attribution Model
+
+Kev Toohey
+Atchison Consultants
++61 413 770 710
+
+
+Structure:
+
+1. Data Loading is input of .CSV files via JNB OneDrive storage
+
+2. Individual Portfolio Analysis is prepared by Jupyter Notebook Python model - held within JNB OneDrive location.
+
+3. Files are committed to Github account **Need to secure source code as private repository**
+
+4. Results of attribution analysis are stored as dataframes within Parquet files within ServerData -
+    held within Render-AttributionModel OneDrive location - utilising a Plotly Dash framework
+
+5. Files are committed to Github account **Needs to remain public to act as Server-side repositry
+
+6. Render.com account is used to publicilly serve files linked to Github registry - unsecured access

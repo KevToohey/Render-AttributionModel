@@ -75,7 +75,7 @@ df = pd.DataFrame({
     "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
 })
 
-app.layout = html.Div(style={'backgroundColor': colour1}, children=[
+app.layout = html.Div(children=[
 
     html.H1(children="Atchison Portfolio Dashboard", style={'text-align': 'Left', 'color': colour3}),
 

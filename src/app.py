@@ -1,14 +1,18 @@
 # importing Libraries
 
+import pandas as pd
+import dash
+from dash import Dash, dash_table, dcc, html, Input, Output, State
+import dash_bootstrap_components as dbc
+import plotly.express as px
+
+
 colour1 = "#3D555E"  #BG Grey/Green
 colour2 = "#E7EAEB"  #Off White
 colour3 = "#93F205"  #Green
 colour4 = "#1DC8F2"  #Blue
 colour5 = "#F27D11"  #Orange
 
-import pandas as pd
-from dash import Dash, dash_table, dcc, html, Input, Output, State
-import plotly.express as px
 
 # IMPORT Datafiles stored on Kev's GitHUB Registry
 
@@ -51,8 +55,7 @@ t_EndDate = summaryVariables['t_EndDate'].iloc[0]
 groupName = df_BM_G1.columns[0]
 groupList = df_BM_G1[df_BM_G1.columns[0]].unique()
 
-
-app = Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 print("****")
@@ -65,39 +68,82 @@ colors = {
     'orange_text': colour5
 }
 # Create Label Range For Date Slider
-rangedates = pd.date_range(t_StartDate, t_EndDate, freq='M')
-numdates= [x for x in range(len(rangedates.unique()))]
+rangedatesM = pd.date_range(t_StartDate, t_EndDate, freq='M')
+rangedatesY = pd.date_range(t_StartDate, t_EndDate, freq='Y')
+numdates= [x for x in range(len(rangedatesM.unique()))]
 
+app.layout = dbc.Container([
+    dbc.Row("", justify="center", className="mb-3"),
+    dbc.Row([
+        dbc.Col(html.Img(src='/assets/atchisonlogo.png', height=50), align="center")
+    ], justify="center", className="mb-5"),
 
-df = pd.DataFrame({
-    "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-    "Amount": [4, 1, 2, 2, 4, 5],
-    "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
-})
+    dbc.Row([
+        dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:"), dbc.CardBody([
+                    dcc.RangeSlider(
+                        min=numdates[0], #the first date
+                        max=numdates[-1], #the last date
+                        value=[numdates[-4],numdates[-1]], #default: the first
+                        marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedatesM)}
+                    )
+                ])], color="success", outline=True), width=2, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:"), dbc.CardBody([
+                    dcc.RangeSlider(
+                        min=numdates[0], #the first date
+                        max=numdates[-1], #the last date
+                        value=[numdates[-4],numdates[-1]], #default: the first
+                        marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedatesM)}
+                    )
+                ])], color="success", outline=True), width=8, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Filter Charts Output:"), dbc.CardBody([
+                    dcc.RangeSlider(
+                        min=numdates[0], #the first date
+                        max=numdates[-1], #the last date
+                        value=[numdates[-4],numdates[-1]], #default: the first
+                        marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedatesM)}
+                    )
+                ])], color="success", outline=True), width=2, align="center", className="mb-3")
+    ], justify="center", className="mb-3"),
 
-app.layout = html.Div(children=[
+    dbc.Row([
+        dbc.Col(dbc.Card("Content", body=True), width=6),
+        dbc.Col([
+            dbc.Card(
+                dbc.CardBody(dcc.DatePickerRange(start_date="2023-01-01", end_date="2023-12-31")
+                )
+            )
+        ], width=6),
+    ], align="center", className="mb-3"),
+    dbc.Row([
+        dbc.Col(dbc.Card("Content", body=True), width=6),
+        dbc.Col(dbc.Card("Content", body=True), width=6),
+    ], align="center", className="mb-3"),
+], fluid=True)
 
-    html.H1(children="Atchison Portfolio Dashboard", style={'text-align': 'Left', 'color': colour3}),
-
-    dcc.DatePickerRange(
-        id='date-picker-001',
-        start_date=t_StartDate,
-        end_date=t_EndDate,
-        display_format='YYYY-MM-DD',),
-
-    #Display date Slider
-    dcc.RangeSlider(min=numdates[0], #the first date
-               max=numdates[-1], #the last date
-               value=[numdates[-4],numdates[-1]], #default: the first
-               marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedates)}),
-
-    dcc.Graph(
-        id='stacked-bar-001'),
-
-    dcc.Graph(
-        id='stacked-bar-002')
-
-])
+# app.layout = html.Div(children=[
+#
+#     html.H1(children="Atchison Portfolio Dashboard", style={'text-align': 'Left', 'color': colour3}),
+#
+#     dcc.DatePickerRange(
+#         id='date-picker-001',
+#         start_date=t_StartDate,
+#         end_date=t_EndDate,
+#         display_format='YYYY-MM-DD',),
+#
+#     #Display date Slider
+#     dcc.RangeSlider(
+#         min=numdates[0], #the first date
+#         max=numdates[-1], #the last date
+#         value=[numdates[-4],numdates[-1]], #default: the first
+#         marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedates)}),
+#
+#     dcc.Graph(
+#         id='stacked-bar-001'),
+#
+#     dcc.Graph(
+#         id='stacked-bar-002')
+#
+# ])
 
 # set up the callback function
 @app.callback(

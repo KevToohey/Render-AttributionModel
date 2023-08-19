@@ -4,3 +4,4 @@ gunicorn
 dash-tools
 plotly
 pyarrow
+dash-bootstrap-components

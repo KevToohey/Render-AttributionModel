@@ -2,6 +2,7 @@
 
 import pandas as pd
 import dash
+import os
 from dash import Dash, dash_table, dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
@@ -13,12 +14,25 @@ colour3 = "#93F205"  #Green
 colour4 = "#1DC8F2"  #Blue
 colour5 = "#F27D11"  #Orange
 
-
 # IMPORT Datafiles stored on Kev's GitHUB Registry
 
 portfolioCode = 'ATC70A3'
 #portfolioCode = 'BON032'
-folderPath = ('../ServerData/'+portfolioCode+'/')
+folderPath = ('/ServerData/'+portfolioCode)
+
+def get_subfolder_names(path):
+    subfolder_names = []
+
+    if os.path.exists(path) and os.path.isdir(path):
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            if os.path.isdir(item_path):
+                subfolder_names.append(item)
+
+    return subfolder_names
+
+subfolders = get_subfolder_names('/ServerData/')
+print(subfolders)
 
 df_L1_w = pd.read_parquet(folderPath+'/df_L1_w.parquet')
 df_L2_w = pd.read_parquet(folderPath+'/df_L2_w.parquet')

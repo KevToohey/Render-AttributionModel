@@ -111,8 +111,9 @@ app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:"),
                           dbc.CardBody([
-                            dcc.Dropdown(
-                        options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios], id='portfolio-dropdown')
+                             dcc.Dropdown(
+                        options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
+                                 id='portfolio-dropdown', value=availablePortfolios[0])
                 ])], color="success", outline=True), width=2, align="center", className="mb-3"),
         dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:"), dbc.CardBody([
                     dcc.RangeSlider(
@@ -135,37 +136,62 @@ app.layout = dbc.Container([
     ], align="center", className="mb-3"),
     dbc.Row([
         dbc.Col("",width=2, align="center", className="mb-3"),
-        dbc.Col(dbc.Card(dcc.Graph(id='stacked-bar-001'), body=True), width=4, align="center", className="mb-3"),
-        dbc.Col(dbc.Card(dcc.Graph(id='stacked-bar-002'), body=True), width=4, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
+            dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
+            dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+    ], align="center", className="mb-3"),
+    dbc.Row([
+        dbc.Col("", width=2, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 3: Portfolio L3 TACTICAL Total Returns"),
+            dbc.CardBody(dcc.Graph(id='line-chart-001'), style={'backgroundColor': 'rgba(255, 255, 255, 0.5)'}),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 4: Portfolio Attribution Analysis vs Reference Portfolio"),
+            dbc.CardBody(dcc.Graph(id='line-chart-002')),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+    ], align="center", className="mb-3"),
+    dbc.Row([
+        dbc.Col("", width=2, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 5: L3 SAA to TAA Attribution Analysis (Equities)"),
+            dbc.CardBody(dcc.Graph(id='line-chart-003'), style={'backgroundColor': 'rgba(255, 255, 255, 0.5)'}),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+        dbc.Col(dbc.Card([
+            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Alternatives)"),
+            dbc.CardBody(dcc.Graph(id='line-chart-004')),
+            dbc.CardFooter("Enter some dot point automated analysis here....")
+        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
     ], align="center", className="mb-3"),
 ], fluid=True)
 
-# app.layout = html.Div(children=[
-#
-#     html.H1(children="Atchison Portfolio Dashboard", style={'text-align': 'Left', 'color': colour3}),
-#
-#     dcc.DatePickerRange(
-#         id='date-picker-001',
-#         start_date=t_StartDate,
-#         end_date=t_EndDate,
-#         display_format='YYYY-MM-DD',),
-#
-#     #Display date Slider
-#     dcc.RangeSlider(
-#         min=numdates[0], #the first date
-#         max=numdates[-1], #the last date
-#         value=[numdates[-4],numdates[-1]], #default: the first
-#         marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedates)}),
-#
-#     dcc.Graph(
-#         id='stacked-bar-001'),
-#
-#     dcc.Graph(
-#         id='stacked-bar-002')
-#
-# ])
+# set up the callback functions
 
-# set up the callback function
+@app.callback(
+    [Output(component_id="date-slider", component_property="min"),
+    Output(component_id="date-slider", component_property="max"),
+    Input(component_id='portfolio-dropdown', component_property='value')])
+def update_date_slider_limits(selected_value):
+    selected_index = availablePortfolios.index(selected_value)
+    Selected_Portfolio = All_Portfolios[selected_index]
+    rangedatesM = pd.date_range(Selected_Portfolio.t_StartDate, Selected_Portfolio.t_EndDate, freq='M')
+    numdates = [x for x in range(len(rangedatesM.unique()))]
+
+    min_date = numdates[0],  # the first date
+    max_date = numdates[-1],  # the last date
+
+    return min_date, max_date
+
 @app.callback(
     Output(component_id='message-2', component_property='children'),
     Input(component_id='portfolio-dropdown', component_property='value'),
@@ -193,10 +219,10 @@ def update_portfolio_code(selected_value):
 @app.callback(
     [Output(component_id="stacked-bar-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
+     Input(component_id="date-picker", component_property="start_date"),
+     Input(component_id="date-picker", component_property="end_date")])
 def update_figure(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date)
+    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
@@ -207,9 +233,8 @@ def update_figure(value, start_date, end_date):
         filtered_df,
         x=filtered_df.index,
         y=[c for c in filtered_df.columns],
-        title="Stacked Bar Chart",
         labels={"x": "Date", "y": "Values"},
-        template = "plotly_dark",
+        template = "plotly_white",
         barmode='stack'
     )
     return updated_figure,
@@ -232,13 +257,98 @@ def update_figure(value, start_date, end_date):
         filtered2_df,
         x=filtered2_df.index,
         y=[c for c in filtered2_df.columns],
-        title="Stacked Bar Chart",
         labels={"x": "Date", "y": "Values"},
-        template = "plotly_dark",
+        template = "plotly_white",
         barmode='stack'
     )
     return updated_figure,
 
+@app.callback(
+    [Output(component_id="line-chart-001", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_figure(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        template = "plotly_white"
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="line-chart-002", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_figure(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+                                                'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        template = "plotly_white"
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="line-chart-003", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_figure(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Australian Shares-- Allocation Effect',
+                                                'G1_Australian Shares-- Selection Effect',
+                                                 'G1_International Shares-- Allocation Effect',
+                                                'G1_International Shares-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        template = "plotly_white"
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="line-chart-004", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_figure(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+                                                'G1_Real Assets-- Selection Effect',
+                                            'G1_Alternatives-- Allocation Effect',
+                                                'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        template = "plotly_white"
+    )
+    return updated_figure,
 
 # Run the app
 if __name__ == '__main__':

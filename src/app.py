@@ -112,21 +112,30 @@ app.layout = dbc.Container([
         dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:"),
                           dbc.CardBody([
                              dcc.Dropdown(
-                        options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
-                                 id='portfolio-dropdown', value=availablePortfolios[0])
-                ])], color="success", outline=True), width=2, align="center", className="mb-3"),
+                                options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
+                                id='portfolio-dropdown', value=availablePortfolios[0])
+                ])], color="success", outline=True), width=2, align="stretch", className="mb-3"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Filter Analysis Output:"),
+                          dbc.CardBody([
+                             dbc.Label("Switch 1"),
+                             dcc.Checklist(
+                                options=[{'label': 'Switch 1', 'value': 'switch-1'}],
+                                value=[],
+                                id='switch-1',
+                                switch=True  # This simulates the switch behavior
+                             ),
+                             dbc.Label("Switch 2"),
+                             dcc.Checklist(
+                                options=[{'label': 'Switch 2', 'value': 'switch-2'}],
+                                value=[],
+                                id='switch-2',
+                                switch=True  # This simulates the switch behavior
+                             )
+                ])], color="success", outline=True), width=7, align="stretch", className="mb-3")
+        ,
         dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:"), dbc.CardBody([
-                    dcc.RangeSlider(
-                        min=numdates[0], #the first date
-                        max=numdates[-1], #the last date
-                        value=[numdates[-4],numdates[-1]], #default: the first
-                        marks = {numd:date.strftime('%Y-%m') for numd,date in zip(numdates, rangedatesM)},
-                        id='date-slider'
-                    )
-                ])], color="success", outline=True), width=8, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([dbc.CardHeader("Filter Charts Output:"), dbc.CardBody([
                     dcc.DatePickerRange(start_date="2023-01-01", end_date="2023-12-31", id='date-picker')
-                ])], color="success", outline=True), width=2, align="center", className="mb-3")
+                ])], color="success", outline=True), width=3, align="stretch", className="mb-3")
     ], justify="center", className="mb-3"),
 
     dbc.Row([
@@ -178,21 +187,6 @@ app.layout = dbc.Container([
 # set up the callback functions
 
 @app.callback(
-    [Output(component_id="date-slider", component_property="min"),
-    Output(component_id="date-slider", component_property="max"),
-    Input(component_id='portfolio-dropdown', component_property='value')])
-def update_date_slider_limits(selected_value):
-    selected_index = availablePortfolios.index(selected_value)
-    Selected_Portfolio = All_Portfolios[selected_index]
-    rangedatesM = pd.date_range(Selected_Portfolio.t_StartDate, Selected_Portfolio.t_EndDate, freq='M')
-    numdates = [x for x in range(len(rangedatesM.unique()))]
-
-    min_date = numdates[0],  # the first date
-    max_date = numdates[-1],  # the last date
-
-    return min_date, max_date
-
-@app.callback(
     Output(component_id='message-2', component_property='children'),
     Input(component_id='portfolio-dropdown', component_property='value'),
 )
@@ -219,8 +213,8 @@ def update_portfolio_code(selected_value):
 @app.callback(
     [Output(component_id="stacked-bar-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
-     Input(component_id="date-picker", component_property="start_date"),
-     Input(component_id="date-picker", component_property="end_date")])
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
 def update_figure(value, start_date, end_date):
     start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
     end_date = pd.to_datetime(end_date)
@@ -235,7 +229,21 @@ def update_figure(value, start_date, end_date):
         y=[c for c in filtered_df.columns],
         labels={"x": "Date", "y": "Values"},
         template = "plotly_white",
-        barmode='stack'
+        barmode='stack',
+    )
+    updated_figure.update_layout(
+        yaxis_title="Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
     )
     return updated_figure,
 
@@ -261,6 +269,20 @@ def update_figure(value, start_date, end_date):
         template = "plotly_white",
         barmode='stack'
     )
+    updated_figure.update_layout(
+        yaxis_title="Asset Allocation (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
     return updated_figure,
 
 @app.callback(
@@ -280,6 +302,20 @@ def update_figure(value, start_date, end_date):
         x=filtered_df.index,
         y=[c for c in filtered_df.columns],
         template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
     )
     return updated_figure,
 
@@ -301,6 +337,20 @@ def update_figure(value, start_date, end_date):
         x=filtered_df.index,
         y=[c for c in filtered_df.columns],
         template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        yaxis_title="Value-Add Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
     )
     return updated_figure,
 
@@ -325,6 +375,20 @@ def update_figure(value, start_date, end_date):
         y=[c for c in filtered_df.columns],
         template = "plotly_white"
     )
+    updated_figure.update_layout(
+        yaxis_title="Value-Add Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
     return updated_figure,
 
 @app.callback(
@@ -347,6 +411,20 @@ def update_figure(value, start_date, end_date):
         x=filtered_df.index,
         y=[c for c in filtered_df.columns],
         template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        yaxis_title="Value-Add Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font=dict(size=11)
+        ),
+        margin=dict(r=0),  # Reduce right margin to maximize visible area
     )
     return updated_figure,
 

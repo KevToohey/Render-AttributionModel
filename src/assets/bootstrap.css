@@ -50,11 +50,10 @@ body {
   line-height: 1.5;
   color: #212529;
   text-align: left;
-  background-image: url("trees.png");
+  background: url("trees.png") center top / auto auto no-repeat;
   background-color: #3D555E;
-  background-repeat: no-repeat;
-  background-size: cover;
 }
+
 
 [tabindex="-1"]:focus:not(:focus-visible) {
   outline: 0 !important; }

@@ -5,3 +5,4 @@ dash-tools
 plotly
 pyarrow
 dash-bootstrap-components
+dash-daq

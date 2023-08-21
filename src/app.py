@@ -5,6 +5,7 @@ import dash
 import os
 from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
+import dash_daq as daq
 import plotly.express as px
 
 
@@ -115,22 +116,19 @@ app.layout = dbc.Container([
                                 options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
                                 id='portfolio-dropdown', value=availablePortfolios[0])
                 ])], color="success", outline=True), width=2, align="stretch", className="mb-3"),
-        dbc.Col(dbc.Card([dbc.CardHeader("Filter Analysis Output:"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Select What Analysis To Output:"),
                           dbc.CardBody([
-                             dbc.Label("Switch 1"),
-                             dcc.Checklist(
-                                options=[{'label': 'Switch 1', 'value': 'switch-1'}],
-                                value=[],
-                                id='switch-1',
-                                switch=True  # This simulates the switch behavior
-                             ),
-                             dbc.Label("Switch 2"),
-                             dcc.Checklist(
-                                options=[{'label': 'Switch 2', 'value': 'switch-2'}],
-                                value=[],
-                                id='switch-2',
-                                switch=True  # This simulates the switch behavior
-                             )
+                            dbc.Row([
+                                dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205", label="Historical Performance", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205", label="Historical Risk Metrics", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-003', on=False, color="#93F205", label="Weight Analysis", labelPosition="bottom"), align="left", width=3),
+                            ], justify="evenly", align="left", className="mb-2"),
+                            dbc.Row([
+                                dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205", label="Contribution Analysis", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-005', on=False, color="#93F205", label="Brinson Attribution", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-006', on=False, color="#93F205", label="Component Return Profile", labelPosition="bottom"), align="left", width=3),
+                            ], justify="evenly", align="left", className="mb-2")
+
                 ])], color="success", outline=True), width=7, align="stretch", className="mb-3")
         ,
         dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:"), dbc.CardBody([
@@ -143,19 +141,28 @@ app.layout = dbc.Container([
         dbc.Col([dbc.Card(dbc.CardBody("Hello"), id='message-2')
         ], width=6),
     ], align="center", className="mb-3"),
-    dbc.Row([
-        dbc.Col("",width=2, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
-            dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
-            dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-    ], align="center", className="mb-3"),
+
+    dbc.Accordion([
+        dbc.AccordionItem([
+            dbc.Row([
+                dbc.Col("",width=2, align="center", className="mb-3"),
+                 dbc.Col(dbc.Card([
+                    dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
+                    dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
+                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+                dbc.Col(dbc.Card([
+                    dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
+                    dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
+                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+            ], align="center", className="mb-3"),
+        ],
+            title="Historical Performance",
+            item_id="accordian-001"
+        ),
+    ]),
+
     dbc.Row([
         dbc.Col("", width=2, align="center", className="mb-3"),
         dbc.Col(dbc.Card([

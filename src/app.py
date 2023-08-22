@@ -119,14 +119,14 @@ app.layout = dbc.Container([
         dbc.Col(dbc.Card([dbc.CardHeader("Select What Analysis To Output:"),
                           dbc.CardBody([
                             dbc.Row([
-                                dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205", label="Historical Performance", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205", label="Historical Risk Metrics", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-003', on=False, color="#93F205", label="Weight Analysis", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205", label="Performance Assessment", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205", label="Portfolio Risk Analysis", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-003', on=False, color="#93F205", label="Allocation Monitoring", labelPosition="bottom"), align="left", width=3),
                             ], justify="evenly", align="left", className="mb-2"),
                             dbc.Row([
                                 dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205", label="Contribution Analysis", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-005', on=False, color="#93F205", label="Brinson Attribution", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-006', on=False, color="#93F205", label="Component Return Profile", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-005', on=False, color="#93F205", label="2-Factor Attribution Analysis", labelPosition="bottom"), align="left", width=3),
+                                dbc.Col(daq.BooleanSwitch(id='switch-006', on=False, color="#93F205", label="Underlying Return Detail", labelPosition="bottom"), align="left", width=3),
                             ], justify="evenly", align="left", className="mb-2")
 
                 ])], color="success", outline=True), width=7, align="stretch", className="mb-3")
@@ -138,56 +138,186 @@ app.layout = dbc.Container([
 
     dbc.Row([
         dbc.Col(dbc.Card(dbc.CardBody(Selected_Portfolio.testPortfolio), id='message-1'), width=6),
-        dbc.Col([dbc.Card(dbc.CardBody("Hello"), id='message-2')
-        ], width=6),
+        dbc.Col([dbc.Card(dbc.CardBody("Hello"), id='message-2')], width=6),
     ], align="center", className="mb-3"),
 
-    dbc.Accordion([
-        dbc.AccordionItem([
-            dbc.Row([
-                dbc.Col("",width=2, align="center", className="mb-3"),
-                 dbc.Col(dbc.Card([
-                    dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
-                    dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
-                    dbc.CardFooter("Enter some dot point automated analysis here....")
-                ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-                dbc.Col(dbc.Card([
-                    dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
-                    dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
-                    dbc.CardFooter("Enter some dot point automated analysis here....")
-                ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-            ], align="center", className="mb-3"),
-        ],
-            title="Historical Performance",
-            item_id="accordian-001"
-        ),
-    ]),
+    # Main Work Area
+    dbc.Row([
+        # Left Gutter
+        dbc.Col("",width=2, align="center", className="mb-3"),
+        # Centre Work Area
+        dbc.Col([
 
-    dbc.Row([
-        dbc.Col("", width=2, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 3: Portfolio L3 TACTICAL Total Returns"),
-            dbc.CardBody(dcc.Graph(id='line-chart-001'), style={'backgroundColor': 'rgba(255, 255, 255, 0.5)'}),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 4: Portfolio Attribution Analysis vs Reference Portfolio"),
-            dbc.CardBody(dcc.Graph(id='line-chart-002')),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+            # Tab 1 - Performance
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 3: Portfolio L3 TACTICAL Total Returns"),
+                            dbc.CardBody(dcc.Graph(id='line-chart-001')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="Portfolio Performance Assessment",
+                    item_id="accordian-001",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+            # Tab 2 - Risk
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-011')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-012')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="Portfolio Risk Analysis",
+                    item_id="accordian-002",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+            # Tab 3- Allocations
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 1: Current Allocation"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-013')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 3: Current Relative Over/Under Weights"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-014')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-015')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="Portfolio Allocation Monitoring",
+                    item_id="accordian-003",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+            # Tab 4- Contribution Analysis
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-016')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-017')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="Portfolio Contribution Analysis",
+                    item_id="accordian-004",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+            # Tab 5- Attribution Analysis
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 4: Portfolio Attribution Analysis vs Reference Portfolio"),
+                            dbc.CardBody(dcc.Graph(id='line-chart-002')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 5: L3 SAA to TAA Attribution Analysis (Equities)"),
+                            dbc.CardBody(dcc.Graph(id='line-chart-003')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Alternatives)"),
+                            dbc.CardBody(dcc.Graph(id='line-chart-004')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Defensives)"),
+                            dbc.CardBody(dcc.Graph(id='line-chart-005')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="2-Factor Attribution Analysis",
+                    item_id="accordian-005",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+            # Tab 6- Underlying Detail Analysis
+            dbc.Accordion([
+                dbc.AccordionItem([
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-020')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardBody(dcc.Graph(id='stacked-bar-021')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                ],
+                    title="Underlying Return Detail",
+                    item_id="accordian-006",
+                    className="transparent-accordion-item"  # Apply transparent background class here
+                ),
+            ]),
+
+        # End of Centre Work Area
+        ], width=8, align="center", className="mb-3"),
+        # Right Gutter
+        dbc.Col("",width=2, align="center", className="mb-3"),
     ], align="center", className="mb-3"),
+
+
+    # Below Main Centre Work Area
     dbc.Row([
         dbc.Col("", width=2, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 5: L3 SAA to TAA Attribution Analysis (Equities)"),
-            dbc.CardBody(dcc.Graph(id='line-chart-003'), style={'backgroundColor': 'rgba(255, 255, 255, 0.5)'}),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
-        dbc.Col(dbc.Card([
-            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Alternatives)"),
-            dbc.CardBody(dcc.Graph(id='line-chart-004')),
-            dbc.CardFooter("Enter some dot point automated analysis here....")
-        ], color="primary", outline=True), width=4, align="center", className="mb-3"),
+        dbc.Col("Atchison Contact Details: enquiries@atchison.com.au", width=4, align="center", className="mb-3"),
+
     ], align="center", className="mb-3"),
 ], fluid=True)
 

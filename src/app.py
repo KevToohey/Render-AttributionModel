@@ -3,7 +3,7 @@
 import pandas as pd
 import dash
 import os
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, State, Dash
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 import plotly.express as px
@@ -110,36 +110,28 @@ app.layout = dbc.Container([
     ], justify="center", className="mb-5"),
 
     dbc.Row([
-        dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:", className="card-header-bold"),
                           dbc.CardBody([
                              dcc.Dropdown(
                                 options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
                                 id='portfolio-dropdown', value=availablePortfolios[0])
                 ])], color="success", outline=True), width=2, align="stretch", className="mb-3"),
-        dbc.Col(dbc.Card([dbc.CardHeader("Select What Analysis To Output:"),
+        dbc.Col(dbc.Card([dbc.CardHeader("Select What Analysis To Output:", className="card-header-bold"),
                           dbc.CardBody([
                             dbc.Row([
-                                dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205", label="Performance Assessment", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205", label="Portfolio Risk Analysis", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-003', on=False, color="#93F205", label="Allocation Monitoring", labelPosition="bottom"), align="left", width=3),
-                            ], justify="evenly", align="left", className="mb-2"),
-                            dbc.Row([
-                                dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205", label="Contribution Analysis", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-005', on=False, color="#93F205", label="2-Factor Attribution Analysis", labelPosition="bottom"), align="left", width=3),
-                                dbc.Col(daq.BooleanSwitch(id='switch-006', on=False, color="#93F205", label="Underlying Return Detail", labelPosition="bottom"), align="left", width=3),
-                            ], justify="evenly", align="left", className="mb-2")
-
-                ])], color="success", outline=True), width=7, align="stretch", className="mb-3")
+                                dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205", label="Performance Assessment", labelPosition="bottom", style={"text-align": "center"}), align="start"),
+                                dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205", label="Portfolio Risk Analysis", labelPosition="bottom"), style={"text-align": "center"}, align="start"),
+                                dbc.Col(daq.BooleanSwitch(id='switch-003', on=False, color="#93F205", label="Allocation Monitoring", labelPosition="bottom"), style={"text-align": "center"}, align="start"),
+                                dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205", label="Contribution Analysis", labelPosition="bottom"), style={"text-align": "center"}, align="start"),
+                                dbc.Col(daq.BooleanSwitch(id='switch-005', on=False, color="#93F205", label="2-Factor Attribution Analysis", labelPosition="bottom", style={"text-align": "center"}), align="start"),
+                                dbc.Col(daq.BooleanSwitch(id='switch-006', on=False, color="#93F205", label="Underlying Return Detail", labelPosition="bottom"), style={"text-align": "center"}, align="start"),
+                            ], justify="evenly", align="start", className="mb-2"),
+                ])], color="success", outline=True), width=8, align="stretch", className="mb-3")
         ,
-        dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:"), dbc.CardBody([
-                    dcc.DatePickerRange(start_date="2023-01-01", end_date="2023-12-31", id='date-picker')
-                ])], color="success", outline=True), width=3, align="stretch", className="mb-3")
+        dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
+                    dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date="2022-12-31", end_date="2023-08-02", id='date-picker', style={"font-size": "11px"})
+                ])], color="success", outline=True), width=2, align="start", className="mb-2")
     ], justify="center", className="mb-3"),
-
-    dbc.Row([
-        dbc.Col(dbc.Card(dbc.CardBody(Selected_Portfolio.testPortfolio), id='message-1'), width=6),
-        dbc.Col([dbc.Card(dbc.CardBody("Hello"), id='message-2')], width=6),
-    ], align="center", className="mb-3"),
 
     # Main Work Area
     dbc.Row([
@@ -154,43 +146,43 @@ app.layout = dbc.Container([
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
-                            dbc.CardBody(dcc.Graph(id='stacked-bar-001')),
+                            dbc.CardBody(dcc.Graph(id='1perf-bar-001')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 3: Portfolio L3 TACTICAL Total Returns"),
-                            dbc.CardBody(dcc.Graph(id='line-chart-001')),
+                            dbc.CardHeader("Chart 2: Portfolio Total Returns (L3)"),
+                            dbc.CardBody(dcc.Graph(id='1perf-line-001')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="Portfolio Performance Assessment",
-                    item_id="accordian-001",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    id="accordion-001",
+                    className="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], className="mb-3"),
 
             # Tab 2 - Risk
             dbc.Accordion([
                 dbc.AccordionItem([
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 1: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-011')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 2: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-012')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="Portfolio Risk Analysis",
-                    item_id="accordian-002",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    id="accordion-002",
+                    class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], start_collapsed=True, className="mb-3"),
 
             # Tab 3- Allocations
             dbc.Accordion([
@@ -198,12 +190,12 @@ app.layout = dbc.Container([
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Current Allocation"),
-                            dbc.CardBody(dcc.Graph(id='stacked-bar-013')),
+                            dbc.CardBody(dcc.Graph(id='3weight-pie-001')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
-                            dbc.CardBody(dcc.Graph(id='stacked-bar-002')),
+                            dbc.CardBody(dcc.Graph(id='3weight-bar-001')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -215,96 +207,96 @@ app.layout = dbc.Container([
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
+                            dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-015')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="Portfolio Allocation Monitoring",
-                    item_id="accordian-003",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    id="accordion-003",
+                    class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], start_collapsed=True, className="mb-3"),
 
             # Tab 4- Contribution Analysis
             dbc.Accordion([
                 dbc.AccordionItem([
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 1: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-016')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 2: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-017')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="Portfolio Contribution Analysis",
-                    item_id="accordian-004",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    item_id="accordion-004",
+                    class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], start_collapsed=True, className="mb-3"),
 
             # Tab 5- Attribution Analysis
             dbc.Accordion([
                 dbc.AccordionItem([
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 4: Portfolio Attribution Analysis vs Reference Portfolio"),
-                            dbc.CardBody(dcc.Graph(id='line-chart-002')),
+                            dbc.CardHeader("Chart 1: Portfolio Attribution Analysis vs Reference Portfolio"),
+                            dbc.CardBody(dcc.Graph(id='5attrib-line-001')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 5: L3 SAA to TAA Attribution Analysis (Equities)"),
-                            dbc.CardBody(dcc.Graph(id='line-chart-003')),
+                            dbc.CardHeader("Chart 2: L3 SAA to TAA Attribution Analysis (Equities)"),
+                            dbc.CardBody(dcc.Graph(id='5attrib-line-002')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Alternatives)"),
-                            dbc.CardBody(dcc.Graph(id='line-chart-004')),
+                            dbc.CardHeader("Chart 3: L3 SAA to TAA Attribution Analysis (Alternatives)"),
+                            dbc.CardBody(dcc.Graph(id='5attrib-line-003')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 6: L3 SAA to TAA Attribution Analysis (Defensives)"),
-                            dbc.CardBody(dcc.Graph(id='line-chart-005')),
+                            dbc.CardHeader("Chart 4: L3 SAA to TAA Attribution Analysis (Defensives)"),
+                            dbc.CardBody(dcc.Graph(id='5attrib-line-004')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="2-Factor Attribution Analysis",
-                    item_id="accordian-005",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    item_id="accordion-005",
+                    class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], start_collapsed=True, className="mb-3"),
 
             # Tab 6- Underlying Detail Analysis
             dbc.Accordion([
                 dbc.AccordionItem([
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 1: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-020')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart xxxx: xxxxxxxx"),
+                            dbc.CardHeader("Chart 2: xxxxxxxx"),
                             dbc.CardBody(dcc.Graph(id='stacked-bar-021')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
                     title="Underlying Return Detail",
-                    item_id="accordian-006",
-                    className="transparent-accordion-item"  # Apply transparent background class here
+                    item_id="accordion-006",
+                    class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
-            ]),
+            ], start_collapsed=True, className="mb-3"),
 
         # End of Centre Work Area
         ], width=8, align="center", className="mb-3"),
@@ -316,48 +308,37 @@ app.layout = dbc.Container([
     # Below Main Centre Work Area
     dbc.Row([
         dbc.Col("", width=2, align="center", className="mb-3"),
-        dbc.Col("Atchison Contact Details: enquiries@atchison.com.au", width=4, align="center", className="mb-3"),
-
+        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Contact Us:"),
+                            dbc.CardBody("Contact Us: enquiries@atchison.com.au"),
+                            dbc.CardFooter("No Error Messages", id="message-1")
+                        ], className="mb-3"), width=8, align="start", className="mb-3"),
     ], align="center", className="mb-3"),
 ], fluid=True)
 
 # set up the callback functions
-
 @app.callback(
-    Output(component_id='message-2', component_property='children'),
-    Input(component_id='portfolio-dropdown', component_property='value'),
+    Output(component_id='accordion-001', component_property='className'),
+    Input(component_id='switch-001', component_property='on')
 )
-def update_portfolio_code(selected_value):
-    if selected_value:
-        selected_index = availablePortfolios.index(selected_value)
-        global Selected_Portfolio
-        Selected_Portfolio = All_Portfolios[selected_index]
-        return f"Selected Index: {selected_index}"
+def toggle_accordion_001(open_status):
+    if open_status:
+        return "transparent-accordion-item"
     else:
-        return f"Please select a portfolio"
-
-@app.callback(
-    Output(component_id='message-1', component_property='children'),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-)
-def update_portfolio_code(selected_value):
-    if selected_value:
-        return f"Selected Portfolio: {Selected_Portfolio.testPortfolio}"
-    else:
-        return f"Please select a portfolio"
+        return "transparent-accordion-item collapsed"
 
 
 @app.callback(
-    [Output(component_id="stacked-bar-001", component_property="figure"),
+    [Output(component_id="1perf-bar-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
+def update_1perf_bar_001(value, start_date, end_date):
     start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = Selected_Portfolio.df_L2_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+    filtered_df = Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
                'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
 
     updated_figure = px.bar(
@@ -384,50 +365,12 @@ def update_figure(value, start_date, end_date):
     )
     return updated_figure,
 
-
 @app.callback(
-    [Output(component_id="stacked-bar-002", component_property="figure"),
+    [Output(component_id="1perf-line-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered2_df = Selected_Portfolio.df_L2_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
-               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
-
-    updated_figure = px.bar(
-        filtered2_df,
-        x=filtered2_df.index,
-        y=[c for c in filtered2_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-        barmode='stack'
-    )
-    updated_figure.update_layout(
-        yaxis_title="Asset Allocation (%)",
-        xaxis_title="",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
-
-@app.callback(
-    [Output(component_id="line-chart-001", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
+def update_1perf_line_001(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
@@ -456,19 +399,96 @@ def update_figure(value, start_date, end_date):
     )
     return updated_figure,
 
+
 @app.callback(
-    [Output(component_id="line-chart-002", component_property="figure"),
+    [Output(component_id="3weight-bar-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
+def update_3weight_bar_001(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
-                                                'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
+    filtered2_df = Selected_Portfolio.df_L3_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
 
+    updated_figure = px.bar(
+        filtered2_df,
+        x=filtered2_df.index,
+        y=[c for c in filtered2_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+        barmode='stack'
+    )
+    updated_figure.update_layout(
+        yaxis_title="Asset Allocation (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="3weight-pie-001", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_3weight_pie_001(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = Selected_Portfolio.df_L3_w.loc[end_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],
+                                                                        'P_'+groupName+'_'+groupList[2],'P_'+groupName+'_'+groupList[3],
+                                                                        'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],
+                                                                        'P_'+groupName+'_'+groupList[6]]].T
+    print(filtered_df)
+    updated_figure = px.pie(
+        filtered_df,
+        values=end_date,
+        names=filtered_df.index,
+        template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        title={
+            "text": f"As at {end_date:%d-%b-%Y}",
+            "font": {"size": 11}  # Adjust the font size as needed
+        },
+
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        #margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="5attrib-line-001", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5attrib_line_001(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+                                                'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
     updated_figure = px.line(
         filtered_df,
         x=filtered_df.index,
@@ -492,16 +512,16 @@ def update_figure(value, start_date, end_date):
     return updated_figure,
 
 @app.callback(
-    [Output(component_id="line-chart-003", component_property="figure"),
+    [Output(component_id="5attrib-line-002", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
+def update_5attrib_line_002(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Australian Shares-- Allocation Effect',
+    filtered_df = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['G1_Australian Shares-- Allocation Effect',
                                                 'G1_Australian Shares-- Selection Effect',
                                                  'G1_International Shares-- Allocation Effect',
                                                 'G1_International Shares-- Selection Effect']] + 1).cumprod() - 1) * 100)
@@ -529,19 +549,58 @@ def update_figure(value, start_date, end_date):
     return updated_figure,
 
 @app.callback(
-    [Output(component_id="line-chart-004", component_property="figure"),
+    [Output(component_id="5attrib-line-003", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
-def update_figure(value, start_date, end_date):
+def update_5attrib_line_003(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+    filtered_df = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
                                                 'G1_Real Assets-- Selection Effect',
                                             'G1_Alternatives-- Allocation Effect',
                                                 'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        yaxis_title="Value-Add Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font=dict(size=11)
+        ),
+        margin=dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="5attrib-line-004", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5attrib_line_004(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['G1_Long Duration-- Allocation Effect',
+                                                'G1_Long Duration-- Selection Effect',
+                                                'G1_Short Duration-- Allocation Effect',
+                                                'G1_Short Duration-- Selection Effect',
+                                                'G1_Cash-- Allocation Effect',
+                                                'G1_Cash-- Selection Effect']] + 1).cumprod() - 1) * 100)
 
     updated_figure = px.line(
         filtered_df,

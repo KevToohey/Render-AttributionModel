@@ -58,6 +58,18 @@ body {
     background-color: transparent !important;
 }
 
+.transparent-accordion-item.collapsed {
+    /* Add your styling properties for the collapsed state here */
+    background-color: transparent !important; /* Example background color */
+    /* Other styling properties */
+}
+
+.card-header-bold {
+    font-weight: bold;
+    color: #3D555E;
+}
+
+
 [tabindex="-1"]:focus:not(:focus-visible) {
   outline: 0 !important; }
 

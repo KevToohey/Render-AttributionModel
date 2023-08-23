@@ -7,6 +7,7 @@ from dash import dcc, html, Input, Output, State, Dash
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 colour1 = "#3D555E"  #BG Grey/Green
@@ -202,13 +203,13 @@ app.layout = dbc.Container([
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 3: Current Relative Over/Under Weights"),
-                            dbc.CardBody(dcc.Graph(id='stacked-bar-014')),
+                            dbc.CardHeader("Chart 3: Current SAA vs TAA"),
+                            dbc.CardBody(dcc.Graph(id='3weight-bar-002')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
-                            dbc.CardBody(dcc.Graph(id='stacked-bar-015')),
+                            dbc.CardHeader("Chart 4: Asset Class Overweight / Underweights"),
+                            dbc.CardBody(dcc.Graph(id='3weight-bar-003')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -400,7 +401,45 @@ def update_1perf_line_001(value, start_date, end_date):
     return updated_figure,
 
 
+@
 @app.callback(
+    [Output(component_id="1perf-bar-001", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_1perf_bar_001(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
+
+    updated_figure = px.bar(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+        barmode='stack',
+    )
+    updated_figure.update_layout(
+        yaxis_title="Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+app.callback(
     [Output(component_id="3weight-bar-001", component_property="figure"),
     Input(component_id='portfolio-dropdown', component_property='value'),
     Input(component_id="date-picker", component_property="start_date"),
@@ -410,7 +449,88 @@ def update_3weight_bar_001(value, start_date, end_date):
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered2_df = Selected_Portfolio.df_L3_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+
+    filtered2_df = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:,['P_TOTAL','BM_G1_TOTAL','Peer_TOTAL','Obj_TOTAL']], t_dates)*100).T
+
+    updated_figure = px.bar(
+        filtered2_df,
+        x=filtered2_df.index,
+        y=[c for c in filtered2_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+        barmode='stack'
+    )
+    updated_figure.update_layout(
+        yaxis_title="Asset Allocation (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+fig_bar_L3PeriodReturns_t = (f_CalcReturnTable(df_L3_r.loc[:,['P_TOTAL','BM_G1_TOTAL','Peer_TOTAL','Obj_TOTAL']], t_dates)*100).T.iplot(kind='bar',
+        yaxis_title="Return (%, %p.a.)", title=('Total Portfolio Performance - as at Last Price '+t_dates.loc[0,'Date'].strftime("(%d %b %Y)")))
+
+
+@app.callback(
+    [Output(component_id="3weight-pie-001", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_3weight_pie_001(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered_df = Selected_Portfolio.df_L3_w.loc[end_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],
+                                                                        'P_'+groupName+'_'+groupList[2],'P_'+groupName+'_'+groupList[3],
+                                                                        'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],
+                                                                        'P_'+groupName+'_'+groupList[6]]].T
+    updated_figure = px.pie(
+        filtered_df,
+        values=end_date,
+        names=filtered_df.index,
+        template = "plotly_white"
+    )
+    updated_figure.update_layout(
+        title={
+            "text": f"As at {end_date:%d-%b-%Y}",
+            "font": {"size": 11}  # Adjust the font size as needed
+        },
+
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        #margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+@app.callback(
+    [Output(component_id="3weight-bar-002", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_3weight_bar_002(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    groupName = Selected_Portfolio.groupName
+    groupList = Selected_Portfolio.groupList
+    filtered2_df = Selected_Portfolio.df_L3vsL2_relw.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
                'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
 
     updated_figure = px.bar(
@@ -437,33 +557,31 @@ def update_3weight_bar_001(value, start_date, end_date):
     )
     return updated_figure,
 
+
 @app.callback(
-    [Output(component_id="3weight-pie-001", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_3weight_pie_001(value, start_date, end_date):
+    [Output(component_id="3weight-bar-003", component_property="figure"),
+     Input(component_id='portfolio-dropdown', component_property='value'),
+     Input(component_id="date-picker", component_property="start_date"),
+     Input(component_id="date-picker", component_property="end_date")])
+def update_3weight_bar_003(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = Selected_Portfolio.df_L3_w.loc[end_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],
-                                                                        'P_'+groupName+'_'+groupList[2],'P_'+groupName+'_'+groupList[3],
-                                                                        'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],
-                                                                        'P_'+groupName+'_'+groupList[6]]].T
-    print(filtered_df)
-    updated_figure = px.pie(
-        filtered_df,
-        values=end_date,
-        names=filtered_df.index,
-        template = "plotly_white"
+    filtered2_df = Selected_Portfolio.df_L2_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
+
+    updated_figure = px.bar(
+        filtered2_df,
+        x=filtered2_df.index,
+        y=[c for c in filtered2_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+        barmode='stack'
     )
     updated_figure.update_layout(
-        title={
-            "text": f"As at {end_date:%d-%b-%Y}",
-            "font": {"size": 11}  # Adjust the font size as needed
-        },
-
+        yaxis_title="Asset Allocation (%)",
+        xaxis_title="",
         legend=dict(
             orientation="h",
             yanchor="top",  # Change this to "top" to move the legend below the chart
@@ -473,7 +591,7 @@ def update_3weight_pie_001(value, start_date, end_date):
             title=None,
             font = dict(size=11)
         ),
-        #margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
     )
     return updated_figure,
 

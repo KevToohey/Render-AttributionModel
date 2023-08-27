@@ -64,6 +64,24 @@ body {
     /* Other styling properties */
 }
 
+.opaque-tab-labels .nav-tabs .nav-link {
+    opacity: 1 !important; /* Make the labels opaque */
+}
+
+.right-tab-labels .nav {
+    flex-direction: column;
+}
+
+.right-tab-labels .nav-item {
+    margin: 0;
+}
+
+.right-tab-labels .nav-link {
+    text-align: right;
+    padding-right: 0.5rem; /* Adjust this value as needed */
+    padding-left: 0; /* Remove left padding to align labels to the right */
+}
+
 .card-header-bold {
     font-weight: bold;
     color: #3D555E;

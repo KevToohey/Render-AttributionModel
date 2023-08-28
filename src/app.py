@@ -302,15 +302,57 @@ app.layout = dbc.Container([
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
-                        dbc.Row([
+                    dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2: Australian Shares Sleee - Underlying Contributors"),
+                            dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Contributors"),
                             dbc.CardBody(dcc.Graph(id='5contrib-line-002')),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 3: International Shares Sleeve - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-003')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-004')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-005')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-006')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-007')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 8: Cash - Underlying Contributors"),
+                            dbc.CardBody(dcc.Graph(id='5contrib-line-008')),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
                 ],
-                    title="Portfolio Contribution Analysis",
+                    title="Sector Sleeve - Contribution Analysis",
                     item_id="accordion-005",
                     class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
@@ -332,7 +374,7 @@ app.layout = dbc.Container([
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                 ],
-                    title="Underlying Return Detail",
+                    title="General Market Valuation Overview",
                     item_id="accordion-006",
                     class_name="transparent-accordion-item",  # Apply transparent background class here
                 ),
@@ -419,7 +461,18 @@ def f_CalcRollingVol(df_Input, window=21, trading_days_per_year=252):
 def f_AssetClassContrib(df_Input, Input_G1_Name):
     columns_to_include = df_Input.columns[(df_Input != 0).any()].tolist()
     indices_with_G1 = Selected_Portfolio.df_productList[Selected_Portfolio.df_productList['G1'] == Input_G1_Name].index
-    return df_Input[columns_to_include].loc[indices_with_G1]
+
+    set1 = set(columns_to_include)
+    set2 = set(indices_with_G1)
+    common_elements = set1.intersection(set2)
+    common_elements_list = list(common_elements)
+
+    # Ensure that indices_with_G1 are valid indices in df_Input
+    if len(common_elements_list) == 0:
+        print("No valid indices found.")
+        return None
+
+    return common_elements_list
 
 
 #@@@ CALL BACKS @@@@@
@@ -1002,8 +1055,6 @@ def update_4attrib_line_004(value, start_date, end_date):
 def update_5contrib_line_001(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
     filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ["P_G1_Australian Shares",
                             "P_G1_International Shares", "P_G1_Real Assets", "P_G1_Alternatives",
                             "P_G1_Long Duration", "P_G1_Short Duration",
@@ -1043,11 +1094,8 @@ def update_5contrib_line_001(value, start_date, end_date):
 def update_5contrib_line_002(value, start_date, end_date):
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
 
     listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-
     filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
 
     updated_figure = px.line(
@@ -1073,6 +1121,219 @@ def update_5contrib_line_002(value, start_date, end_date):
     )
     return updated_figure,
 
+
+@app.callback(
+    [Output(component_id="5contrib-line-003", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_003(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+@app.callback(
+    [Output(component_id="5contrib-line-004", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_004(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+@app.callback(
+    [Output(component_id="5contrib-line-005", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_005(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+@app.callback(
+    [Output(component_id="5contrib-line-006", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_006(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+@app.callback(
+    [Output(component_id="5contrib-line-007", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_007(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
+
+
+@app.callback(
+    [Output(component_id="5contrib-line-008", component_property="figure"),
+    Input(component_id='portfolio-dropdown', component_property='value'),
+    Input(component_id="date-picker", component_property="start_date"),
+    Input(component_id="date-picker", component_property="end_date")])
+def update_5contrib_line_008(value, start_date, end_date):
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    listq = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
+    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq] + 1).cumprod() - 1) * 100)
+
+    updated_figure = px.line(
+        filtered_df,
+        x=filtered_df.index,
+        y=[c for c in filtered_df.columns],
+        labels={"x": "Date", "y": "Values"},
+        template = "plotly_white",
+    )
+    updated_figure.update_layout(
+        yaxis_title="Cumulative Return (%)",
+        xaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",  # Change this to "top" to move the legend below the chart
+            y=-0.3,  # Adjust the y value to position the legend below the chart
+            xanchor="center",  # Center the legend horizontally
+            x=0.5,  # Center the legend horizontally
+            title=None,
+            font = dict(size=11)
+        ),
+        margin = dict(r=0),  # Reduce right margin to maximize visible area
+    )
+    return updated_figure,
 
 
 # Run the app

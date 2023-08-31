@@ -54,6 +54,10 @@ body {
   background-color: #3D555E;
 }
 
+.accordion-title {
+    background-color: success;  /* Modify the background color here */
+}
+
 .transparent-accordion-item {
     background-color: transparent !important;
 }

@@ -33,6 +33,7 @@ class Portfolio:
         self.df_L2_w.index = pd.to_datetime(self.df_L2_w.index, format= '%Y-%m-%d')
         self.df_L3_w = pd.read_parquet('./ServerData/'+portfolioCode+'/df_L3_w.parquet')
         self.df_L3_w.index = pd.to_datetime(self.df_L3_w.index, format='%Y-%m-%d')
+        self.df_L3_limits = pd.read_parquet('./ServerData/'+portfolioCode+'/df_L3_limits.parquet')
         self.df_L1_r = pd.read_parquet('./ServerData/'+portfolioCode+'/df_L1_r.parquet')
         self.df_L1_r.index = pd.to_datetime(self.df_L1_r.index, format='%Y-%m-%d')
         self.df_L1_contrib = pd.read_parquet('./ServerData/'+portfolioCode+'/df_L1_contrib.parquet')
@@ -85,7 +86,7 @@ def f_get_subfolder_names(path):
 # Must be linked to "./ServerData/"
 availablePortfolios = f_get_subfolder_names('./ServerData/')
 
-# Creaste Portfolio class objects (import all data)
+# Create Portfolio class objects (import all data)
 All_Portfolios = []
 for code in availablePortfolios:
     All_Portfolios.append(Portfolio(code))
@@ -257,8 +258,8 @@ app.layout = dbc.Container([
                                         dbc.CardFooter("Enter some dot point automated analysis here....")
                                     ], color="primary", outline=True), align="center", className="mb-3"),
                                     dbc.Col(dbc.Card([
-                                        dbc.CardHeader("Chart 2: Portfolio Sleeve Weights Through Time"),
-                                        dbc.CardBody(dcc.Graph(id='3weight-bar-003')),
+                                        dbc.CardHeader("Chart 2: Current TAA Overweights/Underweights"),
+                                        dbc.CardBody(dcc.Graph(id='3weight-bar-001')),
                                         dbc.CardFooter("Enter some dot point automated analysis here....")
                                     ], color="primary", outline=True), align="center", className="mb-3"),
                                 ], align="center", className="mb-3"),
@@ -271,8 +272,8 @@ app.layout = dbc.Container([
                                         dbc.CardFooter("Enter some dot point automated analysis here....")
                                     ], color="primary", outline=True), align="center", className="mb-3"),
                                     dbc.Col(dbc.Card([
-                                        dbc.CardHeader("Chart 4: Current TAA Overweights/Underweights"),
-                                        dbc.CardBody(dcc.Graph(id='3weight-bar-001')),
+                                        dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
+                                        dbc.CardBody(dcc.Graph(id='3weight-bar-003')),
                                         dbc.CardFooter("Enter some dot point automated analysis here....")
                                     ], color="primary", outline=True), align="center", className="mb-3"),
                                 ], align="center", className="mb-3"),
@@ -483,6 +484,7 @@ def f_CalcDrawdown(df_Input):
     return drawdown_chart_data
 
 
+
 def f_CalcRollingVol(df_Input, window=21, trading_days_per_year=252):
     # Calculate percentage returns for each asset
     percentage_returns = df_Input.pct_change()
@@ -509,6 +511,10 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
     return common_elements_list
 
 
+#returnOutput = f_CalcReturnValues(df_L3_r, dates1.loc[1,'Date'], dates1.loc[0,'Date'])
+
+print(Selected_Portfolio.df_L3_w)
+
 #@@@ CALL BACKS @@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -534,8 +540,8 @@ def update_1perf_bar_001(value, start_date, end_date):
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered_df = Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
-               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
+    filtered_df = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
 
     updated_figure = px.bar(
         filtered_df,
@@ -543,7 +549,7 @@ def update_1perf_bar_001(value, start_date, end_date):
         y=[c for c in filtered_df.columns],
         labels={"x": "Date", "y": "Values"},
         template = "plotly_white",
-        barmode='stack',
+        barmode='relative',
     )
     updated_figure.update_layout(
         yaxis_title="Return (%)",
@@ -873,7 +879,7 @@ def update_3weight_bar_002(value, start_date, end_date):
         y=[c for c in filtered2_df.columns],
         labels={"x": "Date", "y": "Values"},
         template = "plotly_white",
-        barmode='stack'
+        barmode='relative'
     )
     updated_figure.update_layout(
         yaxis_title="Asset Allocation (%)",
@@ -902,7 +908,7 @@ def update_3weight_bar_003(value, start_date, end_date):
     end_date = pd.to_datetime(end_date)
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
-    filtered2_df = Selected_Portfolio.df_L2_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+    filtered2_df = Selected_Portfolio.df_L3_w.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
                'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]
 
     updated_figure = px.bar(

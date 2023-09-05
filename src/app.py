@@ -61,14 +61,11 @@ class Portfolio:
         self.df_BM_G1 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G1.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
         # Recreate Category Group Labels for Charts
-        self.testPortfolio = self.summaryVariables['testPortfolio'].iloc[0]
+        self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
         self.t_StartDate = self.summaryVariables['t_StartDate'].iloc[0]
         self.t_EndDate = self.summaryVariables['t_EndDate'].iloc[0]
         self.groupName = self.df_BM_G1.columns[0]
         self.groupList = self.df_BM_G1[self.df_BM_G1.columns[0]].unique()
-
-
-
 
 
 def f_get_subfolder_names(path):
@@ -94,7 +91,7 @@ for code in availablePortfolios:
 # Initialise charts with 1st dataset
 
 Selected_Portfolio = All_Portfolios[0]
-Selected_Code = Selected_Portfolio.testPortfolio
+Selected_Code = Selected_Portfolio.portfolioName
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

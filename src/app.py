@@ -24,7 +24,6 @@ colour5 = "#F27D11"  #Orange
 load_start_date = "2023-03-31"
 load_end_date = "2023-08-02"
 
-
 class Portfolio:
     def __init__(self, portfolioCode):
         self.df_L1_w = pd.read_parquet('./ServerData/'+portfolioCode+'/df_L1_w.parquet')
@@ -86,6 +85,7 @@ availablePortfolios = f_get_subfolder_names('./ServerData/')
 # Create Portfolio class objects (import all data)
 All_Portfolios = []
 for code in availablePortfolios:
+    print(code)
     All_Portfolios.append(Portfolio(code))
 
 # Initialise charts with 1st dataset

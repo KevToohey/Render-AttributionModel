@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import dash
 import os
+import socket
 from dash import dcc, html, Input, Output, State, Dash
 import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Container import Container
@@ -98,8 +99,19 @@ Selected_Code = Selected_Portfolio.portfolioName
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
+port_number = 8050
 
-print("****")
+
+def get_local_ip(port_number):
+    try:
+        host_name = socket.gethostname()
+        local_ip = socket.gethostbyname(host_name)
+        return f'http://{local_ip}:{port_number}'
+    except socket.error:
+        return "Couldn't get local IP address"
+dashLocation = get_local_ip(port_number)
+print("**** Atchison Analytics Dash App Can Be Accessed Via Local Server Running On Kev's PC Here: ")
+print(dashLocation)
 
 colors = {
     'background': colour1,
@@ -129,8 +141,9 @@ app.layout = dbc.Container([
                     dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:", className="card-header-bold"),
                                       dbc.CardBody([
                                          dcc.Dropdown(
-                                            options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
-                                            id='portfolio-dropdown', value=availablePortfolios[0])
+                                            #options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
+                                            options=[{'label': portfolio, 'value': i} for i, portfolio in enumerate(availablePortfolios)],
+                                            id='portfolio-dropdown', value=0)
                             ])], color="success", outline=True), width=2, align="stretch", className="mb-3"),
                     dbc.Col(dbc.Card(
                         [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
@@ -508,10 +521,6 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
     return common_elements_list
 
 
-#returnOutput = f_CalcReturnValues(df_L3_r, dates1.loc[1,'Date'], dates1.loc[0,'Date'])
-
-print(Selected_Portfolio.df_L3_w)
-
 #@@@ CALL BACKS @@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -527,190 +536,172 @@ def toggle_accordion_001(open_status):
         return "transparent-accordion-item collapsed"
 
 
-@app.callback(
-    [Output(component_id="1perf-bar-001", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_1perf_bar_001(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered_df = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
-               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
 
-    updated_figure = px.bar(
-        filtered_df,
-        x=filtered_df.index,
-        y=[c for c in filtered_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-        barmode='relative',
-    )
-    updated_figure.update_layout(
-        yaxis_title="Return (%)",
-        xaxis_title="",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
 
+# ============ #1 Performance Accordian Callbacks ================================
 
 @app.callback(
-    [Output(component_id="1perf-line-001", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_1perf_line_001(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered_df = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+    [
+        Output(component_id="1perf-bar-001", component_property="figure"),
+        Output(component_id="1perf-line-001", component_property="figure"),
+        Output(component_id="1perf-bar-002", component_property="figure"),
+        Output(component_id="1perf-bar-003", component_property="figure"),
+        Output(component_id="1perf-bar-004", component_property="figure"),
+    ],
+    [
+        Input(component_id='portfolio-dropdown', component_property='value'),
+        Input(component_id="date-picker", component_property="start_date"),
+        Input(component_id="date-picker", component_property="end_date"),
+        Input(component_id='accordion-001', component_property='n_clicks')
+    ],
+    [
+        State('accordion-001', 'is_open')
+    ]
+)
+def update_figures(dropDown_n, start_date, end_date, n_clicks, is_open):
+    print("--Just Updated #1 Area--")
 
-    updated_figure = px.line(
-        filtered_df,
-        x=filtered_df.index,
-        y=[c for c in filtered_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-    )
-    updated_figure.update_layout(
-        yaxis_title="Cumulative Return (%)",
-        xaxis_title="",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
+    if n_clicks is not None and is_open:
+        if dropDown_n is not None:
+            Selected_Portfolio = All_Portfolios[dropDown_n]
 
+        groupName = Selected_Portfolio.groupName
+        groupList = Selected_Portfolio.groupList
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
 
-@app.callback(
-    [Output(component_id="1perf-bar-002", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_1perf_bar_002(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered_df = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.t_dates) * 100).T
+        filtered_df_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+                   'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
 
-    updated_figure = px.bar(
-        filtered_df,
-        x=filtered_df.index,
-        y=[c for c in filtered_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-        barmode='group'
-    )
-    updated_figure.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
+        filtered_df_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
 
+        filtered_df_3 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.t_dates) * 100).T
 
-@app.callback(
-    [Output(component_id="1perf-bar-003", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_1perf_bar_003(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered_df = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.tME_dates) * 100).T
+        filtered_df_4 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.tME_dates) * 100).T
 
-    updated_figure = px.bar(
-        filtered_df,
-        x=filtered_df.index,
-        y=[c for c in filtered_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-        barmode='group'
-    )
-    updated_figure.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
+        filtered_df_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.tQE_dates) * 100).T
 
+        # Create figures for each output
+        figure_1 = px.bar(
+            filtered_df_1,
+            x=filtered_df_1.index,
+            y=[c for c in filtered_df_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='relative',
+        )
+        figure_1.update_layout(
+            yaxis_title="Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-@app.callback(
-    [Output(component_id="1perf-bar-004", component_property="figure"),
-    Input(component_id='portfolio-dropdown', component_property='value'),
-    Input(component_id="date-picker", component_property="start_date"),
-    Input(component_id="date-picker", component_property="end_date")])
-def update_1perf_bar_004(value, start_date, end_date):
-    start_date = pd.to_datetime(start_date) # need to fix this to use range value_index[0] value_index[1]
-    end_date = pd.to_datetime(end_date)
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    filtered_df = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.tQE_dates) * 100).T
+        figure_2 = px.line(
+            filtered_df_2,
+            x=filtered_df_2.index,
+            y=[c for c in filtered_df_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    updated_figure = px.bar(
-        filtered_df,
-        x=filtered_df.index,
-        y=[c for c in filtered_df.columns],
-        labels={"x": "Date", "y": "Values"},
-        template = "plotly_white",
-        barmode='group'
-    )
-    updated_figure.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",  # Change this to "top" to move the legend below the chart
-            y=-0.3,  # Adjust the y value to position the legend below the chart
-            xanchor="center",  # Center the legend horizontally
-            x=0.5,  # Center the legend horizontally
-            title=None,
-            font = dict(size=11)
-        ),
-        margin = dict(r=0),  # Reduce right margin to maximize visible area
-    )
-    return updated_figure,
+        figure_3 = px.bar(
+            filtered_df_3,
+            x=filtered_df_3.index,
+            y=[c for c in filtered_df_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_3.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
+        figure_4 = px.bar(
+            filtered_df_4,
+            x=filtered_df_4.index,
+            y=[c for c in filtered_df_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_4.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        figure_5 = px.bar(
+            filtered_df_5,
+            x=filtered_df_5.index,
+            y=[c for c in filtered_df_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_5.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        return figure_1, figure_2, figure_3, figure_4, figure_5
+    else:
+         # Return None for components when the accordion is closed
+         return None, None, None, None, None
+
+# ============ #2 Risk Accordian Callbacks ================================
 
 @app.callback(
     [Output(component_id="2risk-line-001", component_property="figure"),
@@ -718,6 +709,10 @@ def update_1perf_bar_004(value, start_date, end_date):
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
 def update_2risk_line_001(value, start_date, end_date):
+
+    if value is not None:
+        Selected_Portfolio = All_Portfolios[value]
+
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     filtered_df = f_CalcDrawdown(Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
@@ -752,6 +747,10 @@ def update_2risk_line_001(value, start_date, end_date):
     Input(component_id="date-picker", component_property="start_date"),
     Input(component_id="date-picker", component_property="end_date")])
 def update_2risk_line_002(value, start_date, end_date):
+
+    if value is not None:
+        Selected_Portfolio = All_Portfolios[value]
+
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
     filtered_df = f_CalcRollingVol(Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
@@ -1375,4 +1374,5 @@ def update_5contrib_line_008(value, start_date, end_date):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    #app.run_server(debug=True)
+    app.run_server(host = '0.0.0.0', port = port_number, debug=True)

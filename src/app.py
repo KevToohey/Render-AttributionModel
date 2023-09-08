@@ -94,7 +94,6 @@ for code in availablePortfolios:
 Selected_Portfolio = All_Portfolios[0]
 Selected_Code = Selected_Portfolio.portfolioName
 
-
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -139,10 +138,8 @@ app.layout = dbc.Container([
                 dbc.Row([
                     dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:", className="card-header-bold"),
                                       dbc.CardBody([
-                                         dcc.Dropdown(
-                                            options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
-                                            #options=[{'label': portfolio, 'value': i} for i, portfolio in enumerate(availablePortfolios)],
-                                            id='portfolio-dropdown', value=0)
+                                         dcc.Dropdown(id='portfolio-dropdown', options=[{'label': portfolio, 'value': portfolio} for portfolio in availablePortfolios],
+                                                      value=availablePortfolios[0])
                             ])], color="success", outline=True), width=2, align="stretch", className="mb-3"),
                     dbc.Col(dbc.Card(
                         [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
@@ -553,17 +550,20 @@ def toggle_accordion_001(open_status):
         Input(component_id="date-picker", component_property="end_date"),
     ],
 )
-def update_figures(dropDown_n, start_date, end_date):
+def update_figures(dropDown_value, start_date, end_date):
     print("--Just Updated #1 Area--")
+    print(dropDown_value)
 
-    # if n_clicks is not None and is_open:
-    #     if dropDown_n is not None:
-    #         Selected_Portfolio = All_Portfolios[dropDown_n]
+    if dropDown_value in availablePortfolios:
+        Selected_Portfolio = All_Portfolios[availablePortfolios.index(dropDown_value)]
+        Selected_Code = Selected_Portfolio.portfolioName
 
     groupName = Selected_Portfolio.groupName
     groupList = Selected_Portfolio.groupList
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
+
+    print(Selected_Portfolio.df_L3_r['P_TOTAL'])
 
     filtered_df_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
                'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)

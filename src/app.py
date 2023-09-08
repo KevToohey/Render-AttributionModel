@@ -332,63 +332,160 @@ app.layout = html.Div([
 def render_page_content(pathname):
     if pathname == "/":
         return [
-                html.H1('Select Portfolio & Analysis Settings',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Select Portfolio & Analysis Settings',
+                    style={'textAlign':'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+            dbc.Row([
+                dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:", className="card-header-bold"),
+                                  dbc.CardBody([
+                                      dcc.Dropdown(id='portfolio-dropdown',
+                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
+                                                            availablePortfolios],
+                                                   value=availablePortfolios[0]),
+                                      dcc.Store(id='portfolio-code-store')]
+                                  )], color="primary", outline=True, style={"height": "100%"}), width=4, align="stretch", className="mb-3"),
+                dbc.Col(dbc.Card(
+                    [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
+                        dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date,
+                                            end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
+                    ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="start", className="mb-2"),
+                dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Settings:", className="card-header-bold"),
+                                  dbc.CardBody([
+                                      dbc.Row([
+                                          dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205",
+                                                                    label="Setting #1 tbc",
+                                                                    labelPosition="bottom",
+                                                                    style={"text-align": "center"}), align="start"),
+                                          dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205",
+                                                                    label="Setting #2 tbc",
+                                                                    labelPosition="bottom"),
+                                                  style={"text-align": "center"}, align="start"),
+                                      ], justify="evenly", align="start", className="mb-2"),
+                                  ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="stretch", className="mb-3"),
+                ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
+
+            html.Hr(),
+            dbc.Row([
+                dbc.Col(
+                    dbc.Button("Save Settings & Calculate Analysis.....it may take a few moments!", size='lg'),
+                    id='button-001',
+                    width=2,  # Adjust the width to match the first column (4)
+                    align="start",
+                    className="mb-3",),
+            ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
+
+
+        ]
     elif pathname == "/0-Summary":
         return [
-                html.H1('Summary Dashboard',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Summary Dashboard',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+
+        ]
     elif pathname == "/1-Performance":
         return [
-                html.H1('Performance Benchmarking',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Performance Benchmarking',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+
+
+        ]
     elif pathname == "/2-Risk":
         return [
-                html.H1('Risk Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Risk Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/3-Allocation":
         return [
-                html.H1('Allocation / Exposure Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Allocation / Exposure Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/4-Attribution":
         return [
-                html.H1('Multi-Period Attribution Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Multi-Period Brinson-Fachler Attribution Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/5-Contribution":
         return [
-                html.H1('Multi-Period Contribution Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Multi-Period Contribution Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/6-Component":
         return [
-                html.H1('Portfolio Component Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Portfolio Component Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/7-Markets":
         return [
-                html.H1('General Market Valuation Analysis',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('General Market Valuation Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/8-Reports":
         return [
-                html.H1('Report Generator',
-                        style={'textAlign':'center'}),
-                ]
+            html.H2('Report Generator',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     elif pathname == "/9-Help":
         return [
-                html.H1('Need Help & Model Assumptions',
-                        style={'textAlign':'center'}),
-                ]
+            html.Div(style={'height': '2rem'}),
+            html.H2('Need Help & Model Assumptions',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+        ]
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
-            html.H1("404: Not found", className="text-danger"),
+            html.Div(style={'height': '2rem'}),
+            html.H2("404: Not found", className="text-danger"),
             html.Hr(),
             html.P(f"Whoops the pathname {pathname} was not recognised... - Blame Jake!"),
         ]

@@ -202,11 +202,12 @@ sidebar = html.Div(
     [
         html.Div(
             [
-                html.H2("Portfolio Analytics", style={"color": "#E7EAEB"}),
+                html.H2("Atchison Analytics", style={"color": "#1DC8F2"}),
             ],
             className="sidebar-header",
         ),
         html.Hr(),
+        html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
         dbc.Nav(
             [
                 dbc.NavLink(
@@ -216,6 +217,8 @@ sidebar = html.Div(
                     href="/",
                     active="exact",
                 ),
+                html.Hr(),
+                html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
                         html.I(className="fas fa-home me-2"),
@@ -272,6 +275,8 @@ sidebar = html.Div(
                     href="/6-Component",
                     active="exact",
                 ),
+                html.Hr(),
+                html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
                         html.I(className="fa-solid fa-landmark me-2"),
@@ -288,6 +293,8 @@ sidebar = html.Div(
                     href="/8-Reports",
                     active="exact",
                 ),
+                html.Hr(),
+                html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
                         html.I(className="fa-solid fa-circle-info me-2"),

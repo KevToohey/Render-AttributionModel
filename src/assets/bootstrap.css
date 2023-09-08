@@ -50,7 +50,7 @@ body {
   line-height: 1.5;
   color: #212529;
   text-align: left;
-  background: url("trees.png") center/cover no-repeat;
+  background: url("trees.png") center/cover no-repeat fixed;
   background-color: #3D555E;
 }
 
@@ -147,6 +147,11 @@ body {
 }
 
 .sidebar .nav-link.active i {
+  color: #3D555E; /* Change the color to green (replace with your desired color) */
+}
+
+.sidebar .nav-link.active span {
+  font-weight: bold;
   color: #3D555E; /* Change the color to green (replace with your desired color) */
 }
 

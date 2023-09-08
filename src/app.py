@@ -388,7 +388,19 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
 
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
         ]
     elif pathname == "/1-Performance":
         return [
@@ -399,7 +411,78 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+                    # Tab 1 - Performance
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Tabs([
+                                    dbc.Tab([
+                                        dbc.Card([
+                                            dbc.CardHeader(
+                                                "Chart 1: Total Portfolio Performance - as at Last Price " +
+                                                Selected_Portfolio.t_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+                                            dbc.CardBody(dcc.Graph(id='1perf-bar-002')),
+                                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                                        ], color="primary", outline=True)], label="To Latest Daily",
+                                        active_label_style={"background-color": "#93F205"},
+                                        label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+                                    dbc.Tab([
+                                        dbc.Card([
+                                            dbc.CardHeader(
+                                                "Chart 2: Total Portfolio Performance - as at Last Price " +
+                                                Selected_Portfolio.tME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+                                            dbc.CardBody(dcc.Graph(id='1perf-bar-003')),
+                                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                                        ], color="primary", outline=True)], label="Month End Date",
+                                        active_label_style={"background-color": "#93F205"},
+                                        label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+                                    dbc.Tab([
+                                        dbc.Card([
+                                            dbc.CardHeader(
+                                                "Chart 3: Total Portfolio Performance - as at Last Price " +
+                                                Selected_Portfolio.tQE_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+                                            dbc.CardBody(dcc.Graph(id='1perf-bar-004')),
+                                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                                        ], color="primary", outline=True)], label="Quarter End Date",
+                                        active_label_style={"background-color": "#93F205"},
+                                        label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+                                ], className="mb-3")
+                            ], align="center", className="mb-3"),
 
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 4: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
+                                    dbc.CardBody(dcc.Graph(id='1perf-bar-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 5: Portfolio Total Returns (L3)"),
+                                    dbc.CardBody(dcc.Graph(id='1perf-line-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="Portfolio Performance Assessment",
+                            id="accordion-001",
+                            className="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], className="mb-3"),
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
 
         ]
     elif pathname == "/2-Risk":
@@ -411,6 +494,43 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # Tab 2 - Risk
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 1: Portfolio Drawdown Analysis"),
+                                    dbc.CardBody(dcc.Graph(id='2risk-line-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 2: Portfolio 30 Daily Rolling Volatility (%p.a.)"),
+                                    dbc.CardBody(dcc.Graph(id='2risk-line-002')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="Portfolio Risk Analysis",
+                            id="accordion-002",
+                            class_name="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], start_collapsed=True, className="mb-3"),
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+
         ]
     elif pathname == "/3-Allocation":
         return [
@@ -420,6 +540,55 @@ def render_page_content(pathname):
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # Tab 3- Allocations
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 1: Current Allocation"),
+                                    dbc.CardBody(dcc.Graph(id='3weight-pie-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 2: Current TAA Overweights/Underweights"),
+                                    dbc.CardBody(dcc.Graph(id='3weight-bar-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 3: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                    dbc.CardBody(dcc.Graph(id='3weight-bar-002')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
+                                    dbc.CardBody(dcc.Graph(id='3weight-bar-003')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="Portfolio Allocation Monitoring",
+                            id="accordion-003",
+                            class_name="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], start_collapsed=True, className="mb-3"),
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
 
         ]
     elif pathname == "/4-Attribution":
@@ -431,6 +600,53 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+                    # Tab 4- Attribution Analysis
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 1: Portfolio Attribution Analysis vs Reference Portfolio"),
+                                    dbc.CardBody(dcc.Graph(id='4attrib-line-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 2: L3 SAA to TAA Attribution Analysis (Equities)"),
+                                    dbc.CardBody(dcc.Graph(id='4attrib-line-002')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 3: L3 SAA to TAA Attribution Analysis (Alternatives)"),
+                                    dbc.CardBody(dcc.Graph(id='4attrib-line-003')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 4: L3 SAA to TAA Attribution Analysis (Defensives)"),
+                                    dbc.CardBody(dcc.Graph(id='4attrib-line-004')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="2-Factor Attribution Analysis",
+                            item_id="accordion-004",
+                            class_name="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], start_collapsed=True, className="mb-3"),
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
         ]
     elif pathname == "/5-Contribution":
         return [
@@ -440,6 +656,40 @@ def render_page_content(pathname):
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+                    # Tab 6- Underlying Detail Analysis
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 1: xxxxxxxx"),
+                                    dbc.CardBody(dcc.Graph(id='stacked-bar-020')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 2: xxxxxxxx"),
+                                    dbc.CardBody(dcc.Graph(id='stacked-bar-021')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="General Market Valuation Overview",
+                            item_id="accordion-006",
+                            class_name="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], start_collapsed=True, className="mb-3"),
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
 
         ]
     elif pathname == "/6-Component":
@@ -451,6 +701,86 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+                    # Tab 5- Contribution Analysis
+                    dbc.Accordion([
+                        dbc.AccordionItem([
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-001')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-002')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 3: International Shares Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-003')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-004')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-005')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-006')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-007')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 8: Cash - Underlying Contributors"),
+                                    dbc.CardBody(dcc.Graph(id='5contrib-line-008')),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                        ],
+                            title="Sector Sleeve - Contribution Analysis",
+                            item_id="accordion-005",
+                            class_name="transparent-accordion-item",  # Apply transparent background class here
+                        ),
+                    ], start_collapsed=True, className="mb-3"),
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
         ]
     elif pathname == "/7-Markets":
         return [
@@ -461,14 +791,43 @@ def render_page_content(pathname):
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
 
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
         ]
     elif pathname == "/8-Reports":
         return [
+            html.Div(style={'height': '2rem'}),
             html.H2('Report Generator',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
 
         ]
     elif pathname == "/9-Help":
@@ -479,6 +838,20 @@ def render_page_content(pathname):
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
             html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
 
         ]
     # If the user tries to reach a different page, return a 404 message

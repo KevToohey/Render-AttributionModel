@@ -520,7 +520,7 @@ def render_page_content(pathname):
                             id="accordion-002",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
-                    ], start_collapsed=True, className="mb-3"),
+                    ], className="mb-3"),
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
@@ -581,7 +581,7 @@ def render_page_content(pathname):
                             id="accordion-003",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
-                    ], start_collapsed=True, className="mb-3"),
+                    ], className="mb-3"),
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
@@ -639,7 +639,7 @@ def render_page_content(pathname):
                             item_id="accordion-004",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
-                    ], start_collapsed=True, className="mb-3"),
+                    ], className="mb-3"),
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
@@ -682,7 +682,7 @@ def render_page_content(pathname):
                             item_id="accordion-006",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
-                    ], start_collapsed=True, className="mb-3"),
+                    ], className="mb-3"),
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
@@ -771,7 +771,7 @@ def render_page_content(pathname):
                             item_id="accordion-005",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
-                    ], start_collapsed=True, className="mb-3"),
+                    ], className="mb-3"),
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),

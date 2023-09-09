@@ -105,6 +105,9 @@ for code in availablePortfolios:
 Selected_Portfolio = All_Portfolios[0]
 Selected_Code = Selected_Portfolio.portfolioName
 
+Start_Date = load_start_date
+End_Date = load_end_date
+
 # START APP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.themes.MATERIA, dbc.icons.FONT_AWESOME])
@@ -390,7 +393,7 @@ def render_page_content(pathname):
 
             dbc.Row([
                 # Left Gutter
-                dbc.Col("", width=2, align="center", className="mb-3"),
+                dbc.Col(dcc.Store(id='portfolio-code-store0'), width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
 
@@ -469,6 +472,7 @@ def render_page_content(pathname):
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
+
                         ],
                             title="Portfolio Performance Assessment",
                             id="accordion-001",
@@ -891,9 +895,11 @@ def update_selected_portfolio(selected_value):
     if selected_value in availablePortfolios:
         Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
         Portfolio_Code = Selected_Portfolio.portfolioName  # Update Portfolio_Code
+        return Portfolio_Code
     else:
         Selected_Portfolio = None
         Portfolio_Code = None  # Clear Portfolio_Code
+        return None
 
 
 # ============ #1 Performance Accordian Callbacks ================================
@@ -907,153 +913,149 @@ def update_selected_portfolio(selected_value):
         Output(component_id="1perf-bar-004", component_property="figure"),
     ],
     [
-        Input(component_id='portfolio-dropdown', component_property='value'),
-        Input(component_id="date-picker", component_property="start_date"),
-        Input(component_id="date-picker", component_property="end_date"),
+        [Input(component_id="url", component_property="pathname")]
     ],
 )
-def update_figures(dropDown_value, start_date, end_date):
-    print("--Just Updated #1 Area--")
-    print(dropDown_value)
+def update_figures(pathname):
+    print("--Just Updated #1 Area NOW--")
 
-    # if dropDown_value in availablePortfolios:
-    #     Selected_Portfolio = All_Portfolios[availablePortfolios.index(dropDown_value)]
-    #     Selected_Code = Selected_Portfolio.portfolioName
+    if pathname == "/1-Performance":
+        groupName = Selected_Portfolio.groupName
+        groupList = Selected_Portfolio.groupList
+        start_date = pd.to_datetime(Start_Date)
+        end_date = pd.to_datetime(End_Date)
 
-    groupName = Selected_Portfolio.groupName
-    groupList = Selected_Portfolio.groupList
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
+        print(Selected_Portfolio.df_L3_r['P_TOTAL'])
 
-    print(Selected_Portfolio.df_L3_r['P_TOTAL'])
+        filtered_df_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
+                   'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
 
-    filtered_df_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
-               'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
+        filtered_df_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
 
-    filtered_df_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+        filtered_df_3 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.t_dates) * 100).T
 
-    filtered_df_3 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.t_dates) * 100).T
+        filtered_df_4 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.tME_dates) * 100).T
 
-    filtered_df_4 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.tME_dates) * 100).T
+        filtered_df_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+                                  Selected_Portfolio.tQE_dates) * 100).T
 
-    filtered_df_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                              Selected_Portfolio.tQE_dates) * 100).T
+        # Create figures for each output
+        figure_1 = px.bar(
+            filtered_df_1,
+            x=filtered_df_1.index,
+            y=[c for c in filtered_df_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='relative',
+        )
+        figure_1.update_layout(
+            yaxis_title="Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    # Create figures for each output
-    figure_1 = px.bar(
-        filtered_df_1,
-        x=filtered_df_1.index,
-        y=[c for c in filtered_df_1.columns],
-        labels={"x": "Date", "y": "Values"},
-        template="plotly_white",
-        barmode='relative',
-    )
-    figure_1.update_layout(
-        yaxis_title="Return (%)",
-        xaxis_title="",
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            title=None,
-            font=dict(size=11)
-        ),
-        margin=dict(r=0),
-    )
+        figure_2 = px.line(
+            filtered_df_2,
+            x=filtered_df_2.index,
+            y=[c for c in filtered_df_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    figure_2 = px.line(
-        filtered_df_2,
-        x=filtered_df_2.index,
-        y=[c for c in filtered_df_2.columns],
-        labels={"x": "Date", "y": "Values"},
-        template="plotly_white",
-    )
-    figure_2.update_layout(
-        yaxis_title="Cumulative Return (%)",
-        xaxis_title="",
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            title=None,
-            font=dict(size=11)
-        ),
-        margin=dict(r=0),
-    )
+        figure_3 = px.bar(
+            filtered_df_3,
+            x=filtered_df_3.index,
+            y=[c for c in filtered_df_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_3.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    figure_3 = px.bar(
-        filtered_df_3,
-        x=filtered_df_3.index,
-        y=[c for c in filtered_df_3.columns],
-        labels={"x": "Date", "y": "Values"},
-        template="plotly_white",
-        barmode='group'
-    )
-    figure_3.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            title=None,
-            font=dict(size=11)
-        ),
-        margin=dict(r=0),
-    )
+        figure_4 = px.bar(
+            filtered_df_4,
+            x=filtered_df_4.index,
+            y=[c for c in filtered_df_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_4.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    figure_4 = px.bar(
-        filtered_df_4,
-        x=filtered_df_4.index,
-        y=[c for c in filtered_df_4.columns],
-        labels={"x": "Date", "y": "Values"},
-        template="plotly_white",
-        barmode='group'
-    )
-    figure_4.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            title=None,
-            font=dict(size=11)
-        ),
-        margin=dict(r=0),
-    )
+        figure_5 = px.bar(
+            filtered_df_5,
+            x=filtered_df_5.index,
+            y=[c for c in filtered_df_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_5.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
 
-    figure_5 = px.bar(
-        filtered_df_5,
-        x=filtered_df_5.index,
-        y=[c for c in filtered_df_5.columns],
-        labels={"x": "Date", "y": "Values"},
-        template="plotly_white",
-        barmode='group'
-    )
-    figure_5.update_layout(
-        yaxis_title="Return (%, %p.a.)",
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.3,
-            xanchor="center",
-            x=0.5,
-            title=None,
-            font=dict(size=11)
-        ),
-        margin=dict(r=0),
-    )
-
-    return figure_1, figure_2, figure_3, figure_4, figure_5
+        return figure_1, figure_2, figure_3, figure_4, figure_5
+    else:
+        return None
 
 
 

@@ -119,8 +119,23 @@ body {
   white-space: nowrap;
 }
 
+.sidebar-subheader {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 /* position the header relative to the logo and hide by default */
 .sidebar-header h2 {
+  opacity: 0;
+  margin-left: 1rem;
+  margin-bottom: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sidebar-subheader Div {
   opacity: 0;
   margin-left: 1rem;
   margin-bottom: 0;

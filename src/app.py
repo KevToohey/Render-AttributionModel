@@ -105,12 +105,17 @@ for code in availablePortfolios:
 Selected_Portfolio = All_Portfolios[0]
 Selected_Code = Selected_Portfolio.portfolioName
 
-Start_Date = load_start_date
-End_Date = load_end_date
+text_Start_Date = load_start_date
+text_End_Date = load_end_date
+
+start_date = pd.to_datetime(text_Start_Date)
+end_date = pd.to_datetime(text_End_Date)
+groupName = Selected_Portfolio.groupName
+groupList = Selected_Portfolio.groupList
 
 # START APP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.themes.MATERIA, dbc.icons.FONT_AWESOME])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.themes.MATERIA, dbc.icons.FONT_AWESOME], suppress_callback_exceptions=True)
 server = app.server
 port_number = 8050
 
@@ -210,6 +215,9 @@ sidebar = html.Div(
             className="sidebar-header",
         ),
         html.Hr(),
+        dcc.Store(id='store-portfolio-code'),
+        html.Div(id='display-portfolio-code', style={"color": "#1DC8F2"}, className="sidebar-subheader"),
+        html.Hr(),
         html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
         dbc.Nav(
             [
@@ -306,6 +314,7 @@ sidebar = html.Div(
                     href="/9-Help",
                     active="exact",
                 ),
+
             ],
             vertical=True,
             pills=True,
@@ -347,8 +356,7 @@ def render_page_content(pathname):
                                       dcc.Dropdown(id='portfolio-dropdown',
                                                    options=[{'label': portfolio, 'value': portfolio} for portfolio in
                                                             availablePortfolios],
-                                                   value=availablePortfolios[0]),
-                                      dcc.Store(id='portfolio-code-store')]
+                                                   value=Selected_Code)]
                                   )], color="primary", outline=True, style={"height": "100%"}), width=4, align="stretch", className="mb-3"),
                 dbc.Col(dbc.Card(
                     [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
@@ -371,13 +379,21 @@ def render_page_content(pathname):
                 ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
 
             html.Hr(),
-            dbc.Row([
-                dbc.Col(
-                    dbc.Button("Save Settings & Calculate Analysis.....it may take a few moments!", size='lg'),
-                    id='button-001',
-                    width=2,  # Adjust the width to match the first column (4)
-                    align="start",
-                    className="mb-3",),
+            dbc.Row([dbc.Col(
+                dbc.Card([dbc.CardHeader("Select Analysis Settings:", className="card-header-bold"),
+                          dbc.CardBody([
+                              dbc.Row([
+                                  dbc.Col(daq.BooleanSwitch(id='switch-003', on=True, color="#93F205",
+                                                            label="More Settings #3 tbc",
+                                                            labelPosition="bottom",
+                                                            style={"text-align": "center"}), align="start"),
+                                  dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205",
+                                                            label="More Settings #4 tbc",
+                                                            labelPosition="bottom"),
+                                          style={"text-align": "center"}, align="start"),
+                              ], justify="evenly", align="start", className="mb-2"),
+                          ])], color="primary", outline=True, style={"height": "100%"}),
+                width=8, align = "stretch", className = "mb-3"),
             ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
 
 
@@ -393,7 +409,7 @@ def render_page_content(pathname):
 
             dbc.Row([
                 # Left Gutter
-                dbc.Col(dcc.Store(id='portfolio-code-store0'), width=2, align="center", className="mb-3"),
+                dbc.Col(width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
 
@@ -406,6 +422,140 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
         ]
     elif pathname == "/1-Performance":
+
+        filtered_df_1_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date,
+                          ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
+                           'P_' + groupName + '_' + groupList[2],
+                           'P_' + groupName + '_' + groupList[3], 'P_' + groupName + '_' + groupList[4],
+                           'P_' + groupName + '_' + groupList[5], 'P_' + groupName + '_' + groupList[6]]]) * 100)
+
+        # Create figures for each output
+        figure_1_1 = px.bar(
+            filtered_df_1_1,
+            x=filtered_df_1_1.index,
+            y=[c for c in filtered_df_1_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='relative',
+        )
+        figure_1_1.update_layout(
+            yaxis_title="Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        filtered_df_1_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date,
+                           ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+
+        figure_1_2 = px.line(
+            filtered_df_1_2,
+            x=filtered_df_1_2.index,
+            y=[c for c in filtered_df_1_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_1_2.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        filtered_df_1_3 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.t_dates) * 100).T
+
+        figure_1_3 = px.bar(
+            filtered_df_1_3,
+            x=filtered_df_1_3.index,
+            y=[c for c in filtered_df_1_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_1_3.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        filtered_df_1_4 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.tME_dates) * 100).T
+        figure_1_4 = px.bar(
+            filtered_df_1_4,
+            x=filtered_df_1_4.index,
+            y=[c for c in filtered_df_1_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_1_4.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        filtered_df_1_5 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.tQE_dates) * 100).T
+
+        figure_1_5 = px.bar(
+            filtered_df_1_5,
+            x=filtered_df_1_5.index,
+            y=[c for c in filtered_df_1_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_1_5.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+        ## Populate Charts for Page 1-Performance
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Performance Benchmarking',
@@ -429,7 +579,7 @@ def render_page_content(pathname):
                                             dbc.CardHeader(
                                                 "Chart 1: Total Portfolio Performance - as at Last Price " +
                                                 Selected_Portfolio.t_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                            dbc.CardBody(dcc.Graph(id='1perf-bar-002')),
+                                            dbc.CardBody(dcc.Graph(figure=figure_1_3)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="To Latest Daily",
                                         active_label_style={"background-color": "#93F205"},
@@ -439,7 +589,7 @@ def render_page_content(pathname):
                                             dbc.CardHeader(
                                                 "Chart 2: Total Portfolio Performance - as at Last Price " +
                                                 Selected_Portfolio.tME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                            dbc.CardBody(dcc.Graph(id='1perf-bar-003')),
+                                            dbc.CardBody(dcc.Graph(figure=figure_1_4)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="Month End Date",
                                         active_label_style={"background-color": "#93F205"},
@@ -449,7 +599,7 @@ def render_page_content(pathname):
                                             dbc.CardHeader(
                                                 "Chart 3: Total Portfolio Performance - as at Last Price " +
                                                 Selected_Portfolio.tQE_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                            dbc.CardBody(dcc.Graph(id='1perf-bar-004')),
+                                            dbc.CardBody(dcc.Graph(figure=figure_1_5)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="Quarter End Date",
                                         active_label_style={"background-color": "#93F205"},
@@ -461,14 +611,14 @@ def render_page_content(pathname):
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader(
                                         "Chart 4: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
-                                    dbc.CardBody(dcc.Graph(id='1perf-bar-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_1_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 5: Portfolio Total Returns (L3)"),
-                                    dbc.CardBody(dcc.Graph(id='1perf-line-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_1_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -489,7 +639,60 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
+
+
     elif pathname == "/2-Risk":
+        filtered_df_2_1 = f_CalcDrawdown(
+            Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+
+        figure_2_1 = px.line(
+            filtered_df_2_1,
+            x=filtered_df_2_1.index,
+            y=[c for c in filtered_df_2_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_1.update_layout(
+            yaxis_title="Drawdown Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_2_2 = f_CalcRollingVol(
+            Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+
+        figure_2_2 = px.line(
+            filtered_df_2_2,
+            x=filtered_df_2_2.index,
+            y=[c for c in filtered_df_2_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_2.update_layout(
+            yaxis_title="90 Day Rolling Volatility (% p.a.)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        ## Populate Charts for Page 2-Risk
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Risk Analysis',
@@ -510,12 +713,12 @@ def render_page_content(pathname):
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 1: Portfolio Drawdown Analysis"),
-                                    dbc.CardBody(dcc.Graph(id='2risk-line-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_2_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 2: Portfolio 30 Daily Rolling Volatility (%p.a.)"),
-                                    dbc.CardBody(dcc.Graph(id='2risk-line-002')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_2_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -536,7 +739,123 @@ def render_page_content(pathname):
 
 
         ]
+
+
     elif pathname == "/3-Allocation":
+        filtered_df_3_1 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.t_dates) * 100).T
+
+        figure_3_1 = px.bar(
+            filtered_df_3_1,
+            x=filtered_df_3_1.index,
+            y=[c for c in filtered_df_3_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_3_1.update_layout(
+            yaxis_title="Asset Allocation (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_3_2 = Selected_Portfolio.df_L3_w.loc[end_date:end_date,
+                      ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
+                       'P_' + groupName + '_' + groupList[2], 'P_' + groupName + '_' + groupList[3],
+                       'P_' + groupName + '_' + groupList[4], 'P_' + groupName + '_' + groupList[5],
+                       'P_' + groupName + '_' + groupList[6]]].T
+        figure_3_2 = px.pie(
+            filtered_df_3_2,
+            values=end_date,
+            names=filtered_df_3_2.index,
+            template="plotly_white"
+        )
+        figure_3_2.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            # margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_3_3 = Selected_Portfolio.df_L3vsL2_relw.loc[start_date:end_date,
+                       ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
+                        'P_' + groupName + '_' + groupList[2],
+                        'P_' + groupName + '_' + groupList[3], 'P_' + groupName + '_' + groupList[4],
+                        'P_' + groupName + '_' + groupList[5], 'P_' + groupName + '_' + groupList[6]]]
+
+        figure_3_3 = px.bar(
+            filtered_df_3_3,
+            x=filtered_df_3_3.index,
+            y=[c for c in filtered_df_3_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='relative'
+        )
+        figure_3_3.update_layout(
+            yaxis_title="Asset Allocation (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_3_4 = Selected_Portfolio.df_L3_w.loc[start_date:end_date,
+                       ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
+                        'P_' + groupName + '_' + groupList[2],
+                        'P_' + groupName + '_' + groupList[3], 'P_' + groupName + '_' + groupList[4],
+                        'P_' + groupName + '_' + groupList[5], 'P_' + groupName + '_' + groupList[6]]]
+
+        figure_3_4 = px.bar(
+            filtered_df_3_4,
+            x=filtered_df_3_4.index,
+            y=[c for c in filtered_df_3_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='stack'
+        )
+        figure_3_4.update_layout(
+            yaxis_title="Asset Allocation (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        ## Populate Charts for Page 3-Allocation
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Allocation / Exposure Analysis',
@@ -557,12 +876,12 @@ def render_page_content(pathname):
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 1: Current Allocation"),
-                                    dbc.CardBody(dcc.Graph(id='3weight-pie-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_3_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 2: Current TAA Overweights/Underweights"),
-                                    dbc.CardBody(dcc.Graph(id='3weight-bar-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_3_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -571,12 +890,12 @@ def render_page_content(pathname):
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader(
                                         "Chart 3: Portfolio Sleeve Overweights/Underweights Through Time"),
-                                    dbc.CardBody(dcc.Graph(id='3weight-bar-002')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_3_3)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
-                                    dbc.CardBody(dcc.Graph(id='3weight-bar-003')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_3_4)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -595,7 +914,116 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
+
+
     elif pathname == "/4-Attribution":
+        filtered_df_4_1 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+                                                                                     'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
+        figure_4_1 = px.line(
+            filtered_df_4_1,
+            x=filtered_df_4_1.index,
+            y=[c for c in filtered_df_4_1.columns],
+            template="plotly_white"
+        )
+        figure_4_1.update_layout(
+            yaxis_title="Value-Add Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_4_2 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+                         ['G1_Australian Shares-- Allocation Effect',
+                          'G1_Australian Shares-- Selection Effect',
+                          'G1_International Shares-- Allocation Effect',
+                          'G1_International Shares-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+        figure_4_2 = px.line(
+            filtered_df_4_2,
+            x=filtered_df_4_2.index,
+            y=[c for c in filtered_df_4_2.columns],
+            template="plotly_white"
+        )
+        figure_4_2.update_layout(
+            yaxis_title="Value-Add Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_4_3 = (
+                    ((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+                                                                                  'G1_Real Assets-- Selection Effect',
+                                                                                  'G1_Alternatives-- Allocation Effect',
+                                                                                  'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+        figure_4_3 = px.line(
+            filtered_df_4_3,
+            x=filtered_df_4_3.index,
+            y=[c for c in filtered_df_4_3.columns],
+            template="plotly_white"
+        )
+        figure_4_3.update_layout(
+            yaxis_title="Value-Add Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_4_4 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+                         ['G1_Long Duration-- Allocation Effect',
+                          'G1_Long Duration-- Selection Effect',
+                          'G1_Short Duration-- Allocation Effect',
+                          'G1_Short Duration-- Selection Effect',
+                          'G1_Cash-- Allocation Effect',
+                          'G1_Cash-- Selection Effect']] + 1).cumprod() - 1) * 100)
+
+        figure_4_4 = px.line(
+            filtered_df_4_4,
+            x=filtered_df_4_4.index,
+            y=[c for c in filtered_df_4_4.columns],
+            template="plotly_white"
+        )
+        figure_4_4.update_layout(
+            yaxis_title="Value-Add Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        ## Populate Charts for Page 4 Attribution
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Multi-Period Brinson-Fachler Attribution Analysis',
@@ -616,12 +1044,12 @@ def render_page_content(pathname):
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader(
                                         "Chart 1: Portfolio Attribution Analysis vs Reference Portfolio"),
-                                    dbc.CardBody(dcc.Graph(id='4attrib-line-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_4_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 2: L3 SAA to TAA Attribution Analysis (Equities)"),
-                                    dbc.CardBody(dcc.Graph(id='4attrib-line-002')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_4_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -629,12 +1057,12 @@ def render_page_content(pathname):
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 3: L3 SAA to TAA Attribution Analysis (Alternatives)"),
-                                    dbc.CardBody(dcc.Graph(id='4attrib-line-003')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_4_3)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 4: L3 SAA to TAA Attribution Analysis (Defensives)"),
-                                    dbc.CardBody(dcc.Graph(id='4attrib-line-004')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_4_4)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -653,6 +1081,8 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
         ]
     elif pathname == "/5-Contribution":
+
+        ## Populate Charts for Page 5 Contribution
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Multi-Period Contribution Analysis',
@@ -697,6 +1127,212 @@ def render_page_content(pathname):
 
         ]
     elif pathname == "/6-Component":
+
+        filtered_df_6_1 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ["P_G1_Australian Shares",
+                                                                              "P_G1_International Shares",
+                                                                              "P_G1_Real Assets", "P_G1_Alternatives",
+                                                                              "P_G1_Long Duration",
+                                                                              "P_G1_Short Duration",
+                                                                              "P_G1_Cash"]] + 1).cumprod() - 1) * 100)
+
+        figure_6_1 = px.line(
+            filtered_df_6_1,
+            x=filtered_df_6_1.index,
+            y=[c for c in filtered_df_6_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_1.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
+        filtered_df_6_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_2] + 1).cumprod() - 1) * 100)
+
+        figure_6_2 = px.line(
+            filtered_df_6_2,
+            x=filtered_df_6_2.index,
+            y=[c for c in filtered_df_6_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_2.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
+        filtered_df_6_3 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_3] + 1).cumprod() - 1) * 100)
+
+        figure_6_3 = px.line(
+            filtered_df_6_3,
+            x=filtered_df_6_3.index,
+            y=[c for c in filtered_df_6_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_3.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
+        filtered_df_6_4 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_4] + 1).cumprod() - 1) * 100)
+
+        figure_6_4 = px.line(
+            filtered_df_6_4,
+            x=filtered_df_6_4.index,
+            y=[c for c in filtered_df_6_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_4.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
+        filtered_df_6_5 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_5] + 1).cumprod() - 1) * 100)
+
+        figure_6_5 = px.line(
+            filtered_df_6_5,
+            x=filtered_df_6_5.index,
+            y=[c for c in filtered_df_6_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_5.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
+        filtered_df_6_6 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_6] + 1).cumprod() - 1) * 100)
+
+        figure_6_6 = px.line(
+            filtered_df_6_6,
+            x=filtered_df_6_6.index,
+            y=[c for c in filtered_df_6_6.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_6.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+        filtered_df_6_7 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_7] + 1).cumprod() - 1) * 100)
+
+        figure_6_7 = px.line(
+            filtered_df_6_7,
+            x=filtered_df_6_7.index,
+            y=[c for c in filtered_df_6_7.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_7.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_6_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
+        filtered_df_6_8 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_8] + 1).cumprod() - 1) * 100)
+
+        figure_6_8 = px.line(
+            filtered_df_6_8,
+            x=filtered_df_6_8.index,
+            y=[c for c in filtered_df_6_8.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_6_8.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        ## Populate Charts for Page 6 Component
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Portfolio Component Analysis',
@@ -716,14 +1352,14 @@ def render_page_content(pathname):
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-001')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-002')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -731,42 +1367,42 @@ def render_page_content(pathname):
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader(
                                         "Chart 3: International Shares Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-003')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_3)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-004')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_4)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-005')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_5)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-006')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_6)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-007')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_7)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader("Chart 8: Cash - Underlying Contributors"),
-                                    dbc.CardBody(dcc.Graph(id='5contrib-line-008')),
+                                    dbc.CardBody(dcc.Graph(figure=figure_6_8)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
@@ -787,6 +1423,8 @@ def render_page_content(pathname):
 
         ]
     elif pathname == "/7-Markets":
+
+        ## Populate Charts for Page 7 Markets
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('General Market Valuation Analysis',
@@ -811,6 +1449,8 @@ def render_page_content(pathname):
 
         ]
     elif pathname == "/8-Reports":
+
+        ## Populate Charts for Page 8 Reports
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Report Generator',
@@ -835,6 +1475,7 @@ def render_page_content(pathname):
 
         ]
     elif pathname == "/9-Help":
+
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Need Help & Model Assumptions',
@@ -872,194 +1513,23 @@ def render_page_content(pathname):
 #@@@ CALL BACKS @@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# set up the callback functions
-@app.callback(
-    Output(component_id='accordion-001', component_property='className'),
-    Input(component_id='switch-001', component_property='on')
-)
-def toggle_accordion_001(open_status):
-    if open_status:
-        return "transparent-accordion-item"
-    else:
-        return "transparent-accordion-item collapsed"
-
-
 # Callback to set Selected_Portfolio and update the dcc.Store with Portfolio_Code
 @app.callback(
-    Output('portfolio-code-store', 'data'),  # Update the dcc.Store
-    Input('portfolio-dropdown', 'value')
+    Output('display-value', 'children'),
+    Input('portfolio-dropdown', 'value'),
+    Input('url', 'pathname'),
 )
-def update_selected_portfolio(selected_value):
-    global Selected_Portfolio, Portfolio_Code  # Declare global variables
+def update_selected_portfolio(selected_value, pathname):
+    global Selected_Portfolio, Selected_Code  # Declare global variables
 
-    if selected_value in availablePortfolios:
-        Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
-        Portfolio_Code = Selected_Portfolio.portfolioName  # Update Portfolio_Code
-        return Portfolio_Code
-    else:
-        Selected_Portfolio = None
-        Portfolio_Code = None  # Clear Portfolio_Code
-        return None
+    if pathname == "/":
+        if selected_value in availablePortfolios:
+            Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
+            Selected_Code = Selected_Portfolio.portfolioName  # Update Selected_Code
 
 
-# ============ #1 Performance Accordian Callbacks ================================
-
-@app.callback(
-    [
-        Output(component_id="1perf-bar-001", component_property="figure"),
-        Output(component_id="1perf-line-001", component_property="figure"),
-        Output(component_id="1perf-bar-002", component_property="figure"),
-        Output(component_id="1perf-bar-003", component_property="figure"),
-        Output(component_id="1perf-bar-004", component_property="figure"),
-    ],
-    [
-        [Input(component_id="url", component_property="pathname")]
-    ],
-)
-def update_figures(pathname):
-    print("--Just Updated #1 Area NOW--")
-
-    if pathname == "/1-Performance":
-        groupName = Selected_Portfolio.groupName
-        groupList = Selected_Portfolio.groupList
-        start_date = pd.to_datetime(Start_Date)
-        end_date = pd.to_datetime(End_Date)
-
-        print(Selected_Portfolio.df_L3_r['P_TOTAL'])
-
-        filtered_df_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_'+groupName+'_'+groupList[0],'P_'+groupName+'_'+groupList[1],'P_'+groupName+'_'+groupList[2],
-                   'P_'+groupName+'_'+groupList[3],'P_'+groupName+'_'+groupList[4],'P_'+groupName+'_'+groupList[5],'P_'+groupName+'_'+groupList[6]]]) * 100)
-
-        filtered_df_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
-
-        filtered_df_3 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                                  Selected_Portfolio.t_dates) * 100).T
-
-        filtered_df_4 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                                  Selected_Portfolio.tME_dates) * 100).T
-
-        filtered_df_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-                                  Selected_Portfolio.tQE_dates) * 100).T
-
-        # Create figures for each output
-        figure_1 = px.bar(
-            filtered_df_1,
-            x=filtered_df_1.index,
-            y=[c for c in filtered_df_1.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='relative',
-        )
-        figure_1.update_layout(
-            yaxis_title="Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),
-        )
-
-        figure_2 = px.line(
-            filtered_df_2,
-            x=filtered_df_2.index,
-            y=[c for c in filtered_df_2.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_2.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),
-        )
-
-        figure_3 = px.bar(
-            filtered_df_3,
-            x=filtered_df_3.index,
-            y=[c for c in filtered_df_3.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='group'
-        )
-        figure_3.update_layout(
-            yaxis_title="Return (%, %p.a.)",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),
-        )
-
-        figure_4 = px.bar(
-            filtered_df_4,
-            x=filtered_df_4.index,
-            y=[c for c in filtered_df_4.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='group'
-        )
-        figure_4.update_layout(
-            yaxis_title="Return (%, %p.a.)",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),
-        )
-
-        figure_5 = px.bar(
-            filtered_df_5,
-            x=filtered_df_5.index,
-            y=[c for c in filtered_df_5.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='group'
-        )
-        figure_5.update_layout(
-            yaxis_title="Return (%, %p.a.)",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),
-        )
-
-        return figure_1, figure_2, figure_3, figure_4, figure_5
-    else:
-        return None
-
-
-
-
+#text_Start_Date = load_start_date
+#text_End_Date = load_end_date
 
 # Run the app
 if __name__ == '__main__':

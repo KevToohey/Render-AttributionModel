@@ -1517,21 +1517,24 @@ def render_page_content(pathname):
     State('stored-portfolio-code', 'data'),
     Input('portfolio-dropdown', 'value'),
     State('url', 'pathname'),
-    #Input('stored-portfolio-code', 'data')
 )
 def update_selected_portfolio(stored_value, selected_value, pathname):
     global Selected_Portfolio, Selected_Code  # Declare global variables
 
-    if 'portfolio-dropdown' not in dash.callback_context.inputs:
-        print("Made it Error")
-        return None, None
-
     if pathname == "/":
         if selected_value in availablePortfolios:
             print("Made it B")
+            print(selected_value)
+            print(stored_value.get('key'))
+            if selected_value == stored_value.get('key'):
+                print("No change needed")
+            else:
+                print("Change triggered")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioName  # Update Selected_Code
             return Selected_Code, {'key': Selected_Code}
+        else:
+            return None, None
     else:
         return None, None
 

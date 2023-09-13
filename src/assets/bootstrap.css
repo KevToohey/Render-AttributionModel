@@ -176,7 +176,8 @@ body {
 /* **** Kev Additions for Main Body */
 
 .accordion-title {
-    background-color: success;  /* Modify the background color here */
+    background-color: #3D555E;
+    /* Modify the background color here */
 }
 
 .transparent-accordion-item {
@@ -3488,7 +3489,8 @@ input[type="button"].btn-block {
   padding: 1.25rem; }
 
 .card-title {
-  margin-bottom: 0.75rem; }
+  margin-bottom: 0.75rem;
+  }
 
 .card-subtitle {
   margin-top: -0.375rem;
@@ -3506,7 +3508,8 @@ input[type="button"].btn-block {
 .card-header {
   padding: 0.75rem 1.25rem;
   margin-bottom: 0;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: #3D555E;
+  color: #1DC8F2;
   border-bottom: 1px solid rgba(0, 0, 0, 0.125); }
   .card-header:first-child {
     border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0; }

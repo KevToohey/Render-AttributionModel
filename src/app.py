@@ -579,7 +579,7 @@ def render_page_content(pathname):
                                             dbc.CardBody(dcc.Graph(figure=figure_1_3)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="To Latest Daily",
-                                        active_label_style={"background-color": "#93F205"},
+                                        active_label_style={"background-color": "#1DC8F2"},
                                         label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
                                     dbc.Tab([
                                         dbc.Card([
@@ -589,7 +589,7 @@ def render_page_content(pathname):
                                             dbc.CardBody(dcc.Graph(figure=figure_1_4)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="Month End Date",
-                                        active_label_style={"background-color": "#93F205"},
+                                        active_label_style={"background-color": "#1DC8F2"},
                                         label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
                                     dbc.Tab([
                                         dbc.Card([
@@ -599,7 +599,7 @@ def render_page_content(pathname):
                                             dbc.CardBody(dcc.Graph(figure=figure_1_5)),
                                             dbc.CardFooter("Enter some dot point automated analysis here....")
                                         ], color="primary", outline=True)], label="Quarter End Date",
-                                        active_label_style={"background-color": "#93F205"},
+                                        active_label_style={"background-color": "#1DC8F2"},
                                         label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
                                 ], className="mb-3")
                             ], align="center", className="mb-3"),

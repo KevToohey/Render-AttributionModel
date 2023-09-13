@@ -215,8 +215,8 @@ sidebar = html.Div(
             className="sidebar-header",
         ),
         html.Hr(),
-        dcc.Store(id='store-portfolio-code'),
-        html.Div(id='display-portfolio-code', style={"color": "#1DC8F2"}, className="sidebar-subheader"),
+        dcc.Store(id='stored-portfolio-code', data={'key': Selected_Code}),
+        html.Div(id='display-portfolio-code', style={"color": "#1DC8F2", "margin-left": "5rem"}, className="sidebar-subheader"),
         html.Hr(),
         html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
         dbc.Nav(
@@ -325,9 +325,6 @@ sidebar = html.Div(
 
 
 content = html.Div(id="page-content", children=[])
-
-
-
 
 ## MAIN LAYOUT --------
 
@@ -1515,18 +1512,28 @@ def render_page_content(pathname):
 
 # Callback to set Selected_Portfolio and update the dcc.Store with Portfolio_Code
 @app.callback(
-    Output('display-value', 'children'),
+    Output('display-portfolio-code', 'children'),
+    Output('stored-portfolio-code', 'data'),
+    State('stored-portfolio-code', 'data'),
     Input('portfolio-dropdown', 'value'),
-    Input('url', 'pathname'),
+    State('url', 'pathname'),
+    #Input('stored-portfolio-code', 'data')
 )
-def update_selected_portfolio(selected_value, pathname):
+def update_selected_portfolio(stored_value, selected_value, pathname):
     global Selected_Portfolio, Selected_Code  # Declare global variables
+
+    if 'portfolio-dropdown' not in dash.callback_context.inputs:
+        print("Made it Error")
+        return None, None
 
     if pathname == "/":
         if selected_value in availablePortfolios:
+            print("Made it B")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioName  # Update Selected_Code
-
+            return Selected_Code, {'key': Selected_Code}
+    else:
+        return None, None
 
 #text_Start_Date = load_start_date
 #text_End_Date = load_end_date

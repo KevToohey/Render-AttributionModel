@@ -139,8 +139,10 @@ body {
   opacity: 0;
   margin-left: 1rem;
   margin-bottom: 0;
+  margin-left: 7rem;
   transition: opacity 0.2s ease-in-out;
 }
+
 
 /* reveal the header when the sidebar is toggled */
 .sidebar:hover .sidebar-header h2 {

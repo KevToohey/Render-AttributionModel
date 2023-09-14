@@ -1679,6 +1679,10 @@ def render_page_content(pathname):
 
         ]
     elif pathname == "/10-ESG":
+        listq_10_1 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
+        filtered_df_10_1 = Selected_Portfolio.df_productList.loc[listq_10_1, ["Name", "G1", "G2", "G3", "G4", "Type",
+                                                                              "E-score", "S-score", "G-score",
+                                                                              "ESG-score", "Controversy-score"]]
 
         ## Populate Charts for Page 10 ESG
         return [
@@ -1694,7 +1698,7 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
-
+                    dbc.Table.from_dataframe(filtered_df_10_1, striped=True, bordered=True, hover=True)
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 

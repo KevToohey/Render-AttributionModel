@@ -214,7 +214,6 @@ sidebar = html.Div(
             ],
             className="sidebar-header",
         ),
-        html.Hr(),
         dcc.Store(id='stored-portfolio-code', data={'key': Selected_Code}),
         html.Div(id='display-portfolio-code', style={"color": "#1DC8F2", "margin-left": "5rem"}, className="sidebar-subheader"),
         html.Hr(),
@@ -262,6 +261,8 @@ sidebar = html.Div(
                     href="/3-Allocation",
                     active="exact",
                 ),
+                html.Hr(),
+                html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
                         html.I(className="fa-solid fa-trophy me-2"),
@@ -290,10 +291,28 @@ sidebar = html.Div(
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
+                        html.I(className="fa-solid fa-tree me-2"),
+                        html.Span("ESG / Controversy"),
+                    ],
+                    href="/10-ESG",
+                    active="exact",
+                ),
+                dbc.NavLink(
+                    [
+                        html.I(className="fa-solid fa-sack-dollar me-2"),
+                        html.Span("Fee Analysis"),
+                    ],
+                    href="/11-Fees",
+                    active="exact",
+                ),
+                html.Hr(),
+                html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
+                dbc.NavLink(
+                    [
                         html.I(className="fa-solid fa-landmark me-2"),
                         html.Span("Market Valuation Analysis"),
                     ],
-                    href="/7-Markets",
+                    href="/20-Markets",
                     active="exact",
                 ),
                 dbc.NavLink(
@@ -301,7 +320,7 @@ sidebar = html.Div(
                         html.I(className="fa-solid fa-file-lines me-2"),
                         html.Span("Report Generator"),
                     ],
-                    href="/8-Reports",
+                    href="/21-Reports",
                     active="exact",
                 ),
                 html.Hr(),
@@ -311,7 +330,7 @@ sidebar = html.Div(
                         html.I(className="fa-solid fa-circle-info me-2"),
                         html.Span("Need Help?"),
                     ],
-                    href="/9-Help",
+                    href="/30-Help",
                     active="exact",
                 ),
 
@@ -377,7 +396,7 @@ def render_page_content(pathname):
 
             html.Hr(),
             dbc.Row([dbc.Col(
-                dbc.Card([dbc.CardHeader("Select Analysis Settings:", className="card-header-bold"),
+                dbc.Card([dbc.CardHeader("What If? Alternate Portfolio Allocation Settings:", className="card-header-bold"),
                           dbc.CardBody([
                               dbc.Row([
                                   dbc.Col(daq.BooleanSwitch(id='switch-003', on=True, color="#93F205",
@@ -1078,11 +1097,215 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
         ]
     elif pathname == "/5-Contribution":
+        filtered_df_5_1 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, ["P_G1_Australian Shares",
+                                                                                  "P_G1_International Shares",
+                                                                                  "P_G1_Real Assets",
+                                                                                  "P_G1_Alternatives",
+                                                                                  "P_G1_Long Duration",
+                                                                                  "P_G1_Short Duration",
+                                                                                  "P_G1_Cash"]] + 1).cumprod() - 1) * 100)
+
+        figure_5_1 = px.line(
+            filtered_df_5_1,
+            x=filtered_df_5_1.index,
+            y=[c for c in filtered_df_5_1.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_1.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
+        filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_2] + 1).cumprod() - 1) * 100)
+
+        figure_5_2 = px.line(
+            filtered_df_5_2,
+            x=filtered_df_5_2.index,
+            y=[c for c in filtered_df_5_2.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_2.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
+        filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_3] + 1).cumprod() - 1) * 100)
+
+        figure_5_3 = px.line(
+            filtered_df_5_3,
+            x=filtered_df_5_3.index,
+            y=[c for c in filtered_df_5_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_3.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
+        filtered_df_5_4 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_4] + 1).cumprod() - 1) * 100)
+
+        figure_5_4 = px.line(
+            filtered_df_5_4,
+            x=filtered_df_5_4.index,
+            y=[c for c in filtered_df_5_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_4.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
+        filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_5] + 1).cumprod() - 1) * 100)
+
+        figure_5_5 = px.line(
+            filtered_df_5_5,
+            x=filtered_df_5_5.index,
+            y=[c for c in filtered_df_5_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_5.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
+        filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_6] + 1).cumprod() - 1) * 100)
+
+        figure_5_6 = px.line(
+            filtered_df_5_6,
+            x=filtered_df_5_6.index,
+            y=[c for c in filtered_df_5_6.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_6.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+        filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+
+        figure_5_7 = px.line(
+            filtered_df_5_7,
+            x=filtered_df_5_7.index,
+            y=[c for c in filtered_df_5_7.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_7.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
+        filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_8] + 1).cumprod() - 1) * 100)
+
+        figure_5_8 = px.line(
+            filtered_df_5_8,
+            x=filtered_df_5_8.index,
+            y=[c for c in filtered_df_5_8.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_5_8.update_layout(
+            yaxis_title="Cumulative Contribution (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
 
         ## Populate Charts for Page 5 Contribution
         return [
             html.Div(style={'height': '2rem'}),
-            html.H2('Multi-Period Contribution Analysis',
+            html.H2('Multi-Period Weighted Return Contribution Analysis',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
@@ -1098,18 +1321,54 @@ def render_page_content(pathname):
                         dbc.AccordionItem([
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 1: xxxxxxxx"),
-                                    dbc.CardBody(dcc.Graph(id='stacked-bar-020')),
+                                    dbc.CardHeader("Chart 1: Asset Sleeve Weighted Return Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_1)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 2: xxxxxxxx"),
-                                    dbc.CardBody(dcc.Graph(id='stacked-bar-021')),
+                                    dbc.CardHeader("Chart 2: Australian Shares Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_2)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 3: International Shares Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_3)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 4: Real Assets Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_4)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 5: Alternatives Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_5)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 6: Long Duration Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_6)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                            ], align="center", className="mb-3"),
+                            dbc.Row([
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 7: Short Duration Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_7)),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True), align="center", className="mb-3"),
+                                dbc.Col(dbc.Card([
+                                    dbc.CardHeader("Chart 8: Cash Sleeve - Contributions"),
+                                    dbc.CardBody(dcc.Graph(figure=figure_5_8)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                         ],
-                            title="General Market Valuation Overview",
+                            title="Return Contribution Analysis",
                             item_id="accordion-006",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
@@ -1355,7 +1614,7 @@ def render_page_content(pathname):
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_2)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
@@ -1363,48 +1622,48 @@ def render_page_content(pathname):
                             dbc.Row([
                                 dbc.Col(dbc.Card([
                                     dbc.CardHeader(
-                                        "Chart 3: International Shares Sleeve - Underlying Contributors"),
+                                        "Chart 3: International Shares Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_3)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_4)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_5)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_6)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_7)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                             dbc.Row([
                                 dbc.Col(dbc.Card([
-                                    dbc.CardHeader("Chart 8: Cash - Underlying Contributors"),
+                                    dbc.CardHeader("Chart 8: Cash - Underlying Components"),
                                     dbc.CardBody(dcc.Graph(figure=figure_6_8)),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True), align="center", className="mb-3"),
                             ], align="center", className="mb-3"),
                         ],
-                            title="Sector Sleeve - Contribution Analysis",
+                            title="Sector Sleeve - Look Through Component Analysis",
                             item_id="accordion-005",
                             class_name="transparent-accordion-item",  # Apply transparent background class here
                         ),
@@ -1419,9 +1678,61 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
-    elif pathname == "/7-Markets":
+    elif pathname == "/10-ESG":
 
-        ## Populate Charts for Page 7 Markets
+        ## Populate Charts for Page 10 ESG
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Portfolio ESG / Controversy Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+        ]
+    elif pathname == "/11-Fees":
+
+        ## Populate Charts for Page 11 Fees
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Portfolio Fee Analysis',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+        ]
+    elif pathname == "/20-Markets":
+
+        ## Populate Charts for Page 20 Markets
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('General Market Valuation Analysis',
@@ -1445,9 +1756,9 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
-    elif pathname == "/8-Reports":
+    elif pathname == "/21-Reports":
 
-        ## Populate Charts for Page 8 Reports
+        ## Populate Charts for Page 21 Reports
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Report Generator',
@@ -1471,8 +1782,9 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
-    elif pathname == "/9-Help":
+    elif pathname == "/30-Help":
 
+        ## Populate Charts for Page 30 Help
         return [
             html.Div(style={'height': '2rem'}),
             html.H2('Need Help & Model Assumptions',

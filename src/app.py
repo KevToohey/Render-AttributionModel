@@ -105,6 +105,12 @@ for code in availablePortfolios:
 Selected_Portfolio = All_Portfolios[0]
 Selected_Code = Selected_Portfolio.portfolioName
 
+Alt1_Portfolio = All_Portfolios[1]
+Alt1_Code = Alt1_Portfolio.portfolioName
+
+Alt2_Portfolio = All_Portfolios[2]
+Alt2_Code = Alt2_Portfolio.portfolioName
+
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
 
@@ -369,10 +375,25 @@ def render_page_content(pathname):
             dbc.Row([
                 dbc.Col(dbc.Card([dbc.CardHeader("Select Portfolio:", className="card-header-bold"),
                                   dbc.CardBody([
+
+                                      html.H6('Primary Portfolio:'),
                                       dcc.Dropdown(id='portfolio-dropdown',
                                                    options=[{'label': portfolio, 'value': portfolio} for portfolio in
                                                             availablePortfolios],
-                                                   value=Selected_Code)]
+                                                   value=Selected_Code),
+                                      html.Hr(),
+                                      html.H6('Alternative 1:'),
+                                      dcc.Dropdown(id='portfolio-dropdown-alt1',
+                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
+                                                            availablePortfolios],
+                                                   value=Alt1_Code),
+                                      html.Hr(),
+                                      html.H6('Alternative 2:'),
+                                      dcc.Dropdown(id='portfolio-dropdown-alt2',
+                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
+                                                            availablePortfolios],
+                                                   value=Alt2_Code)
+                                  ]
                                   )], color="primary", outline=True, style={"height": "100%"}), width=4, align="stretch", className="mb-3"),
                 dbc.Col(dbc.Card(
                     [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
@@ -439,11 +460,8 @@ def render_page_content(pathname):
         ]
     elif pathname == "/1-Performance":
 
-        filtered_df_1_1 = ((Selected_Portfolio.df_L3_r.loc[start_date:end_date,
-                          ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
-                           'P_' + groupName + '_' + groupList[2],
-                           'P_' + groupName + '_' + groupList[3], 'P_' + groupName + '_' + groupList[4],
-                           'P_' + groupName + '_' + groupList[5], 'P_' + groupName + '_' + groupList[6]]]) * 100)
+        filtered_df_1_1 = pd.concat([Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_' + groupName + '_' + n]] * 100 for n in groupList], axis=1)
+        filtered_df_1_1.columns = groupList
 
         # Create figures for each output
         figure_1_1 = px.bar(
@@ -471,6 +489,17 @@ def render_page_content(pathname):
 
         filtered_df_1_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date,
                            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+        filtered_df_1_2.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Code != 'Off':
+            a1 = (((Alt1_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a1.columns = ['Alt 1 ('+Alt1_Code+')']
+            filtered_df_1_2 = pd.concat([filtered_df_1_2, a1], axis=1)
+
+        if Alt2_Code != 'Off':
+            a2 = (((Alt2_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a2.columns = ['Alt 2 ('+Alt2_Code+')']
+            filtered_df_1_2 = pd.concat([filtered_df_1_2, a2], axis=1)
 
         figure_1_2 = px.line(
             filtered_df_1_2,
@@ -498,6 +527,18 @@ def render_page_content(pathname):
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.t_dates) * 100).T
 
+        filtered_df_1_3.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Code != 'Off':
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
+            a1.columns = ['Alt 1 ('+Alt1_Code+')']
+            filtered_df_1_3 = pd.concat([filtered_df_1_3, a1], axis=1)
+
+        if Alt2_Code != 'Off':
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
+            a2.columns = ['Alt 2 ('+Alt2_Code+')']
+            filtered_df_1_3 = pd.concat([filtered_df_1_3, a2], axis=1)
+
         figure_1_3 = px.bar(
             filtered_df_1_3,
             x=filtered_df_1_3.index,
@@ -523,6 +564,18 @@ def render_page_content(pathname):
         filtered_df_1_4 = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.tME_dates) * 100).T
+        filtered_df_1_4.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Code != 'Off':
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
+            a1.columns = ['Alt 1 ('+Alt1_Code+')']
+            filtered_df_1_4 = pd.concat([filtered_df_1_4, a1], axis=1)
+
+        if Alt2_Code != 'Off':
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
+            a2.columns = ['Alt 2 ('+Alt2_Code+')']
+            filtered_df_1_4 = pd.concat([filtered_df_1_4, a2], axis=1)
+
         figure_1_4 = px.bar(
             filtered_df_1_4,
             x=filtered_df_1_4.index,
@@ -548,6 +601,18 @@ def render_page_content(pathname):
         filtered_df_1_5 = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.tQE_dates) * 100).T
+
+        filtered_df_1_5.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Code != 'Off':
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
+            a1.columns = ['Alt 1 ('+Alt1_Code+')']
+            filtered_df_1_5 = pd.concat([filtered_df_1_5, a1], axis=1)
+
+        if Alt2_Code != 'Off':
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
+            a2.columns = ['Alt 2 ('+Alt2_Code+')']
+            filtered_df_1_5 = pd.concat([filtered_df_1_5, a2], axis=1)
 
         figure_1_5 = px.bar(
             filtered_df_1_5,
@@ -758,41 +823,17 @@ def render_page_content(pathname):
 
 
     elif pathname == "/3-Allocation":
-        filtered_df_3_1 = (f_CalcReturnTable(
-            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-            Selected_Portfolio.t_dates) * 100).T
 
-        figure_3_1 = px.bar(
-            filtered_df_3_1,
-            x=filtered_df_3_1.index,
-            y=[c for c in filtered_df_3_1.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_3_1.update_layout(
-            yaxis_title="Asset Allocation (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+        filtered_df_3_2 = pd.concat([Selected_Portfolio.df_L3_w.loc[end_date:end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
+        filtered_df_3_2['Current'] = filtered_df_3_2.sum(axis=1)
+        filtered_df_3_2 = filtered_df_3_2[['Current']]
+        filtered_df_3_2.reset_index(inplace=True)
+        filtered_df_3_2.columns = ['GroupValue', 'Current']
 
-        filtered_df_3_2 = Selected_Portfolio.df_L3_w.loc[end_date:end_date,
-                      ['P_' + groupName + '_' + groupList[0], 'P_' + groupName + '_' + groupList[1],
-                       'P_' + groupName + '_' + groupList[2], 'P_' + groupName + '_' + groupList[3],
-                       'P_' + groupName + '_' + groupList[4], 'P_' + groupName + '_' + groupList[5],
-                       'P_' + groupName + '_' + groupList[6]]].T
         figure_3_2 = px.pie(
             filtered_df_3_2,
-            values=end_date,
-            names=filtered_df_3_2.index,
+            values='Current',
+            names='GroupValue',
             template="plotly_white"
         )
         figure_3_2.update_layout(
@@ -811,6 +852,50 @@ def render_page_content(pathname):
                 font=dict(size=11)
             ),
             # margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        # Below is dependent on 3.2
+        row_values = []
+        allrows_values = []
+        group_df = Selected_Portfolio.df_L3_limits[Selected_Portfolio.df_L3_limits['Group'] == groupName]
+        for n, element in enumerate(groupList):
+            # Filter the DataFrame for the current group
+            group_df2 = group_df[group_df['GroupValue'] == groupList[n]]
+            row_values.append(groupList[n])
+            row_values.append(filtered_df_3_2.loc[n, "Current"])
+            # Check if there are any rows for the current group
+            if not group_df2.empty:
+                # Get the minimum value from the 'Min' column of the filtered DataFrame
+                row_values.append(group_df2['Min'].min())
+                row_values.append(group_df2['Max'].max())
+            else:
+                # If no rows are found for the current group, append None to the list
+                row_values.append(0)
+                row_values.append(100)
+
+            print(row_values)
+            allrows_values.append(row_values)
+            row_values = []
+
+        column_names = ['Group Value', 'Current', 'Min', 'Max']
+
+        filtered_df_3_1 = pd.DataFrame(allrows_values, columns=column_names)
+
+        figure_3_1 = go.Figure(data=[go.Ohlc(
+            x=filtered_df_3_1['Group Value'],
+            open=filtered_df_3_1['Current'],
+            high=filtered_df_3_1['Max'],
+            low=filtered_df_3_1['Min'],
+            close=filtered_df_3_1['Current'],
+        )])
+        figure_3_1.update(layout_xaxis_rangeslider_visible=False,)
+
+        figure_3_1.update_layout(
+            title="Asset Allocation Policy Ranges (%)",
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            xaxis=dict(linecolor=colour5),  # Set x-axis line color to 'primary'
+            yaxis=dict(linecolor=colour5),  # Set y-axis line color to 'primary'
+            plot_bgcolor='white',  # Set background color to white
         )
 
         filtered_df_3_3 = Selected_Portfolio.df_L3vsL2_relw.loc[start_date:end_date,
@@ -1832,10 +1917,12 @@ def render_page_content(pathname):
     Output('stored-portfolio-code', 'data'),
     State('stored-portfolio-code', 'data'),
     Input('portfolio-dropdown', 'value'),
+    Input('portfolio-dropdown-alt1', 'value'),
+    Input('portfolio-dropdown-alt2', 'value'),
     State('url', 'pathname'),
 )
-def update_selected_portfolio(stored_value, selected_value, pathname):
-    global Selected_Portfolio, Selected_Code  # Declare global variables
+def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_value, pathname):
+    global Selected_Portfolio, Selected_Code, Alt1_Portfolio, Alt1_Code, Alt2_Portfolio, Alt2_Code  # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
@@ -1848,6 +1935,10 @@ def update_selected_portfolio(stored_value, selected_value, pathname):
                 print("Change triggered")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioName  # Update Selected_Code
+            Alt1_Portfolio = All_Portfolios[availablePortfolios.index(alt1_value)]
+            Alt1_Code = Alt1_Portfolio.portfolioName
+            Alt2_Portfolio = All_Portfolios[availablePortfolios.index(alt2_value)]
+            Alt2_Code = Alt2_Portfolio.portfolioName
             return Selected_Code, {'key': Selected_Code}
         else:
             return None, None

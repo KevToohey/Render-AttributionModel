@@ -114,6 +114,8 @@ Alt2_Code = Alt2_Portfolio.portfolioName
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
 
+Product_List = Selected_Portfolio.df_productList.index.tolist()
+
 start_date = pd.to_datetime(text_Start_Date)
 end_date = pd.to_datetime(text_End_Date)
 groupName = Selected_Portfolio.groupName
@@ -395,29 +397,35 @@ def render_page_content(pathname):
                                                    value=Alt2_Code)
                                   ]
                                   )], color="primary", outline=True, style={"height": "100%"}), width=4, align="stretch", className="mb-3"),
-                dbc.Col(dbc.Card(
-                    [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
-                        dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date,
-                                            end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
-                    ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="start", className="mb-2"),
-                dbc.Col(dbc.Card([dbc.CardHeader("Select Analysis Settings:", className="card-header-bold"),
+                dbc.Col(dbc.Card([dbc.CardHeader("Select Attribution Grouping:", className="card-header-bold"),
                                   dbc.CardBody([
                                       dbc.Row([
-                                          dbc.Col(daq.BooleanSwitch(id='switch-001', on=True, color="#93F205",
-                                                                    label="Setting #1 tbc",
-                                                                    labelPosition="bottom",
-                                                                    style={"text-align": "center"}), align="start"),
-                                          dbc.Col(daq.BooleanSwitch(id='switch-002', on=False, color="#93F205",
-                                                                    label="Setting #2 tbc",
-                                                                    labelPosition="bottom"),
-                                                  style={"text-align": "center"}, align="start"),
+                                          dbc.Col(
+                                              dcc.RadioItems(
+                                                  options=[
+                                                      {'label': ' G1 - Atchison Sleeve Categories', 'value': 'G1'},
+                                                      {'label': ' G2 - CFS Edge Policy', 'value': 'G2'},
+                                                      {'label': ' G3 - HUB24 Policy', 'value': 'G3'},
+                                                      {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
+                                                      {'label': ' G5 - Geography', 'value': 'G5'},
+                                                  ],
+                                                  id="radio-001",
+                                                  value='G1',
+                                              ), align="start"),
                                       ], justify="evenly", align="start", className="mb-2"),
-                                  ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="stretch", className="mb-3"),
+                                  ])], color="primary", outline=True, style={"height": "100%"}), width=2,
+                        align="stretch", className="mb-3"),
+                dbc.Col(dbc.Card(
+                    [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
+                        dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date, day_size=35,
+                                            end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
+                    ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="start", className="mb-2"),
+
                 ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
 
             html.Hr(),
             dbc.Row([dbc.Col(
-                dbc.Card([dbc.CardHeader("What If? Alternate Portfolio Allocation Settings:", className="card-header-bold"),
+                dbc.Card([dbc.CardHeader("Some Other Stuff To Be Added....:", className="card-header-bold"),
                           dbc.CardBody([
                               dbc.Row([
                                   dbc.Col(daq.BooleanSwitch(id='switch-003', on=True, color="#93F205",
@@ -857,7 +865,6 @@ def render_page_content(pathname):
                 row_values.append(0)
                 row_values.append(100)
 
-            print(row_values)
             allrows_values.append(row_values)
             row_values = []
 
@@ -946,6 +953,29 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
+
+        filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+        filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
+        filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
+        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G1', 'G2', 'G3', 'G4']], on='Code')
+        filtered_df_3_5 = filtered_df_3_5.rename(columns={end_date: 'Current Weight'})
+
+        figure_3_5 = px.sunburst(
+            filtered_df_3_5,
+            path=['G1', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        figure_3_5.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+
         ## Populate Charts for Page 3-Allocation
         return [
             html.Div(style={'height': '2rem'}),
@@ -977,16 +1007,40 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 3: Current Asset Allocation"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_5, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 3: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                "Chart 4: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_3)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 4: Portfolio Sleeve Weights Through Time"),
+                            dbc.CardHeader("Chart 5: Portfolio Sleeve Weights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_4)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+
+
+                    dbc.Row([
+                        # Left Gutter
+                        dbc.Col("", width=2, align="center", className="mb-3"),
+                        # Centre Work Area
+                        dbc.Col([
+                            dbc.Table.from_dataframe(filtered_df_3_5, striped=True, bordered=True, hover=True)
+                            # End of Centre Work Area
+                        ], width=12, align="center", className="mb-3"),
+
+                        # Right Gutter
+                        dbc.Col("", width=2, align="center", className="mb-3"),
+
                     ], align="center", className="mb-3"),
 
                     # End of Centre Work Area
@@ -1210,14 +1264,12 @@ def render_page_content(pathname):
         )
 
         checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "International Shares"]]
-        print(checkData[0])
 
         if checkData[0] > 0:
             listq_5_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
             filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_3] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_3 = []
-            print("avoided error")
 
         figure_5_3 = px.line(
             filtered_df_5_3,
@@ -1242,7 +1294,6 @@ def render_page_content(pathname):
         )
 
         checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Real Assets"]]
-        print(checkData[0])
 
         if checkData[0] > 0:
             listq_5_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
@@ -1273,8 +1324,14 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
-        filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_5] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Alternatives"]]
+
+        if checkData[0] > 0:
+            listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
+            filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_5] + 1).cumprod() - 1) * 100)
+        else:
+            filtered_df_5_5 = []
+            print("avoided error 2")
 
         figure_5_5 = px.line(
             filtered_df_5_5,
@@ -1298,8 +1355,14 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
-        filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_6] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Long Duration"]]
+
+        if checkData[0] > 0:
+            listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
+            filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_6] + 1).cumprod() - 1) * 100)
+        else:
+            filtered_df_5_6 = []
+            print("avoided error 2")
 
         figure_5_6 = px.line(
             filtered_df_5_6,
@@ -1323,8 +1386,14 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
-        filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Short Duration"]]
+
+        if checkData[0] > 0:
+            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+        else:
+            filtered_df_5_7 = []
+            print("avoided error 2")
 
         figure_5_7 = px.line(
             filtered_df_5_7,
@@ -1347,6 +1416,15 @@ def render_page_content(pathname):
             ),
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
+
+        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Cash"]]
+
+        if checkData[0] > 0:
+            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
+            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+        else:
+            filtered_df_5_7 = []
+            print("avoided error 2")
 
         listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
         filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_8] + 1).cumprod() - 1) * 100)
@@ -1893,9 +1971,6 @@ def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_val
 
     if pathname == "/":
         if selected_value in availablePortfolios:
-            print("Made it B")
-            print(selected_value)
-            print(stored_value.get('key'))
             if selected_value == stored_value.get('key'):
                 print("No change needed")
             else:

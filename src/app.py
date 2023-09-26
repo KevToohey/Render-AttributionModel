@@ -957,12 +957,12 @@ def render_page_content(pathname):
         filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
         filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
-        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G1', 'G2', 'G3', 'G4']], on='Code')
+        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
         filtered_df_3_5 = filtered_df_3_5.rename(columns={end_date: 'Current Weight'})
 
         figure_3_5 = px.sunburst(
             filtered_df_3_5,
-            path=['G1', 'Name'],
+            path=['G0', 'G1', 'G4', 'Name'],
             names='Name',
             values='Current Weight',
             template="plotly_white"

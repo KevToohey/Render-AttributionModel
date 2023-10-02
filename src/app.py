@@ -975,6 +975,22 @@ def render_page_content(pathname):
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
         )
 
+        figure_3_6 = px.sunburst(
+            filtered_df_3_5,
+            path=['G1', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        figure_3_6.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+
 
         ## Populate Charts for Page 3-Allocation
         return [
@@ -1015,8 +1031,16 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 4: Current Asset Allocation"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_6, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 4: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                "Chart 5: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_3)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -1055,7 +1079,7 @@ def render_page_content(pathname):
 
 
     elif pathname == "/4-Attribution":
-        filtered_df_4_1 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+        filtered_df_4_1 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
                                                                                      'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
         figure_4_1 = px.line(
             filtered_df_4_1,
@@ -1078,7 +1102,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_2 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_4_2 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date,
                          ['G1_Australian Shares-- Allocation Effect',
                           'G1_Australian Shares-- Selection Effect',
                           'G1_International Shares-- Allocation Effect',
@@ -1106,7 +1130,7 @@ def render_page_content(pathname):
         )
 
         filtered_df_4_3 = (
-                    ((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+                    ((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
                                                                                   'G1_Real Assets-- Selection Effect',
                                                                                   'G1_Alternatives-- Allocation Effect',
                                                                                   'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
@@ -1132,11 +1156,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_4 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_4_4 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date,
                          ['G1_Long Duration-- Allocation Effect',
                           'G1_Long Duration-- Selection Effect',
-                          'G1_Short Duration-- Allocation Effect',
-                          'G1_Short Duration-- Selection Effect',
+                          'G1_Floating Rate-- Allocation Effect',
+                          'G1_Floating Rate-- Selection Effect',
                           'G1_Cash-- Allocation Effect',
                           'G1_Cash-- Selection Effect']] + 1).cumprod() - 1) * 100)
 
@@ -1386,10 +1410,10 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Short Duration"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Floating Rate"]]
 
         if checkData[0] > 0:
-            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
             filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_7 = []
@@ -1504,7 +1528,7 @@ def render_page_content(pathname):
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 7: Short Duration Sleeve - Contributions"),
+                            dbc.CardHeader("Chart 7: Floating Rate Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=figure_5_7)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -1676,7 +1700,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        listq_6_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Short Duration")
+        listq_6_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
         filtered_df_6_7 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_7] + 1).cumprod() - 1) * 100)
 
         figure_6_7 = px.line(
@@ -1786,7 +1810,7 @@ def render_page_content(pathname):
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 7: Short Duration Sleeve - Underlying Components"),
+                            dbc.CardHeader("Chart 7: Floating Rate Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=figure_6_7)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),

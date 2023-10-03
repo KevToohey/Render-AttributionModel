@@ -1079,7 +1079,7 @@ def render_page_content(pathname):
 
 
     elif pathname == "/4-Attribution":
-        filtered_df_4_1 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+        filtered_df_4_1 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
                                                                                      'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
         figure_4_1 = px.line(
             filtered_df_4_1,
@@ -1102,7 +1102,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_2 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date,
+        filtered_df_4_2 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
                          ['G1_Australian Shares-- Allocation Effect',
                           'G1_Australian Shares-- Selection Effect',
                           'G1_International Shares-- Allocation Effect',
@@ -1130,7 +1130,7 @@ def render_page_content(pathname):
         )
 
         filtered_df_4_3 = (
-                    ((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+                    ((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
                                                                                   'G1_Real Assets-- Selection Effect',
                                                                                   'G1_Alternatives-- Allocation Effect',
                                                                                   'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
@@ -1156,7 +1156,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_4 = (((Selected_Portfolio.df_L3_2FAttrib.loc[start_date:end_date,
+        filtered_df_4_4 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
                          ['G1_Long Duration-- Allocation Effect',
                           'G1_Long Duration-- Selection Effect',
                           'G1_Floating Rate-- Allocation Effect',

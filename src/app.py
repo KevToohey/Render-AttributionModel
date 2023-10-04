@@ -993,14 +993,12 @@ def render_page_content(pathname):
         )
 
         filtered_df_3_7 = filtered_df_3_5
-
-
-        for value in filtered_df_3_7.index:
+        # Find if any of the held investments - are also available in the dataset as products with look through holdings
+        for index, value in enumerate(filtered_df_3_7.index):
             if value in availablePortfolios:
                 print("Matched value:", value)
-
-
-        #    Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
+                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(availablePortfolios.index(value))]
+                print(Underlying_Portfolio.portfolioName)
         #    Selected_Code = Selected_Portfolio.portfolioName
 
 

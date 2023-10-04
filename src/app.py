@@ -975,14 +975,43 @@ def render_page_content(pathname):
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
         )
 
+        filtered_df_3_6 = filtered_df_3_5
+
         figure_3_6 = px.sunburst(
-            filtered_df_3_5,
+            filtered_df_3_6,
             path=['G1', 'Name'],
             names='Name',
             values='Current Weight',
             template="plotly_white"
         )
         figure_3_6.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_3_7 = filtered_df_3_5
+
+
+        for value in filtered_df_3_7.index:
+            if value in availablePortfolios:
+                print("Matched value:", value)
+
+
+        #    Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
+        #    Selected_Code = Selected_Portfolio.portfolioName
+
+
+        figure_3_7 = px.sunburst(
+            filtered_df_3_7,
+            path=['G1', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        figure_3_7.update_layout(
             title={
                 "text": f"As at {end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
@@ -1039,8 +1068,16 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 5: Current Asset Allocation - Drill Through"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_7, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 5: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                "Chart 6: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_3)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),

@@ -993,12 +993,40 @@ def render_page_content(pathname):
         )
 
         filtered_df_3_7 = filtered_df_3_5
+        underlying_df_3_7 = []
         # Find if any of the held investments - are also available in the dataset as products with look through holdings
         for index, value in enumerate(filtered_df_3_7.index):
             if value in availablePortfolios:
                 print("Matched value:", value)
-                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(availablePortfolios.index(value))]
-                print(Underlying_Portfolio.portfolioName)
+                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
+
+                underlying_df_3_7 = Underlying_Portfolio.df_L3_w.loc[end_date:end_date,
+                                  Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+                underlying_df_3_7 = underlying_df_3_7.loc[:, (underlying_df_3_7 != 0).any()].T
+                underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
+
+                underlying_df_3_7 = underlying_df_3_7.merge(
+                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+                underlying_df_3_7 = underlying_df_3_7.rename(columns={end_date: 'Current Weight'})
+
+                # Find and print the 'Current Weight' in filtered_df_3_7
+                parent_weight_value = filtered_df_3_7.loc[value, 'Current Weight']
+                print("Current Weight in filtered_df_3_7:", parent_weight_value)
+
+                # Multiply each value in 'Current Weight' column of underlying_df_3_7
+                underlying_df_3_7['Current Weight'] *= (parent_weight_value/100)
+
+                # Remove the matched row from filtered_df_3_7
+                filtered_df_3_7 = filtered_df_3_7.drop(index=value)
+
+                # Merge all rows from underlying_df_3_7 into filtered_df_3_7
+                filtered_df_3_7 = pd.concat([filtered_df_3_7, underlying_df_3_7])
+
+        # Find and merge rows with the same 'index' value in filtered_df_3_7
+        #filtered_df_3_7['Current Weight'] = filtered_df_3_7.groupby(filtered_df_3_7.index)['Current Weight'].transform(
+        #    'sum')
+        #filtered_df_3_7 = filtered_df_3_7.drop_duplicates(subset=filtered_df_3_7.index, keep='first')
+
         #    Selected_Code = Selected_Portfolio.portfolioName
 
 
@@ -1010,6 +1038,22 @@ def render_page_content(pathname):
             template="plotly_white"
         )
         figure_3_7.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+
+        figure_3_8 = px.sunburst(
+            filtered_df_3_7,  # This needs updating to 3_78
+            path=['G1', 'G4', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        figure_3_8.update_layout(
             title={
                 "text": f"As at {end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
@@ -1074,6 +1118,14 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 5: Current Asset Allocation - Drill Through"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_8, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 6: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_3)),
@@ -1093,7 +1145,7 @@ def render_page_content(pathname):
                         dbc.Col("", width=2, align="center", className="mb-3"),
                         # Centre Work Area
                         dbc.Col([
-                            dbc.Table.from_dataframe(filtered_df_3_5, striped=True, bordered=True, hover=True)
+                            dbc.Table.from_dataframe(filtered_df_3_7, striped=True, bordered=True, hover=True)
                             # End of Centre Work Area
                         ], width=12, align="center", className="mb-3"),
 
@@ -1101,6 +1153,8 @@ def render_page_content(pathname):
                         dbc.Col("", width=2, align="center", className="mb-3"),
 
                     ], align="center", className="mb-3"),
+
+
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),

@@ -34,7 +34,7 @@ colors = {
 }
 
 load_start_date = "2023-03-31"
-load_end_date = "2023-08-02"
+load_end_date = "2023-09-30"
 
 class Portfolio:
     def __init__(self, portfolioCode):
@@ -102,7 +102,7 @@ for code in availablePortfolios:
 
 # Initialise charts with 1st dataset
 
-Selected_Portfolio = All_Portfolios[0]
+Selected_Portfolio = All_Portfolios[3]
 Selected_Code = Selected_Portfolio.portfolioName
 
 Alt1_Portfolio = All_Portfolios[1]
@@ -664,19 +664,13 @@ def render_page_content(pathname):
                             dbc.Tab([
                                 dbc.Card([
                                     dbc.CardHeader(
-                                        "Chart 1: Total Portfolio Performance - as at Last Price " +
-                                        Selected_Portfolio.t_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                    dbc.CardBody(dcc.Graph(figure=figure_1_3)),
-                                    dbc.CardFooter("Enter some dot point automated analysis here....")
-                                ], color="primary", outline=True)], label="To Latest Daily",
-                                active_label_style={"background-color": "#1DC8F2"},
-                                label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
-                            dbc.Tab([
-                                dbc.Card([
-                                    dbc.CardHeader(
                                         "Chart 2: Total Portfolio Performance - as at Last Price " +
                                         Selected_Portfolio.tME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                    dbc.CardBody(dcc.Graph(figure=figure_1_4)),
+                                    dbc.CardBody([dcc.Graph(figure=figure_1_4),
+                                                  html.Hr(),
+                                                  dbc.Table.from_dataframe(filtered_df_1_4.T.round(2), index=True,
+                                                                           striped=True, bordered=True, hover=True)
+                                                  ]),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True)], label="Month End Date",
                                 active_label_style={"background-color": "#1DC8F2"},
@@ -686,11 +680,30 @@ def render_page_content(pathname):
                                     dbc.CardHeader(
                                         "Chart 3: Total Portfolio Performance - as at Last Price " +
                                         Selected_Portfolio.tQE_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
-                                    dbc.CardBody(dcc.Graph(figure=figure_1_5)),
+                                    dbc.CardBody([dcc.Graph(figure=figure_1_5),
+                                                  html.Hr(),
+                                                  dbc.Table.from_dataframe(filtered_df_1_5.T.round(2), index=True,
+                                                                           striped=True, bordered=True, hover=True)
+                                                  ]),
                                     dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True)], label="Quarter End Date",
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+                            dbc.Tab([
+                                dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 1: Total Portfolio Performance - as at Last Price " +
+                                        Selected_Portfolio.t_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+                                    dbc.CardBody([dcc.Graph(figure=figure_1_3),
+                                                  html.Hr(),
+                                                  dbc.Table.from_dataframe(filtered_df_1_3.T.round(2), index=True,
+                                                                           striped=True, bordered=True, hover=True)
+                                                  ]),
+                                    dbc.CardFooter("Enter some dot point automated analysis here....")
+                                ], color="primary", outline=True)], label="To Latest Daily",
+                                active_label_style={"background-color": "#1DC8F2"},
+                                label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+
                         ], className="mb-3")
                     ], align="center", className="mb-3"),
 
@@ -702,6 +715,7 @@ def render_page_content(pathname):
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
+
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Portfolio Total Returns (L3)"),
@@ -772,6 +786,45 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
+        filtered_df_2_3 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.tME_dates) * 100).T
+
+        filtered_df_2_3.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Code != 'Off':
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            filtered_df_2_3 = pd.concat([filtered_df_2_3, a1], axis=1)
+
+        if Alt2_Code != 'Off':
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            filtered_df_2_3 = pd.concat([filtered_df_2_3, a2], axis=1)
+
+        figure_2_3 = px.bar(
+            filtered_df_2_3,
+            x=filtered_df_2_3.index,
+            y=[c for c in filtered_df_2_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_2_3.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
+
         ## Populate Charts for Page 2-Risk
         return [
             html.Div(style={'height': '2rem'}),
@@ -800,8 +853,20 @@ def render_page_content(pathname):
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader(
+                                "Chart 3: Portfolio Risk Metrics Chart - Daily Asset Sleeve Returns"),
+                            dbc.CardBody([dcc.Graph(figure=figure_2_3),
+                                          html.Hr(),
+                                          dbc.Table.from_dataframe(filtered_df_2_3.T.round(2), index=True,
+                                                                   striped=True, bordered=True, hover=True)
+                                          ]),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
 
-                    # End of Centre Work Area
+                        # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
                 # Right Gutter
@@ -1251,7 +1316,8 @@ def render_page_content(pathname):
                           'G1_Floating Rate-- Allocation Effect',
                           'G1_Floating Rate-- Selection Effect',
                           'G1_Cash-- Allocation Effect',
-                          'G1_Cash-- Selection Effect']] + 1).cumprod() - 1) * 100)
+                          'G1_Cash-- Selection Effect',
+                          ]] + 1).cumprod() - 1) * 100)
 
         figure_4_4 = px.line(
             filtered_df_4_4,
@@ -1273,6 +1339,24 @@ def render_page_content(pathname):
             ),
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
+
+        filtered_df_4_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+                                            ['G1_Australian Shares-- Allocation Effect',
+                                             'G1_Australian Shares-- Selection Effect',
+                                             'G1_International Shares-- Allocation Effect',
+                                             'G1_International Shares-- Selection Effect',
+                                             'G1_Real Assets-- Allocation Effect',
+                                             'G1_Real Assets-- Selection Effect',
+                                             'G1_Alternatives-- Allocation Effect',
+                                             'G1_Alternatives-- Selection Effect',
+                                             'G1_Long Duration-- Allocation Effect',
+                                             'G1_Long Duration-- Selection Effect',
+                                             'G1_Floating Rate-- Allocation Effect',
+                                             'G1_Floating Rate-- Selection Effect',
+                                             'G1_Cash-- Allocation Effect',
+                                             'G1_Cash-- Selection Effect'
+                                             ]],
+            Selected_Portfolio.tME_dates) * 100).T
 
         ## Populate Charts for Page 4 Attribution
         return [
@@ -1315,6 +1399,18 @@ def render_page_content(pathname):
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader(
+                                "Chart 5: Portfolio Risk Metrics Chart - Daily Asset Sleeve Returns"),
+                            dbc.CardBody([dbc.Table.from_dataframe(filtered_df_4_5.T.round(2), index=True,
+                                                                   striped=True, bordered=True, hover=True)
+                                          ]),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
@@ -1563,6 +1659,24 @@ def render_page_content(pathname):
             ),
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
+
+        filtered_df_5_9 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+                                             ['G1_Australian Shares-- Allocation Effect',
+                                              'G1_Australian Shares-- Selection Effect',
+                                              'G1_International Shares-- Allocation Effect',
+                                              'G1_International Shares-- Selection Effect',
+                                              'G1_Real Assets-- Allocation Effect',
+                                              'G1_Real Assets-- Selection Effect',
+                                              'G1_Alternatives-- Allocation Effect',
+                                              'G1_Alternatives-- Selection Effect',
+                                              'G1_Long Duration-- Allocation Effect',
+                                              'G1_Long Duration-- Selection Effect',
+                                              'G1_Floating Rate-- Allocation Effect',
+                                              'G1_Floating Rate-- Selection Effect',
+                                              'G1_Cash-- Allocation Effect',
+                                              'G1_Cash-- Selection Effect'
+                                              ]],
+                                             Selected_Portfolio.tME_dates) * 100).T
 
         ## Populate Charts for Page 5 Contribution
         return [

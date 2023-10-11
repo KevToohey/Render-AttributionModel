@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import dash
 import os
+import shutil
 import socket
 from dash import dcc, html, Input, Output, State, Dash
 import dash_bootstrap_components as dbc
@@ -11,6 +12,7 @@ from dash_bootstrap_components._components.Container import Container
 import dash_daq as daq
 import plotly.express as px
 import plotly.graph_objects as go
+from datetime import datetime
 import datetime as dt
 import calendar
 from pandas.tseries.offsets import MonthEnd
@@ -1087,14 +1089,6 @@ def render_page_content(pathname):
                 # Merge all rows from underlying_df_3_7 into filtered_df_3_7
                 filtered_df_3_7 = pd.concat([filtered_df_3_7, underlying_df_3_7])
 
-        # Find and merge rows with the same 'index' value in filtered_df_3_7
-        #filtered_df_3_7['Current Weight'] = filtered_df_3_7.groupby(filtered_df_3_7.index)['Current Weight'].transform(
-        #    'sum')
-        #filtered_df_3_7 = filtered_df_3_7.drop_duplicates(subset=filtered_df_3_7.index, keep='first')
-
-        #    Selected_Code = Selected_Portfolio.portfolioName
-
-
         figure_3_7 = px.sunburst(
             filtered_df_3_7,
             path=['G1', 'Name'],
@@ -2119,6 +2113,36 @@ def render_page_content(pathname):
         ]
     elif pathname == "/21-Reports":
 
+        rp_filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date,
+                          Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+        rp_filtered_df_3_5 = rp_filtered_df_3_5.loc[:, (rp_filtered_df_3_5 != 0).any()].T
+        rp_filtered_df_3_5 = rp_filtered_df_3_5.rename_axis('Code')
+        rp_filtered_df_3_5 = rp_filtered_df_3_5.merge(
+            Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+        rp_filtered_df_3_5 = rp_filtered_df_3_5.rename(columns={end_date: 'Current Weight'})
+
+        rp_figure_3_5 = px.sunburst(
+            rp_filtered_df_3_5,
+            path=['G0', 'G1', 'G4', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        rp_figure_3_5.update_layout(
+            title={
+                "text": f"As at {end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        nowDateTime = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+        MYDIR = ('./OutputFiles/' + Selected_Code +'/'+ nowDateTime)
+
+        print(MYDIR)
+        os.makedirs(MYDIR)
+        print("Got here")
+
         ## Populate Charts for Page 21 Reports
         return [
             html.Div(style={'height': '2rem'}),
@@ -2140,7 +2164,9 @@ def render_page_content(pathname):
                 # Right Gutter
                 dbc.Col("", width=2, align="center", className="mb-3"),
 
-            ], align="center", className="mb-3")
+            ], align="center", className="mb-3"),
+
+            rp_figure_3_5.write_html(MYDIR+'/figure_3_5.html')
 
         ]
     elif pathname == "/30-Help":

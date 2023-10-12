@@ -2144,6 +2144,26 @@ def render_page_content(pathname):
         os.makedirs(MYDIR)
         print("Got here")
 
+        # Creating the HTML file
+        file_html = open(MYDIR+"/demo.html", "w")
+        # Adding the input data to the HTML file
+        file_html.write('''<html>
+        <html>
+        <head>HTML File</head>
+        <body>
+        <h1>
+        Creating a Nested Webpage using KT: 
+        'iframe' Tag: Geeksforgeeks
+        </h1>
+ 
+        <iframe src="./figure_3_5.html"
+              height="1000px" width="1000px">
+        </iframe>
+        </body>
+        </html>''')
+        # Saving the data into the HTML file
+        file_html.close()
+
         ## Populate Charts for Page 21 Reports
         return [
             html.Div(style={'height': '2rem'}),

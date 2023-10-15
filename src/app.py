@@ -2113,6 +2113,33 @@ def render_page_content(pathname):
         ]
     elif pathname == "/21-Reports":
 
+        rp_filtered_df_1_4 = (f_CalcReturnTable(
+            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Selected_Portfolio.tME_dates) * 100).T
+        rp_filtered_df_1_4.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        rp_figure_1_4 = px.bar(
+            rp_filtered_df_1_4,
+            x=rp_filtered_df_1_4.index,
+            y=[c for c in rp_filtered_df_1_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        rp_figure_1_4.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),
+        )
+
         rp_filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date,
                           Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         rp_filtered_df_3_5 = rp_filtered_df_3_5.loc[:, (rp_filtered_df_3_5 != 0).any()].T
@@ -2145,19 +2172,30 @@ def render_page_content(pathname):
         print("Got here")
 
         # Creating the HTML file
-        file_html = open(MYDIR+"/demo.html", "w")
+        file_html = open(MYDIR+"/"+Selected_Code+"-Report.html", "w")
         # Adding the input data to the HTML file
         file_html.write('''<html>
         <html>
-        <head>HTML File</head>
-        <body>
-        <h1>
-        Creating a Nested Webpage using KT: 
-        'iframe' Tag: Geeksforgeeks
+        <body style="background-color:#3D555E; color: #E7EAEB;">
+        
+        <h1 style="color: #1DC8F2;">
+        Atchison Portfolio Analytics
         </h1>
+        
+               
+        <H2 style="color: #E7EAEB;">Performance
+        </H2>
+        
+        <iframe src="./figure_1_4.html"
+              height="1000px" width="950px" style="border: none;">
+        </iframe>
+        
+        <H2 style="color: #E7EAEB;">Asset Allocation
+        </H2>
+
  
         <iframe src="./figure_3_5.html"
-              height="1000px" width="1000px">
+              height="1000px" width="950px" style="border: none;">
         </iframe>
         </body>
         </html>''')
@@ -2187,7 +2225,8 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
-            rp_figure_3_5.write_html(MYDIR+'/figure_3_5.html')
+            rp_figure_3_5.write_html(MYDIR+'/figure_3_5.html'),
+            rp_figure_1_4.write_html(MYDIR + '/figure_1_4.html')
 
         ]
     elif pathname == "/30-Help":

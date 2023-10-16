@@ -2281,7 +2281,7 @@ def render_page_content(pathname):
     Input('date-picker', 'start_date'),  # Add start_date input
     Input('date-picker', 'end_date'),    # Add end_date input
 )
-def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_value, pathname, text_Start_Date, text_End_Date):
+def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, text_Start_Date, text_End_Date):
     global Selected_Portfolio, Selected_Code, Alt1_Portfolio, Alt1_Code, Alt2_Portfolio, Alt2_Code, dt_start_date, dt_end_date  # Declare global variables
 
     if pathname == "/":

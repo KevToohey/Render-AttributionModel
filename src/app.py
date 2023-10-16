@@ -118,8 +118,8 @@ text_End_Date = load_end_date
 
 Product_List = Selected_Portfolio.df_productList.index.tolist()
 
-start_date = pd.to_datetime(text_Start_Date)
-end_date = pd.to_datetime(text_End_Date)
+dt_start_date = pd.to_datetime(text_Start_Date)
+dt_end_date = pd.to_datetime(text_End_Date)
 groupName = Selected_Portfolio.groupName
 groupList = Selected_Portfolio.groupList
 
@@ -470,7 +470,7 @@ def render_page_content(pathname):
         ]
     elif pathname == "/1-Performance":
 
-        filtered_df_1_1 = pd.concat([Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_' + groupName + '_' + n]] * 100 for n in groupList], axis=1)
+        filtered_df_1_1 = pd.concat([Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] * 100 for n in groupList], axis=1)
         filtered_df_1_1.columns = groupList
 
         # Create figures for each output
@@ -497,17 +497,17 @@ def render_page_content(pathname):
             margin=dict(r=0),
         )
 
-        filtered_df_1_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date,
+        filtered_df_1_2 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
         filtered_df_1_2.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
 
         if Alt1_Code != 'Off':
-            a1 = (((Alt1_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a1 = (((Alt1_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a1.columns = ['Alt 1 ('+Alt1_Code+')']
             filtered_df_1_2 = pd.concat([filtered_df_1_2, a1], axis=1)
 
         if Alt2_Code != 'Off':
-            a2 = (((Alt2_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a2 = (((Alt2_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             filtered_df_1_2 = pd.concat([filtered_df_1_2, a2], axis=1)
 
@@ -739,7 +739,7 @@ def render_page_content(pathname):
 
     elif pathname == "/2-Risk":
         filtered_df_2_1 = f_CalcDrawdown(
-            Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
 
         figure_2_1 = px.line(
             filtered_df_2_1,
@@ -764,7 +764,7 @@ def render_page_content(pathname):
         )
 
         filtered_df_2_2 = f_CalcRollingVol(
-            Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
 
         figure_2_2 = px.line(
             filtered_df_2_2,
@@ -882,7 +882,7 @@ def render_page_content(pathname):
 
     elif pathname == "/3-Allocation":
 
-        filtered_df_3_2 = pd.concat([Selected_Portfolio.df_L3_w.loc[end_date:end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
+        filtered_df_3_2 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
         filtered_df_3_2.index = groupList
         filtered_df_3_2['Current'] = filtered_df_3_2.sum(axis=1)
         filtered_df_3_2 = filtered_df_3_2[['Current']]
@@ -897,7 +897,7 @@ def render_page_content(pathname):
         )
         figure_3_2.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
 
@@ -958,7 +958,7 @@ def render_page_content(pathname):
         figure_3_1.update_layout(
             showlegend=False,
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -966,7 +966,7 @@ def render_page_content(pathname):
         )
 
 
-        filtered_df_3_3 = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[start_date:end_date,
+        filtered_df_3_3 = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
         filtered_df_3_3.columns = groupList
 
@@ -993,7 +993,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_3_4 = pd.concat([Selected_Portfolio.df_L3_w.loc[start_date:end_date,
+        filtered_df_3_4 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
         filtered_df_3_4.columns = groupList
 
@@ -1021,11 +1021,11 @@ def render_page_content(pathname):
         )
 
 
-        filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+        filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
         filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
         filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-        filtered_df_3_5 = filtered_df_3_5.rename(columns={end_date: 'Current Weight'})
+        filtered_df_3_5 = filtered_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
 
         figure_3_5 = px.sunburst(
             filtered_df_3_5,
@@ -1036,7 +1036,7 @@ def render_page_content(pathname):
         )
         figure_3_5.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -1053,7 +1053,7 @@ def render_page_content(pathname):
         )
         figure_3_6.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -1067,14 +1067,14 @@ def render_page_content(pathname):
                 print("Matched value:", value)
                 Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
 
-                underlying_df_3_7 = Underlying_Portfolio.df_L3_w.loc[end_date:end_date,
+                underlying_df_3_7 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
                                   Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
                 underlying_df_3_7 = underlying_df_3_7.loc[:, (underlying_df_3_7 != 0).any()].T
                 underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
 
                 underlying_df_3_7 = underlying_df_3_7.merge(
                     Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-                underlying_df_3_7 = underlying_df_3_7.rename(columns={end_date: 'Current Weight'})
+                underlying_df_3_7 = underlying_df_3_7.rename(columns={dt_end_date: 'Current Weight'})
 
                 # Find and print the 'Current Weight' in filtered_df_3_7
                 parent_weight_value = filtered_df_3_7.loc[value, 'Current Weight']
@@ -1098,7 +1098,7 @@ def render_page_content(pathname):
         )
         figure_3_7.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -1114,7 +1114,7 @@ def render_page_content(pathname):
         )
         figure_3_8.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -1227,7 +1227,7 @@ def render_page_content(pathname):
 
 
     elif pathname == "/4-Attribution":
-        filtered_df_4_1 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['P_TOTAL_G1 -- Allocation Effect',
+        filtered_df_4_1 = (((Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date, ['P_TOTAL_G1 -- Allocation Effect',
                                                                                      'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
         figure_4_1 = px.line(
             filtered_df_4_1,
@@ -1250,7 +1250,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_2 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_4_2 = (((Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date,
                          ['G1_Australian Shares-- Allocation Effect',
                           'G1_Australian Shares-- Selection Effect',
                           'G1_International Shares-- Allocation Effect',
@@ -1278,7 +1278,7 @@ def render_page_content(pathname):
         )
 
         filtered_df_4_3 = (
-                    ((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date, ['G1_Real Assets-- Allocation Effect',
+                    ((Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date, ['G1_Real Assets-- Allocation Effect',
                                                                                   'G1_Real Assets-- Selection Effect',
                                                                                   'G1_Alternatives-- Allocation Effect',
                                                                                   'G1_Alternatives-- Selection Effect']] + 1).cumprod() - 1) * 100)
@@ -1304,7 +1304,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_4 = (((Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_4_4 = (((Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date,
                          ['G1_Long Duration-- Allocation Effect',
                           'G1_Long Duration-- Selection Effect',
                           'G1_Floating Rate-- Allocation Effect',
@@ -1334,7 +1334,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_4_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_4_5 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date,
                                             ['G1_Australian Shares-- Allocation Effect',
                                              'G1_Australian Shares-- Selection Effect',
                                              'G1_International Shares-- Allocation Effect',
@@ -1415,7 +1415,7 @@ def render_page_content(pathname):
         ]
     elif pathname == "/5-Contribution":
 
-        filtered_df_5_1 = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+        filtered_df_5_1 = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
                                      for n in groupList], axis=1)
         filtered_df_5_1.columns = groupList
 
@@ -1442,7 +1442,7 @@ def render_page_content(pathname):
         )
 
         listq_5_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-        filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_2] + 1).cumprod() - 1) * 100)
+        filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_2] + 1).cumprod() - 1) * 100)
 
         figure_5_2 = px.line(
             filtered_df_5_2,
@@ -1466,11 +1466,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "International Shares"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
 
         if checkData[0] > 0:
             listq_5_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
-            filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_3] + 1).cumprod() - 1) * 100)
+            filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_3] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_3 = []
 
@@ -1496,11 +1496,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
 
         if checkData[0] > 0:
             listq_5_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
-            filtered_df_5_4 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_4] + 1).cumprod() - 1) * 100)
+            filtered_df_5_4 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_4] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_4 = []
             print("avoided error 2")
@@ -1527,11 +1527,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
 
         if checkData[0] > 0:
             listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
-            filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_5] + 1).cumprod() - 1) * 100)
+            filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_5] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_5 = []
             print("avoided error 2")
@@ -1558,11 +1558,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
 
         if checkData[0] > 0:
             listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
-            filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_6] + 1).cumprod() - 1) * 100)
+            filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_6] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_6 = []
             print("avoided error 2")
@@ -1589,11 +1589,11 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
 
         if checkData[0] > 0:
             listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
-            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_7] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_7 = []
             print("avoided error 2")
@@ -1620,17 +1620,17 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        checkData = Selected_Portfolio.df_L3_w.loc[end_date, ['P_' + groupName + '_' + "Cash"]]
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
 
         if checkData[0] > 0:
             listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_7] + 1).cumprod() - 1) * 100)
         else:
             filtered_df_5_7 = []
             print("avoided error 2")
 
         listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-        filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[start_date:end_date, listq_5_8] + 1).cumprod() - 1) * 100)
+        filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_8] + 1).cumprod() - 1) * 100)
 
         figure_5_8 = px.line(
             filtered_df_5_8,
@@ -1654,7 +1654,7 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_5_9 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[start_date:end_date,
+        filtered_df_5_9 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date,
                                              ['G1_Australian Shares-- Allocation Effect',
                                               'G1_Australian Shares-- Selection Effect',
                                               'G1_International Shares-- Allocation Effect',
@@ -1746,7 +1746,7 @@ def render_page_content(pathname):
         ]
     elif pathname == "/6-Component":
 
-        filtered_df_6_1 = pd.concat([(((Selected_Portfolio.df_L3_r.loc[start_date:end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+        filtered_df_6_1 = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
                                      for n in groupList], axis=1)
         filtered_df_6_1.columns = groupList
 
@@ -1773,7 +1773,7 @@ def render_page_content(pathname):
         )
 
         listq_6_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-        filtered_df_6_2 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_2] + 1).cumprod() - 1) * 100)
+        filtered_df_6_2 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_2] + 1).cumprod() - 1) * 100)
 
         figure_6_2 = px.line(
             filtered_df_6_2,
@@ -1798,7 +1798,7 @@ def render_page_content(pathname):
         )
 
         listq_6_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
-        filtered_df_6_3 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_3] + 1).cumprod() - 1) * 100)
+        filtered_df_6_3 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_3] + 1).cumprod() - 1) * 100)
 
         figure_6_3 = px.line(
             filtered_df_6_3,
@@ -1823,7 +1823,7 @@ def render_page_content(pathname):
         )
 
         listq_6_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
-        filtered_df_6_4 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_4] + 1).cumprod() - 1) * 100)
+        filtered_df_6_4 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_4] + 1).cumprod() - 1) * 100)
 
         figure_6_4 = px.line(
             filtered_df_6_4,
@@ -1848,7 +1848,7 @@ def render_page_content(pathname):
         )
 
         listq_6_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
-        filtered_df_6_5 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_5] + 1).cumprod() - 1) * 100)
+        filtered_df_6_5 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_5] + 1).cumprod() - 1) * 100)
 
         figure_6_5 = px.line(
             filtered_df_6_5,
@@ -1873,7 +1873,7 @@ def render_page_content(pathname):
         )
 
         listq_6_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
-        filtered_df_6_6 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_6] + 1).cumprod() - 1) * 100)
+        filtered_df_6_6 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_6] + 1).cumprod() - 1) * 100)
 
         figure_6_6 = px.line(
             filtered_df_6_6,
@@ -1898,7 +1898,7 @@ def render_page_content(pathname):
         )
 
         listq_6_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
-        filtered_df_6_7 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_7] + 1).cumprod() - 1) * 100)
+        filtered_df_6_7 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_7] + 1).cumprod() - 1) * 100)
 
         figure_6_7 = px.line(
             filtered_df_6_7,
@@ -1923,7 +1923,7 @@ def render_page_content(pathname):
         )
 
         listq_6_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-        filtered_df_6_8 = (((Selected_Portfolio.df_L3_r.loc[start_date:end_date, listq_6_8] + 1).cumprod() - 1) * 100)
+        filtered_df_6_8 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_8] + 1).cumprod() - 1) * 100)
 
         figure_6_8 = px.line(
             filtered_df_6_8,
@@ -2140,13 +2140,13 @@ def render_page_content(pathname):
             margin=dict(r=0),
         )
 
-        rp_filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[end_date:end_date,
+        rp_filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
                           Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         rp_filtered_df_3_5 = rp_filtered_df_3_5.loc[:, (rp_filtered_df_3_5 != 0).any()].T
         rp_filtered_df_3_5 = rp_filtered_df_3_5.rename_axis('Code')
         rp_filtered_df_3_5 = rp_filtered_df_3_5.merge(
             Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-        rp_filtered_df_3_5 = rp_filtered_df_3_5.rename(columns={end_date: 'Current Weight'})
+        rp_filtered_df_3_5 = rp_filtered_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
 
         rp_figure_3_5 = px.sunburst(
             rp_filtered_df_3_5,
@@ -2157,7 +2157,7 @@ def render_page_content(pathname):
         )
         rp_figure_3_5.update_layout(
             title={
-                "text": f"As at {end_date:%d-%b-%Y}",
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
@@ -2274,13 +2274,15 @@ def render_page_content(pathname):
     Output('display-portfolio-code', 'children'),
     Output('stored-portfolio-code', 'data'),
     State('stored-portfolio-code', 'data'),
+    State('url', 'pathname'),
     Input('portfolio-dropdown', 'value'),
     Input('portfolio-dropdown-alt1', 'value'),
     Input('portfolio-dropdown-alt2', 'value'),
-    State('url', 'pathname'),
+    Input('date-picker', 'start_date'),  # Add start_date input
+    Input('date-picker', 'end_date'),    # Add end_date input
 )
-def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_value, pathname):
-    global Selected_Portfolio, Selected_Code, Alt1_Portfolio, Alt1_Code, Alt2_Portfolio, Alt2_Code  # Declare global variables
+def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_value, pathname, text_Start_Date, text_End_Date):
+    global Selected_Portfolio, Selected_Code, Alt1_Portfolio, Alt1_Code, Alt2_Portfolio, Alt2_Code, dt_start_date, dt_end_date  # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
@@ -2294,6 +2296,11 @@ def update_selected_portfolio(stored_value, selected_value, alt1_value, alt2_val
             Alt1_Code = Alt1_Portfolio.portfolioName
             Alt2_Portfolio = All_Portfolios[availablePortfolios.index(alt2_value)]
             Alt2_Code = Alt2_Portfolio.portfolioName
+
+            dt_start_date = pd.to_datetime(text_Start_Date)
+            dt_end_date = pd.to_datetime(text_End_Date)
+            print(dt_start_date)
+
             return Selected_Code, {'key': Selected_Code}
         else:
             return None, None

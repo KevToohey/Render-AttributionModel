@@ -13,6 +13,7 @@ import dash_daq as daq
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
+from datetime import timedelta
 import datetime as dt
 import calendar
 from pandas.tseries.offsets import MonthEnd
@@ -35,7 +36,7 @@ colors = {
     'orange_text': colour5
 }
 
-load_start_date = "2023-03-31"
+load_start_date = "2020-09-30"
 load_end_date = "2023-09-30"
 
 class Portfolio:
@@ -188,13 +189,71 @@ def f_CalcDrawdown(df_Input):
     return drawdown_chart_data
 
 
-def f_CalcRollingVol(df_Input, window=21, trading_days_per_year=252):
+def f_CalcRollingDailyVol(df_Input, window, trading_days_per_year):
     # Calculate percentage returns for each asset
-    percentage_returns = df_Input.pct_change()
-    percentage_returns = percentage_returns.replace([np.inf, -np.inf], np.nan).dropna()
+    percentage_returns = df_Input.replace([np.inf, -np.inf], np.nan).dropna()
     # Calculate rolling volatility
     rolling_volatility = percentage_returns.rolling(window=window).std() * np.sqrt(trading_days_per_year)
+    # Drop rows with NaN values (corresponding to the start of each series)
+    rolling_volatility = rolling_volatility.dropna()
     return rolling_volatility
+
+def f_CalcRollingMonthlyVol(df_Input, window, trading_months_per_year):
+    # Calculate percentage returns for each asset
+    percentage_returns = df_Input.replace([np.inf, -np.inf], np.nan).dropna()
+    # Resample to monthly returns
+    monthly_returns = (1 + percentage_returns).resample('M').prod() - 1
+    # Calculate rolling volatility
+    rolling_volatility = monthly_returns.rolling(window=window).std() * np.sqrt(trading_months_per_year)
+    # Drop rows with NaN values (corresponding to the start of each series)
+    rolling_volatility = rolling_volatility.dropna()
+    return rolling_volatility
+
+def f_CalcRollingMonthlySharpe(df_Input, window, trading_months_per_year, risk_free_rate):
+    # Calculate percentage returns for each asset
+    percentage_returns = df_Input.replace([np.inf, -np.inf], np.nan).dropna()
+    # Resample to monthly returns
+    monthly_returns = (1 + percentage_returns).resample('M').prod() - 1
+    # Calculate rolling volatility
+    rolling_volatility = monthly_returns.rolling(window=window).std() * np.sqrt(trading_months_per_year)
+    #rolling_volatility = rolling_volatility.iloc[-1]
+    days = window*365/12
+
+    if days > 0: returnOutput = (monthly_returns.rolling(window=window).apply(lambda x: (x + 1).prod() - 1, raw=True))
+
+    if days > 365: returnOutput = (((1 + returnOutput) ** (1 / (days / 365))) - 1)
+
+    rolling_mean_excess_returns = returnOutput - risk_free_rate/12
+
+    rolling_sharpe_ratio = rolling_mean_excess_returns / rolling_volatility
+    # Drop rows with NaN values (corresponding to the start of each series)
+    rolling_sharpe_ratio = rolling_sharpe_ratio.loc[dt_start_date:dt_end_date]
+    #rolling_sharpe_ratio = rolling_sharpe_ratio.dropna()
+    return rolling_sharpe_ratio
+
+def count_positive_values(x):
+    return np.sum(x > 0)
+
+def f_CalcRollingMonthlyBattingAverage(df_Input, window):
+    # Calculate percentage returns for each asset
+    percentage_returns = df_Input.replace([np.inf, -np.inf], np.nan).dropna()
+    # Resample to monthly returns
+    monthly_returns = (1 + percentage_returns).resample('M').prod() - 1
+    monthly_returns.replace(0.0000, np.nan, inplace=True)
+
+    monthly_returns['Alpha to Benchmark'] = monthly_returns['P_TOTAL'] - monthly_returns['BM_G1_TOTAL']
+    monthly_returns['Alpha to Peers'] = monthly_returns['P_TOTAL'] - monthly_returns['Peer_TOTAL']
+
+    print(monthly_returns)
+
+    monthly_returns = monthly_returns.dropna()
+
+    valid_window = min(window, monthly_returns.shape[0])
+
+    rolling_batting_average = monthly_returns[['Alpha to Benchmark', 'Alpha to Peers']].rolling(window=window).apply(count_positive_values) / valid_window
+    rolling_batting_average = rolling_batting_average.loc[dt_start_date:dt_end_date]
+
+    return rolling_batting_average
 
 
 def f_AssetClassContrib(df_Input, Input_G1_Name):
@@ -741,6 +800,8 @@ def render_page_content(pathname):
         filtered_df_2_1 = f_CalcDrawdown(
             Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
 
+        filtered_df_2_1.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
         figure_2_1 = px.line(
             filtered_df_2_1,
             x=filtered_df_2_1.index,
@@ -763,8 +824,12 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_2_2 = f_CalcRollingVol(
-            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+        # Based on 30 day Window - Daily Data annualised (252 trading days)
+        filtered_df_2_2 = f_CalcRollingDailyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date-timedelta(days=30)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 30, 252) *100
+
+        filtered_df_2_2.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
 
         figure_2_2 = px.line(
             filtered_df_2_2,
@@ -774,6 +839,35 @@ def render_page_content(pathname):
             template="plotly_white",
         )
         figure_2_2.update_layout(
+            yaxis_title="30 Day Rolling Volatility (% p.a.)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        # Based on 90 day Window - Daily Data annualised (252 trading days)
+        filtered_df_2_3 = f_CalcRollingDailyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date-timedelta(days=90)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 90, 252) * 100
+
+        filtered_df_2_3.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
+        figure_2_3 = px.line(
+            filtered_df_2_3,
+            x=filtered_df_2_3.index,
+            y=[c for c in filtered_df_2_3.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_3.update_layout(
             yaxis_title="90 Day Rolling Volatility (% p.a.)",
             xaxis_title="",
             legend=dict(
@@ -788,31 +882,145 @@ def render_page_content(pathname):
             margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
-        filtered_df_2_3 = (f_CalcReturnTable(
+        # Based on 1 Year Monthly data Windows - Monthly Data annualised (12 months)
+        filtered_df_2_4 = f_CalcRollingMonthlyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=364)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 12, 12) * 100
+
+        filtered_df_2_4.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
+        figure_2_4 = px.line(
+            filtered_df_2_4,
+            x=filtered_df_2_4.index,
+            y=[c for c in filtered_df_2_4.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_4.update_layout(
+            yaxis_title="12 Month Rolling Volatility (% p.a.)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_2_5 = f_CalcRollingMonthlyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3*365-1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12) * 100
+
+        filtered_df_2_5.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
+        figure_2_5 = px.line(
+            filtered_df_2_5,
+            x=filtered_df_2_5.index,
+            y=[c for c in filtered_df_2_5.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_5.update_layout(
+            yaxis_title="36 Month Rolling Volatility (% p.a.)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_2_6 = f_CalcRollingMonthlySharpe(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3*365-1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12, 0)
+
+        filtered_df_2_6.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
+        figure_2_6 = px.line(
+            filtered_df_2_6,
+            x=filtered_df_2_6.index,
+            y=[c for c in filtered_df_2_6.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_6.update_layout(
+            yaxis_title="Rolling 3 Year Sharpe Ratio",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_2_7 = f_CalcRollingMonthlyBattingAverage(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) * 100
+
+        filtered_df_2_7.columns = [Selected_Code+'vs SAA Benchmark', Selected_Code+'vs Peer Manager']
+
+        figure_2_7 = px.line(
+            filtered_df_2_7,
+            x=filtered_df_2_7.index,
+            y=[c for c in filtered_df_2_7.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_2_7.update_layout(
+            yaxis_title="Rolling 3 Year Batting Average (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+
+        filtered_df_2_9 = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.tME_dates) * 100).T
 
-        filtered_df_2_3.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        filtered_df_2_9.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
 
         if Alt1_Code != 'Off':
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
             a1.columns = ['Alt 1 (' + Alt1_Code + ')']
-            filtered_df_2_3 = pd.concat([filtered_df_2_3, a1], axis=1)
+            filtered_df_2_9 = pd.concat([filtered_df_2_9, a1], axis=1)
 
         if Alt2_Code != 'Off':
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
             a2.columns = ['Alt 2 (' + Alt2_Code + ')']
-            filtered_df_2_3 = pd.concat([filtered_df_2_3, a2], axis=1)
+            filtered_df_2_9 = pd.concat([filtered_df_2_9, a2], axis=1)
 
-        figure_2_3 = px.bar(
-            filtered_df_2_3,
-            x=filtered_df_2_3.index,
-            y=[c for c in filtered_df_2_3.columns],
+        figure_2_9 = px.bar(
+            filtered_df_2_9,
+            x=filtered_df_2_9.index,
+            y=[c for c in filtered_df_2_9.columns],
             labels={"x": "Date", "y": "Values"},
             template="plotly_white",
             barmode='group'
         )
-        figure_2_3.update_layout(
+        figure_2_9.update_layout(
             yaxis_title="Return (%, %p.a.)",
             legend=dict(
                 orientation="h",
@@ -845,13 +1053,49 @@ def render_page_content(pathname):
                     # Tab 2 - Risk
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: Portfolio Drawdown Analysis"),
+                            dbc.CardHeader("Chart 1: Portfolio 30 Day Rolling Volatility (%p.a.)"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_2)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 2: Portfolio 90 Day Rolling Volatility (%p.a.)"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_3)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 3: Portfolio 12 Month Rolling Volatility (%p.a.)"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_4)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 4: Portfolio 36 Month Rolling Volatility (%p.a.)"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_5)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 5: Portfolio Drawdown Analysis"),
                             dbc.CardBody(dcc.Graph(figure=figure_2_1)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2: Portfolio 30 Daily Rolling Volatility (%p.a.)"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_2)),
+                            dbc.CardHeader("Chart 6: Portfolio 3 Year Rolling Sharpe Ratio"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_6)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 7: Portfolio 3 Year Rolling Batting Average"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_7)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 8: Portfolio 3 Year Rolling Sharpe Ratio"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_6)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -859,9 +1103,9 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 3: Portfolio Risk Metrics Chart - Daily Asset Sleeve Returns"),
-                            dbc.CardBody([dcc.Graph(figure=figure_2_3),
+                            dbc.CardBody([dcc.Graph(figure=figure_2_9),
                                           html.Hr(),
-                                          dbc.Table.from_dataframe(filtered_df_2_3.T.round(2), index=True,
+                                          dbc.Table.from_dataframe(filtered_df_2_9.T.round(2), index=True,
                                                                    striped=True, bordered=True, hover=True)
                                           ]),
                             dbc.CardFooter("Enter some dot point automated analysis here....")

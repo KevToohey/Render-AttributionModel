@@ -36,7 +36,7 @@ colors = {
     'orange_text': colour5
 }
 
-load_start_date = "2020-09-30"
+load_start_date = "2021-09-30"
 load_end_date = "2023-09-30"
 
 class Portfolio:

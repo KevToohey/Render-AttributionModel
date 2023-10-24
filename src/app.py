@@ -264,10 +264,12 @@ def f_CalcRollingMonthlyAlpha(df_Input, window):
     if days > 365: returnOutput = (((1 + returnOutput) ** (1 / (days / 365))) - 1)
 
     monthly_returns.replace(0.0000, np.nan, inplace=True)
-    monthly_returns[' vs Benchmark'] = monthly_returns['P_TOTAL'] - monthly_returns['BM_G1_TOTAL']
-    monthly_returns[' vs Peers'] = monthly_returns['P_TOTAL'] - monthly_returns['Peer_TOTAL']
+    monthly_returns[' vs SAA Benchmark'] = monthly_returns['P_TOTAL'] - monthly_returns['BM_G1_TOTAL']
+    monthly_returns[' vs Peer Manager'] = monthly_returns['P_TOTAL'] - monthly_returns['Peer_TOTAL']
 
     alphaOutput = monthly_returns[[' vs SAA Benchmark', ' vs Peer Manager']].loc[dt_start_date:dt_end_date]
+
+
     return alphaOutput
 
 def f_CalcRollingMonthlySharpe(df_Input, window, trading_months_per_year, risk_free_rate):
@@ -1165,8 +1167,13 @@ def render_page_content(pathname):
         filtered_df_2_11 = f_CalcRollingMonthlyAlpha(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
+
+
         filtered_df_2_11.columns = [' vs SAA Benchmark', ' vs Peer Manager']
         # Return / Tracking Error
+
+        print(filtered_df_2_11)
+        print(filtered_df_2_9)
         filtered_df_2_11 = filtered_df_2_11 / (filtered_df_2_9)
 
         figure_2_11 = px.line(
@@ -1309,6 +1316,18 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 10: Portfolio 3 Year Rolling Calmar Ratio"),
                             dbc.CardBody(dcc.Graph(figure=figure_2_10)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 9: Portfolio 3 Year Rolling Information Ratio"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_11)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 10: Portfolio 3 Year Rolling #######"),
+                            dbc.CardBody(dcc.Graph(figure=figure_2_11)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2608,6 +2627,53 @@ def render_page_content(pathname):
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
         )
 
+        rp_filtered_df_3_7 = rp_filtered_df_3_5
+        underlying_df_3_7 = []
+        # Find if any of the held investments - are also available in the dataset as products with look through holdings
+        for index, value in enumerate(rp_filtered_df_3_7.index):
+            if value in availablePortfolios:
+                print("Matched value:", value)
+                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
+
+                underlying_df_3_7 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                                    Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+                underlying_df_3_7 = underlying_df_3_7.loc[:, (underlying_df_3_7 != 0).any()].T
+                underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
+
+                underlying_df_3_7 = underlying_df_3_7.merge(
+                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+                underlying_df_3_7 = underlying_df_3_7.rename(columns={dt_end_date: 'Current Weight'})
+
+                # Find and print the 'Current Weight' in filtered_df_3_7
+                parent_weight_value = rp_filtered_df_3_7.loc[value, 'Current Weight']
+                print("Current Weight in rp_filtered_df_3_7:", parent_weight_value)
+
+                # Multiply each value in 'Current Weight' column of underlying_df_3_7
+                underlying_df_3_7['Current Weight'] *= (parent_weight_value / 100)
+
+                # Remove the matched row from filtered_df_3_7
+                rp_filtered_df_3_7 = rp_filtered_df_3_7.drop(index=value)
+
+                # Merge all rows from underlying_df_3_7 into filtered_df_3_7
+                rp_filtered_df_3_7 = pd.concat([rp_filtered_df_3_7, underlying_df_3_7])
+
+        rp_figure_3_7 = px.sunburst(
+            rp_filtered_df_3_7,
+            path=['G1', 'Name'],
+            names='Name',
+            values='Current Weight',
+            template="plotly_white"
+        )
+        rp_figure_3_7.update_layout(
+            title={
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+
+
         nowDateTime = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
         #MYDIR = ('./OutputFiles/' + Selected_Code +'/'+ nowDateTime)
         MYDIR = ('C:/AtchisonAnalytics/OutputFiles/' + Selected_Code + '/' + nowDateTime)
@@ -2627,7 +2693,20 @@ def render_page_content(pathname):
         Atchison Portfolio Analytics
         </h1>
         
-               
+              
+                
+        <H2 style="color: #E7EAEB;">Asset Allocation
+        </H2>
+        
+        <iframe src="./figure_3_7.html"
+              height="1000px" width="950px" style="border: none;">
+        </iframe>
+
+ 
+        <iframe src="./figure_3_5.html"
+              height="1000px" width="950px" style="border: none;">
+        </iframe>
+        
         <H2 style="color: #E7EAEB;">Performance
         </H2>
         
@@ -2635,13 +2714,6 @@ def render_page_content(pathname):
               height="1000px" width="950px" style="border: none;">
         </iframe>
         
-        <H2 style="color: #E7EAEB;">Asset Allocation
-        </H2>
-
- 
-        <iframe src="./figure_3_5.html"
-              height="1000px" width="950px" style="border: none;">
-        </iframe>
         </body>
         </html>''')
         # Saving the data into the HTML file
@@ -2670,8 +2742,9 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
-            rp_figure_3_5.write_html(MYDIR+'/figure_3_5.html'),
-            rp_figure_1_4.write_html(MYDIR + '/figure_1_4.html')
+            rp_figure_3_5.write_html(MYDIR + '/figure_3_5.html'),
+            rp_figure_3_7.write_html(MYDIR + '/figure_3_7.html'),
+            rp_figure_1_4.write_html(MYDIR + '/figure_1_4.html'),
 
         ]
     elif pathname == "/30-Help":

@@ -1883,258 +1883,245 @@ def render_page_content(pathname):
                                      for n in groupList], axis=1)
         filtered_df_5_1.columns = groupList
 
-        figure_5_1 = px.line(
-            filtered_df_5_1,
-            x=filtered_df_5_1.index,
-            y=[c for c in filtered_df_5_1.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_1.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+        # Filter columns with sums not equal to 0
+        non_zero_columns = [c for c in filtered_df_5_1.columns if c is not None and filtered_df_5_1[c].sum() != 0]
 
-        listq_5_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-        filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_2] + 1).cumprod() - 1) * 100)
+        if not filtered_df_5_1.empty and len(non_zero_columns) > 0:
+            figure_5_1 = px.line(
+                filtered_df_5_1,
+                x=filtered_df_5_1.index,
+                y=[c for c in non_zero_columns if c is not None],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_1.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+        else:
+            # Create an empty figure
+            figure_5_1 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
 
-        figure_5_2 = px.line(
-            filtered_df_5_2,
-            x=filtered_df_5_2.index,
-            y=[c for c in filtered_df_5_2.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_2.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] > 0:
+            listq_5_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
+            filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_2] + 1).cumprod() - 1) * 100)
+
+            figure_5_2 = px.line(
+                filtered_df_5_2,
+                x=filtered_df_5_2.index,
+                y=[c for c in filtered_df_5_2.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_2.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+        else:
+            figure_5_2 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
-
         if checkData[0] > 0:
             listq_5_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
             filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_3] + 1).cumprod() - 1) * 100)
-        else:
-            filtered_df_5_3 = []
 
-        figure_5_3 = px.line(
-            filtered_df_5_3,
-            x=filtered_df_5_3.index,
-            y=[c for c in filtered_df_5_3.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_3.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+            figure_5_3 = px.line(
+                filtered_df_5_3,
+                x=filtered_df_5_3.index,
+                y=[c for c in filtered_df_5_3.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_3.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+        else:
+            figure_5_3 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
-
         if checkData[0] > 0:
             listq_5_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
             filtered_df_5_4 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_4] + 1).cumprod() - 1) * 100)
-        else:
-            filtered_df_5_4 = []
-            print("avoided error 2")
 
-        figure_5_4 = px.line(
-            filtered_df_5_4,
-            x=filtered_df_5_4.index,
-            y=[c for c in filtered_df_5_4.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_4.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+            figure_5_4 = px.line(
+                filtered_df_5_4,
+                x=filtered_df_5_4.index,
+                y=[c for c in filtered_df_5_4.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_4.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+
+        else:
+            figure_5_4 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
-
         if checkData[0] > 0:
             listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
             filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_5] + 1).cumprod() - 1) * 100)
-        else:
-            filtered_df_5_5 = []
-            print("avoided error 2")
 
-        figure_5_5 = px.line(
-            filtered_df_5_5,
-            x=filtered_df_5_5.index,
-            y=[c for c in filtered_df_5_5.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_5.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+            figure_5_5 = px.line(
+                filtered_df_5_5,
+                x=filtered_df_5_5.index,
+                y=[c for c in filtered_df_5_5.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_5.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+
+        else:
+            figure_5_5 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
-
         if checkData[0] > 0:
             listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
             filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_6] + 1).cumprod() - 1) * 100)
-        else:
-            filtered_df_5_6 = []
-            print("avoided error 2")
 
-        figure_5_6 = px.line(
-            filtered_df_5_6,
-            x=filtered_df_5_6.index,
-            y=[c for c in filtered_df_5_6.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_6.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+            figure_5_6 = px.line(
+                filtered_df_5_6,
+                x=filtered_df_5_6.index,
+                y=[c for c in filtered_df_5_6.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_6.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+        else:
+            figure_5_6 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
-
         if checkData[0] > 0:
             listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
             filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_7] + 1).cumprod() - 1) * 100)
-        else:
-            filtered_df_5_7 = []
-            print("avoided error 2")
 
-        figure_5_7 = px.line(
-            filtered_df_5_7,
-            x=filtered_df_5_7.index,
-            y=[c for c in filtered_df_5_7.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_7.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+            figure_5_7 = px.line(
+                filtered_df_5_7,
+                x=filtered_df_5_7.index,
+                y=[c for c in filtered_df_5_7.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_7.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
+        else:
+            figure_5_7 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
-
         if checkData[0] > 0:
-            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_7] + 1).cumprod() - 1) * 100)
+            listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
+            filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_8] + 1).cumprod() - 1) * 100)
+
+            figure_5_8 = px.line(
+                filtered_df_5_8,
+                x=filtered_df_5_8.index,
+                y=[c for c in filtered_df_5_8.columns],
+                labels={"x": "Date", "y": "Values"},
+                template="plotly_white",
+            )
+            figure_5_8.update_layout(
+                yaxis_title="Cumulative Contribution (%)",
+                xaxis_title="",
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+                margin=dict(r=0),  # Reduce right margin to maximize visible area
+            )
         else:
-            filtered_df_5_7 = []
-            print("avoided error 2")
+            figure_5_8 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
 
-        listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-        filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_8] + 1).cumprod() - 1) * 100)
-
-        figure_5_8 = px.line(
-            filtered_df_5_8,
-            x=filtered_df_5_8.index,
-            y=[c for c in filtered_df_5_8.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_5_8.update_layout(
-            yaxis_title="Cumulative Contribution (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        filtered_df_5_9 = (f_CalcReturnTable(Selected_Portfolio.df_L3_1FAttrib.loc[dt_start_date:dt_end_date,
-                                             ['G1_Australian Shares-- Allocation Effect',
-                                              'G1_Australian Shares-- Selection Effect',
-                                              'G1_International Shares-- Allocation Effect',
-                                              'G1_International Shares-- Selection Effect',
-                                              'G1_Real Assets-- Allocation Effect',
-                                              'G1_Real Assets-- Selection Effect',
-                                              'G1_Alternatives-- Allocation Effect',
-                                              'G1_Alternatives-- Selection Effect',
-                                              'G1_Long Duration-- Allocation Effect',
-                                              'G1_Long Duration-- Selection Effect',
-                                              'G1_Floating Rate-- Allocation Effect',
-                                              'G1_Floating Rate-- Selection Effect',
-                                              'G1_Cash-- Allocation Effect',
-                                              'G1_Cash-- Selection Effect'
-                                              ]],
-                                             Selected_Portfolio.tME_dates) * 100).T
 
         ## Populate Charts for Page 5 Contribution
         return [

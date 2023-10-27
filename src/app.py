@@ -37,7 +37,7 @@ colors = {
 }
 
 load_start_date = "2021-09-30"
-load_end_date = "2023-09-30"
+load_end_date = "2023-10-24"
 
 class Portfolio:
     def __init__(self, portfolioCode):
@@ -151,8 +151,12 @@ def f_CalcReturnValues(df_Input, startDate, endDate):
     days = 0.0
     days = ((endDate - startDate).days)
 
+    pd.set_option('display.max_rows', None)
+
     if days > 0:
-        returnOutput = ((df_Input.loc[startDate + relativedelta(days=1):endDate] + 1).cumprod() - 1).iloc[-1]
+        returnOutput = np.prod((df_Input.loc[startDate + relativedelta(days=1):endDate] + 1)) -1 #((df_Input.loc[startDate + relativedelta(days=1):endDate] + 1).cumprod() - 1).iloc[-1]
+        if startDate == endDate-timedelta(days=365): print(df_Input.loc[startDate + relativedelta(days=355):endDate])
+
     elif days == 0:
         returnOutput = df_Input.iloc[0]
     else:
@@ -345,6 +349,7 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
     set2 = set(indices_with_G1)
     common_elements = set1.intersection(set2)
     common_elements_list = list(common_elements)
+    print(common_elements_list)
 
     # Ensure that indices_with_G1 are valid indices in df_Input
     if len(common_elements_list) == 0:
@@ -1884,7 +1889,8 @@ def render_page_content(pathname):
         filtered_df_5_1.columns = groupList
 
         # Filter columns with sums not equal to 0
-        non_zero_columns = [c for c in filtered_df_5_1.columns if c is not None and filtered_df_5_1[c].sum() != 0]
+        non_zero_columns = filtered_df_5_1.columns[filtered_df_5_1.sum() != 0].tolist()
+        print(non_zero_columns)
 
         if not filtered_df_5_1.empty and len(non_zero_columns) > 0:
             figure_5_1 = px.line(

@@ -1493,8 +1493,10 @@ def render_page_content(pathname):
         filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
         filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
-        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'MCap$', 'P/ERatio', 'P/BookRatio', 'EPSGrowth', 'DivYield']], on='Code')
         filtered_df_3_5 = filtered_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
+
+        print(Selected_Portfolio.df_productList.columns)
 
         figure_3_5 = px.sunburst(
             filtered_df_3_5,
@@ -1542,7 +1544,7 @@ def render_page_content(pathname):
                 underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
 
                 underlying_df_3_7 = underlying_df_3_7.merge(
-                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4',  'MCap$', 'P/ERatio', 'P/BookRatio', 'EPSGrowth', 'DivYield']], on='Code')
                 underlying_df_3_7 = underlying_df_3_7.rename(columns={dt_end_date: 'Current Weight'})
 
                 # Find and print the 'Current Weight' in filtered_df_3_7
@@ -1582,6 +1584,19 @@ def render_page_content(pathname):
             template="plotly_white"
         )
         figure_3_8.update_layout(
+            title={
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        figure_3_9 = px.scatter(
+            filtered_df_3_7, x="P/BookRatio", y="MCap$",
+            color="G4", size='Current Weight',
+            hover_data=['EPSGrowth'], template="plotly_white"
+        )
+        figure_3_9.update_layout(
             title={
                 "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
@@ -1646,7 +1661,7 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 5: Current Asset Allocation - Drill Through"),
+                            dbc.CardHeader("Chart 6: Current Asset Allocation - Drill Through"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_8, style={'height': '1000px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -1654,13 +1669,21 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 7 Drill Through Aus Eq Characteristics"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_9, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 6: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                "Chart 10: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_3)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 5: Portfolio Sleeve Weights Through Time"),
+                            dbc.CardHeader("Chart 11: Portfolio Sleeve Weights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_4)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),

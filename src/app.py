@@ -1544,7 +1544,7 @@ def render_page_content(pathname):
                 underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
 
                 underlying_df_3_7 = underlying_df_3_7.merge(
-                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4',  'MCap$', 'P/ERatio', 'P/BookRatio', 'EPSGrowth', 'DivYield']], on='Code')
+                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'MCap$', 'P/ERatio', 'P/BookRatio', 'EPSGrowth', 'DivYield']], on='Code')
                 underlying_df_3_7 = underlying_df_3_7.rename(columns={dt_end_date: 'Current Weight'})
 
                 # Find and print the 'Current Weight' in filtered_df_3_7
@@ -1594,9 +1594,38 @@ def render_page_content(pathname):
         figure_3_9 = px.scatter(
             filtered_df_3_7, x="P/BookRatio", y="MCap$",
             color="G4", size='Current Weight',
-            hover_data=['EPSGrowth'], template="plotly_white"
+            hover_data=['Name', 'EPSGrowth'], template="plotly_white"
         )
         figure_3_9.update_layout(
+            title={
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+        )
+
+        filtered_df_3_10 = filtered_df_3_7[(filtered_df_3_7['Type'] == 'ASXStock')].copy()
+        print("Unique 'Code' values in filtered_df_3_10:")
+        print(filtered_df_3_10.index.unique())
+
+        grouped_df_3_10 = filtered_df_3_10.groupby('Name')['Current Weight'].sum().reset_index()
+        print(grouped_df_3_10['Current Weight'].to_string(index=False))
+
+        grouped_df_3_10_sorted = grouped_df_3_10.sort_values(by='Current Weight', ascending=False)
+        print(grouped_df_3_10_sorted['Current Weight'].to_string(index=False))
+
+        assetClassWeight = filtered_df_3_10['Current Weight'].sum()
+
+        grouped_df_3_10_sorted['Cumulative Weight'] = grouped_df_3_10_sorted.groupby('Name')['Current Weight'].cumsum() / (assetClassWeight/100)
+
+        figure_3_10 = go.Figure(go.Waterfall(
+            x=grouped_df_3_10_sorted['Name'],
+            y=grouped_df_3_10_sorted['Cumulative Weight'],
+            textposition="outside",
+            connector={"line":{"color":"rgb(63, 63, 63)"}},
+        ))
+
+        figure_3_10.update_layout(
             title={
                 "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
@@ -1671,6 +1700,14 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7 Drill Through Aus Eq Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_9, style={'height': '1000px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 8 Drill Through Aus Eq Characteristics"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_10, style={'height': '1000px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),

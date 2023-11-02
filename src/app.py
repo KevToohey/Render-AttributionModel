@@ -1503,11 +1503,9 @@ def render_page_content(pathname):
                                                 on='Code')
         BM_AustShares_df_3_5 = BM_AustShares_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
 
-
         filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
         filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
         filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
-
         filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
                                                                                    'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
                                                                                    'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
@@ -1616,11 +1614,13 @@ def render_page_content(pathname):
         selected_avg_MarketCap = (filtered_df_3_7['MarketCap'].astype(float) * filtered_df_3_7['Current Weight'] / 100).sum() / (filtered_df_3_7['Current Weight'] / 100).sum()
         selected_avg_PE_Ratio = (filtered_df_3_7['PE_Ratio'].astype(float) * filtered_df_3_7['Current Weight'] / 100).sum() / (filtered_df_3_7['Current Weight'] / 100).sum()
         selected_avg_NetProfitMargin = (filtered_df_3_7['NetProfitMargin(%)'].astype(float) * filtered_df_3_7['Current Weight'] / 100).sum() / (filtered_df_3_7['Current Weight'] / 100).sum()
+        selected_avg_ReturnonTotalEquity = (filtered_df_3_7['ReturnonTotalEquity(%)'].astype(float) * filtered_df_3_7['Current Weight'] / 100).sum() / (filtered_df_3_7['Current Weight'] / 100).sum()
 
         BM_avg_GrowthofNetIncome = (BM_AustShares_df_3_5['GrowthofNetIncome(%)'].astype(float) * BM_AustShares_df_3_5['Current Weight'] / 100).sum() / (BM_AustShares_df_3_5['Current Weight'] / 100).sum()
         BM_avg_MarketCap = (BM_AustShares_df_3_5['MarketCap'].astype(float) * BM_AustShares_df_3_5['Current Weight'] / 100).sum() / (BM_AustShares_df_3_5['Current Weight'] / 100).sum()
         BM_avg_PE_Ratio = (BM_AustShares_df_3_5['PE_Ratio'].astype(float) * BM_AustShares_df_3_5['Current Weight'] / 100).sum() / (BM_AustShares_df_3_5['Current Weight'] / 100).sum()
         BM_avg_NetProfitMargin = (BM_AustShares_df_3_5['NetProfitMargin(%)'].astype(float) * BM_AustShares_df_3_5['Current Weight'] / 100).sum() / (BM_AustShares_df_3_5['Current Weight'] / 100).sum()
+        BM_avg_ReturnonTotalEquity = (BM_AustShares_df_3_5['ReturnonTotalEquity(%)'].astype(float) * BM_AustShares_df_3_5['Current Weight'] / 100).sum() / (BM_AustShares_df_3_5['Current Weight'] / 100).sum()
 
         figure_3_9 = px.scatter(
             filtered_df_3_7, x="GrowthofNetIncome(%)", y="MarketCap",
@@ -1657,16 +1657,16 @@ def render_page_content(pathname):
             hover_data=['Name', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net', 'GrowthofNetIncome(%)',
                         'GrowthofNetSales(%)',
                         'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%'], template="plotly_white"
+                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio'], template="plotly_white"
         )
-        selected_trace_3_11 = go.Scatter(x=[selected_avg_GrowthofNetIncome], y=[selected_avg_MarketCap],
+        selected_trace_3_11 = go.Scatter(x=[selected_avg_NetProfitMargin], y=[selected_avg_ReturnonTotalEquity],
                                         mode='markers+text',
                                         marker=dict(size=12, color='black', symbol="circle-cross",
                                                     line=dict(color='midnightblue', width=1)),
                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
                                         textposition='bottom right',
                                         showlegend=False)
-        BM_trace_3_11 = go.Scatter(x=[BM_avg_GrowthofNetIncome], y=[BM_avg_MarketCap],
+        BM_trace_3_11 = go.Scatter(x=[BM_avg_NetProfitMargin], y=[BM_avg_ReturnonTotalEquity],
                                   mode='markers+text',
                                   marker=dict(size=12, color='lightskyblue', symbol="star",
                                               line=dict(color='midnightblue', width=1)),
@@ -1684,13 +1684,29 @@ def render_page_content(pathname):
         )
 
         figure_3_12 = px.scatter(
-            filtered_df_3_7, x="NetProfitMargin(%)", y="ReturnonTotalEquity(%)",
+            filtered_df_3_7, x="PE_Ratio", y="ReturnonTotalEquity(%)",
             color="G4", size='Current Weight',
             hover_data=['Name', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net', 'GrowthofNetIncome(%)',
                         'GrowthofNetSales(%)',
                         'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%'], template="plotly_white"
+                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio'], template="plotly_white"
         )
+        selected_trace_3_12 = go.Scatter(x=[selected_avg_PE_Ratio], y=[selected_avg_ReturnonTotalEquity],
+                                         mode='markers+text',
+                                         marker=dict(size=12, color='black', symbol="circle-cross",
+                                                     line=dict(color='midnightblue', width=1)),
+                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
+                                         textposition='bottom right',
+                                         showlegend=False)
+        BM_trace_3_12 = go.Scatter(x=[BM_avg_PE_Ratio], y=[BM_avg_ReturnonTotalEquity],
+                                   mode='markers+text',
+                                   marker=dict(size=12, color='lightskyblue', symbol="star",
+                                               line=dict(color='midnightblue', width=1)),
+                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioName,
+                                   textposition='top right',
+                                   showlegend=False)
+        figure_3_12.add_trace(selected_trace_3_12)
+        figure_3_12.add_trace(BM_trace_3_12)
         figure_3_12.update_layout(
             title={
                 "text": f"As at {dt_end_date:%d-%b-%Y}",
@@ -1794,6 +1810,14 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8 Drill Through Aus Eq Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_11, style={'height': '800px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 9 Drill Through Aus Eq Characteristics"),
+                            dbc.CardBody(dcc.Graph(figure=figure_3_12, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),

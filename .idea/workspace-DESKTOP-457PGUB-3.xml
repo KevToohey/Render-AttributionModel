@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="61aea1e1-5dba-41b6-a28e-5bb5fd4b04e3" name="Changes" comment="Kev 25/10" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Rebase.Settings">
+    <option name="NEW_BASE" value="main" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2TxQq2v70IVXZutslq2uqMDJz5y" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\AtchisonAnalytics\OutputFiles\Atchison70ACTIVE\2023-10-12--17-05-47" />
+      <recent name="C:\Users\kevto\OneDrive\FILE Backup\Kev\PYTHON Projects\Render-AttributionModel\src" />
+      <recent name="C:\Users\kevto\OneDrive\FILE Backup\Kev\PYTHON Projects\Render-AttributionModel\assets" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\kevto\OneDrive\FILE Backup\Kev\PYTHON Projects\Render-AttributionModel\src" />
+      <recent name="C:\Users\kevto\OneDrive\FILE Backup\Kev\PYTHON Projects\Render-AttributionModel\assets" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Render-AttributionModel" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.app" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="61aea1e1-5dba-41b6-a28e-5bb5fd4b04e3" name="Changes" comment="" />
+      <created>1691982439437</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1691982439437</updated>
+    </task>
+    <task id="LOCAL-00001" summary="kev">
+      <created>1692270087879</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1692270087879</updated>
+    </task>
+    <task id="LOCAL-00002" summary="kev">
+      <created>1692270340857</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1692270340857</updated>
+    </task>
+    <task id="LOCAL-00003" summary="kev">
+      <created>1692458510885</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1692458510885</updated>
+    </task>
+    <task id="LOCAL-00004" summary="kev">
+      <created>1692468556633</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1692468556633</updated>
+    </task>
+    <task id="LOCAL-00005" summary="kev 21/8">
+      <created>1692537319164</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1692537319164</updated>
+    </task>
+    <task id="LOCAL-00006" summary="kev 21/8">
+      <created>1692640420056</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1692640420056</updated>
+    </task>
+    <task id="LOCAL-00007" summary="kev 22/8">
+      <created>1692699159438</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1692699159438</updated>
+    </task>
+    <task id="LOCAL-00008" summary="kev 22/8">
+      <created>1692797344438</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1692797344438</updated>
+    </task>
+    <task id="LOCAL-00009" summary="kev 23/8">
+      <created>1692806573579</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1692806573579</updated>
+    </task>
+    <task id="LOCAL-00010" summary="kev 27/8">
+      <created>1693146704517</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1693146704517</updated>
+    </task>
+    <task id="LOCAL-00011" summary="kev 27/8">
+      <created>1693184426834</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1693184426834</updated>
+    </task>
+    <task id="LOCAL-00012" summary="kev 30/8">
+      <created>1693500293191</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1693500293191</updated>
+    </task>
+    <task id="LOCAL-00013" summary="kev 27/8">
+      <created>1693759521510</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1693759521510</updated>
+    </task>
+    <task id="LOCAL-00014" summary="kev 27/8">
+      <created>1693759743639</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1693759743639</updated>
+    </task>
+    <task id="LOCAL-00015" summary="kev 31/8">
+      <created>1693896896061</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1693896896061</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Kev fixed ServerFile location">
+      <created>1693956378793</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1693956378793</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Kev fixed ServerFile location">
+      <created>1693957570732</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1693957570732</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Kev fixed ServerFile location">
+      <created>1693984286440</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1693984286440</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Kev fixed ServerFile location 6/9">
+      <created>1694090264994</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1694090264994</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Kev fixed ServerFile location 6/9">
+      <created>1694149679182</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1694149679182</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Kev fixed ServerFile location 6/9">
+      <created>1694162758102</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1694162758102</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Kev fixed ServerFile location 6/9">
+      <created>1694186964558</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1694186964558</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Kev fixed ServerFile location 6/9">
+      <created>1694188824842</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1694188824842</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Kev fixed ServerFile location 6/9">
+      <created>1694195197840</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1694195197840</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Kev fixed ServerFile location 8/9">
+      <created>1694196410922</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1694196410922</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Kev fixed ServerFile location 8/9">
+      <created>1694241774696</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1694241774696</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Kev fixed ServerFile location 8/9">
+      <created>1694281367472</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1694281367472</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Kev fixed ServerFile location 8/9">
+      <created>1694502665696</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1694502665696</updated>
+    </task>
+    <task id="LOCAL-00029" summary="12/09/23 Kev">
+      <created>1694609842519</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1694609842519</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Kev fixed ServerFile location 8/9">
+      <created>1694611830015</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1694611830015</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Kev fixed ServerFile location 8/9">
+      <created>1694643878529</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1694643878529</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Kev fixed AA charts location 19/9">
+      <created>1695053995382</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1695053995382</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Kev fixed ServerFile location 19/9">
+      <created>1695106618664</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1695106618664</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Kev fixed ServerFile location 20/9">
+      <created>1695196933838</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1695196933838</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Input File Update 26/9 Kev">
+      <created>1695730216317</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1695730216317</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Kev fixed ServerFile location 20/9">
+      <created>1695734604950</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1695734604950</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Kev fixed ServerFile location 30/9">
+      <created>1696285172800</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1696285172800</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Kev fixed ServerFile location 30/9">
+      <created>1696421620266</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1696421620266</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Kev fixed ServerFile location 31/9">
+      <created>1696422175776</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1696422175776</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Kev Aus Eq core done 10/10">
+      <created>1697059298656</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1697059298656</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Create HTML Report 12/10">
+      <created>1697120086853</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1697120086853</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Kev Aus Eq core done 12/10">
+      <created>1697436408281</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1697436408281</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Kev Aus Eq core done 12/10">
+      <created>1697695409093</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1697695409093</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Kev Aus Eq core done 12/10">
+      <created>1697695818952</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1697695818952</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Kev 25/10">
+      <created>1698158900035</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1698158900035</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Kev 25/10">
+      <created>1698373681555</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1698373681555</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Kev 25/10">
+      <created>1698579396237</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1698579396237</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="kev" />
+    <MESSAGE value="kev 21/8" />
+    <MESSAGE value="kev 22/8" />
+    <MESSAGE value="kev 23/8" />
+    <MESSAGE value="kev 30/8" />
+    <MESSAGE value="kev 27/8" />
+    <MESSAGE value="kev 31/8" />
+    <MESSAGE value="Kev fixed ServerFile location" />
+    <MESSAGE value="Kev fixed ServerFile location 6/9" />
+    <MESSAGE value="12/09/23 Kev" />
+    <MESSAGE value="Kev fixed ServerFile location 8/9" />
+    <MESSAGE value="Kev fixed AA charts location 19/9" />
+    <MESSAGE value="Kev fixed ServerFile location 19/9" />
+    <MESSAGE value="Input File Update 26/9 Kev" />
+    <MESSAGE value="Kev fixed ServerFile location 20/9" />
+    <MESSAGE value="Kev fixed ServerFile location 30/9" />
+    <MESSAGE value="Kev fixed ServerFile location 31/9" />
+    <MESSAGE value="Kev Aus Eq core done 10/10" />
+    <MESSAGE value="Create HTML Report 12/10" />
+    <MESSAGE value="Kev Aus Eq core done 12/10" />
+    <MESSAGE value="Kev 25/10" />
+    <option name="LAST_COMMIT_MESSAGE" value="Kev 25/10" />
+  </component>
+</project>

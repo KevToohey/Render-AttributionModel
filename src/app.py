@@ -1631,7 +1631,7 @@ def render_page_content(pathname):
         )
         selected_trace_3_9 = go.Scatter(x=[selected_avg_GrowthofNetIncome], y=[selected_avg_MarketCap],
                                         mode='markers+text',
-                                        marker=dict(size=12, color='black', symbol="circle-cross", line=dict(color='midnightblue', width=1)),
+                                        marker=dict(size=12, color='black', symbol="cross", line=dict(color='midnightblue', width=1)),
                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
                                         textposition='bottom right',
                                         showlegend=False)
@@ -1661,7 +1661,7 @@ def render_page_content(pathname):
         )
         selected_trace_3_11 = go.Scatter(x=[selected_avg_NetProfitMargin], y=[selected_avg_ReturnonTotalEquity],
                                         mode='markers+text',
-                                        marker=dict(size=12, color='black', symbol="circle-cross",
+                                        marker=dict(size=12, color='black', symbol="cross",
                                                     line=dict(color='midnightblue', width=1)),
                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
                                         textposition='bottom right',
@@ -1693,7 +1693,7 @@ def render_page_content(pathname):
         )
         selected_trace_3_12 = go.Scatter(x=[selected_avg_PE_Ratio], y=[selected_avg_ReturnonTotalEquity],
                                          mode='markers+text',
-                                         marker=dict(size=12, color='black', symbol="circle-cross",
+                                         marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='midnightblue', width=1)),
                                          text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
                                          textposition='bottom right',

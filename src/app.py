@@ -75,6 +75,7 @@ class Portfolio:
         self.df_BM_G1 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G1.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
         # Recreate Category Group Labels for Charts
+        self.portfolioCode = self.summaryVariables['portfolioCode'].iloc[0]
         self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
         self.t_StartDate = self.summaryVariables['t_StartDate'].iloc[0]
         self.t_EndDate = self.summaryVariables['t_EndDate'].iloc[0]
@@ -106,13 +107,16 @@ for code in availablePortfolios:
 # Initialise charts with 1st dataset
 
 Selected_Portfolio = All_Portfolios[3]
-Selected_Code = Selected_Portfolio.portfolioName
+Selected_Code = Selected_Portfolio.portfolioCode
+Selected_Name = Selected_Portfolio.portfolioName
 
 Alt1_Portfolio = All_Portfolios[1]
-Alt1_Code = Alt1_Portfolio.portfolioName
+Alt1_Code = Alt1_Portfolio.portfolioCode
+Alt1_Name = Alt1_Portfolio.portfolioName
 
 Alt2_Portfolio = All_Portfolios[2]
-Alt2_Code = Alt2_Portfolio.portfolioName
+Alt2_Code = Alt2_Portfolio.portfolioCode
+Alt2_Name = Alt2_Portfolio.portfolioName
 
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
@@ -530,6 +534,9 @@ def render_page_content(pathname):
                                                    options=[{'label': portfolio, 'value': portfolio} for portfolio in
                                                             availablePortfolios],
                                                    value=Selected_Code),
+                                      html.Div(id='display-portfolio-name',
+                                               style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                               className="sidebar-subheader"),
                                       html.Hr(),
                                       html.H6('Alternative 1:'),
                                       dcc.Dropdown(id='portfolio-dropdown-alt1',
@@ -556,7 +563,7 @@ def render_page_content(pathname):
                                                       {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
                                                       {'label': ' G5 - Geography', 'value': 'G5'},
                                                   ],
-                                                  id="radio-001",
+                                                  id="group_radio",
                                                   value='G1',
                                               ), align="start"),
                                       ], justify="evenly", align="start", className="mb-2"),
@@ -1632,13 +1639,13 @@ def render_page_content(pathname):
         selected_trace_3_9 = go.Scatter(x=[selected_avg_GrowthofNetIncome], y=[selected_avg_MarketCap],
                                         mode='markers+text',
                                         marker=dict(size=12, color='black', symbol="cross", line=dict(color='midnightblue', width=1)),
-                                        text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
+                                        text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                         textposition='bottom right',
                                         showlegend=False)
         BM_trace_3_9 = go.Scatter(x=[BM_avg_GrowthofNetIncome], y=[BM_avg_MarketCap],
                                         mode='markers+text',
                                         marker=dict(size=12, color='lightskyblue', symbol="star", line=dict(color='midnightblue', width=1)),
-                                        text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioName,
+                                        text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
                                         textposition='top right',
                                         showlegend=False)
         figure_3_9.add_trace(selected_trace_3_9)
@@ -1663,14 +1670,14 @@ def render_page_content(pathname):
                                         mode='markers+text',
                                         marker=dict(size=12, color='black', symbol="cross",
                                                     line=dict(color='midnightblue', width=1)),
-                                        text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
+                                        text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                         textposition='bottom right',
                                         showlegend=False)
         BM_trace_3_11 = go.Scatter(x=[BM_avg_NetProfitMargin], y=[BM_avg_ReturnonTotalEquity],
                                   mode='markers+text',
                                   marker=dict(size=12, color='lightskyblue', symbol="star",
                                               line=dict(color='midnightblue', width=1)),
-                                  text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioName,
+                                  text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
                                   textposition='top right',
                                   showlegend=False)
         figure_3_11.add_trace(selected_trace_3_11)
@@ -1695,14 +1702,14 @@ def render_page_content(pathname):
                                          mode='markers+text',
                                          marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='midnightblue', width=1)),
-                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
+                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                          textposition='bottom right',
                                          showlegend=False)
         BM_trace_3_12 = go.Scatter(x=[BM_avg_PE_Ratio], y=[BM_avg_ReturnonTotalEquity],
                                    mode='markers+text',
                                    marker=dict(size=12, color='lightskyblue', symbol="star",
                                                line=dict(color='midnightblue', width=1)),
-                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioName,
+                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
                                    textposition='top right',
                                    showlegend=False)
         figure_3_12.add_trace(selected_trace_3_12)
@@ -2961,17 +2968,20 @@ def render_page_content(pathname):
 # Callback to set Selected_Portfolio and update the dcc.Store with Portfolio_Code
 @app.callback(
     Output('display-portfolio-code', 'children'),
+    Output('display-portfolio-name', 'children'),
     Output('stored-portfolio-code', 'data'),
     State('stored-portfolio-code', 'data'),
     State('url', 'pathname'),
     Input('portfolio-dropdown', 'value'),
     Input('portfolio-dropdown-alt1', 'value'),
     Input('portfolio-dropdown-alt2', 'value'),
+    Input('group_radio', 'value'),
     Input('date-picker', 'start_date'),  # Add start_date input
     Input('date-picker', 'end_date'),    # Add end_date input
 )
-def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, text_Start_Date, text_End_Date):
-    global Selected_Portfolio, Selected_Code, Alt1_Portfolio, Alt1_Code, Alt2_Portfolio, Alt2_Code, dt_start_date, dt_end_date  # Declare global variables
+def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, text_Start_Date, text_End_Date):
+    global Selected_Portfolio, Selected_Code, Selected_Name, Alt1_Portfolio, Alt1_Code, Alt1_Name, Alt1_Name
+    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Group_value, dt_start_date, dt_end_date  # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
@@ -2980,21 +2990,24 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             else:
                 print("Change triggered")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
-            Selected_Code = Selected_Portfolio.portfolioName  # Update Selected_Code
+            Selected_Code = Selected_Portfolio.portfolioCode  # Update Selected_Code
+            Selected_Name = Selected_Portfolio.portfolioName
             Alt1_Portfolio = All_Portfolios[availablePortfolios.index(alt1_value)]
-            Alt1_Code = Alt1_Portfolio.portfolioName
+            Alt1_Code = Alt1_Portfolio.portfolioCode
+            Alt1_Name = Alt1_Portfolio.portfolioName
             Alt2_Portfolio = All_Portfolios[availablePortfolios.index(alt2_value)]
-            Alt2_Code = Alt2_Portfolio.portfolioName
-
+            Alt2_Code = Alt2_Portfolio.portfolioCode
+            Alt2_Name = Alt2_Portfolio.portfolioName
+            Group_value = group_value
             dt_start_date = pd.to_datetime(text_Start_Date)
             dt_end_date = pd.to_datetime(text_End_Date)
             print(dt_start_date)
 
-            return Selected_Code, {'key': Selected_Code}
+            return Selected_Code, Selected_Code, {'key': Selected_Code}
         else:
-            return None, None
+            return None, None, None
     else:
-        return None, None
+        return None, None, None
 
 #text_Start_Date = load_start_date
 #text_End_Date = load_end_date

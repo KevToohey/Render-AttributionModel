@@ -72,11 +72,15 @@ class Portfolio:
         self.tME_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/tME_dates.parquet')
         self.tQE_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/tQE_dates.parquet')
         self.df_productList = pd.read_parquet('./ServerData/'+portfolioCode+'/df_productList.parquet')
+        self.df_accountList = pd.read_parquet('./ServerData/' + portfolioCode + '/df_accountList.parquet')
         self.df_BM_G1 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G1.parquet')
+        self.df_BM_G2 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G2.parquet')
+        self.df_BM_G3 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G3.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
         # Recreate Category Group Labels for Charts
         self.portfolioCode = self.summaryVariables['portfolioCode'].iloc[0]
         self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
+        self.portfolioType = self.summaryVariables['portfolioType'].iloc[0]
         self.t_StartDate = self.summaryVariables['t_StartDate'].iloc[0]
         self.t_EndDate = self.summaryVariables['t_EndDate'].iloc[0]
         self.groupName = self.df_BM_G1.columns[0]
@@ -109,14 +113,17 @@ for code in availablePortfolios:
 Selected_Portfolio = All_Portfolios[3]
 Selected_Code = Selected_Portfolio.portfolioCode
 Selected_Name = Selected_Portfolio.portfolioName
+Selected_Type = Selected_Portfolio.portfolioType
 
 Alt1_Portfolio = All_Portfolios[1]
 Alt1_Code = Alt1_Portfolio.portfolioCode
 Alt1_Name = Alt1_Portfolio.portfolioName
+Alt1_Type = Alt1_Portfolio.portfolioType
 
 Alt2_Portfolio = All_Portfolios[2]
 Alt2_Code = Alt2_Portfolio.portfolioCode
 Alt2_Name = Alt2_Portfolio.portfolioName
+Alt2_Type = Alt2_Portfolio.portfolioType
 
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
@@ -535,6 +542,9 @@ def render_page_content(pathname):
                                                             availablePortfolios],
                                                    value=Selected_Code),
                                       html.Div(id='display-portfolio-name',
+                                               style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                               className="sidebar-subheader"),
+                                      html.Div(id='display-portfolio-type',
                                                style={"color": "#1DC8F2", "margin-left": "5rem"},
                                                className="sidebar-subheader"),
                                       html.Hr(),
@@ -2969,6 +2979,7 @@ def render_page_content(pathname):
 @app.callback(
     Output('display-portfolio-code', 'children'),
     Output('display-portfolio-name', 'children'),
+    Output('display-portfolio-type', 'children'),
     Output('stored-portfolio-code', 'data'),
     State('stored-portfolio-code', 'data'),
     State('url', 'pathname'),
@@ -2980,8 +2991,8 @@ def render_page_content(pathname):
     Input('date-picker', 'end_date'),    # Add end_date input
 )
 def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, text_Start_Date, text_End_Date):
-    global Selected_Portfolio, Selected_Code, Selected_Name, Alt1_Portfolio, Alt1_Code, Alt1_Name, Alt1_Name
-    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Group_value, dt_start_date, dt_end_date  # Declare global variables
+    global Selected_Portfolio, Selected_Code, Selected_Name, Selected_Type, Alt1_Portfolio, Alt1_Code, Alt1_Name, Alt1_Name, Alt1_Type
+    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Alt2_Type, Group_value, dt_start_date, dt_end_date  # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
@@ -2992,22 +3003,25 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioCode  # Update Selected_Code
             Selected_Name = Selected_Portfolio.portfolioName
+            Selected_Type = Selected_Portfolio.portfolioType
             Alt1_Portfolio = All_Portfolios[availablePortfolios.index(alt1_value)]
             Alt1_Code = Alt1_Portfolio.portfolioCode
             Alt1_Name = Alt1_Portfolio.portfolioName
+            Alt1_Type = Alt1_Portfolio.portfolioType
             Alt2_Portfolio = All_Portfolios[availablePortfolios.index(alt2_value)]
             Alt2_Code = Alt2_Portfolio.portfolioCode
             Alt2_Name = Alt2_Portfolio.portfolioName
+            Alt2_Type = Alt2_Portfolio.portfolioType
             Group_value = group_value
             dt_start_date = pd.to_datetime(text_Start_Date)
             dt_end_date = pd.to_datetime(text_End_Date)
             print(dt_start_date)
 
-            return Selected_Code, Selected_Code, {'key': Selected_Code}
+            return Selected_Code, Selected_Name, Selected_Type, {'key': Selected_Code}
         else:
-            return None, None, None
+            return None, None, None, None
     else:
-        return None, None, None
+        return None, None, None, None
 
 #text_Start_Date = load_start_date
 #text_End_Date = load_end_date

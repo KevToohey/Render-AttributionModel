@@ -425,6 +425,33 @@ sidebar = html.Div(
                         html.Span("Allocation / Exposure"),
                     ],
                     href="/3-Allocation",
+                    id="menu-parent-allocation",
+                    active="exact",
+                ),
+
+                dbc.NavLink(
+                    [
+                        html.I(className="fa-solid fa-industry me-2"),
+                        html.Span("Equity Sleeve Detail"),
+                    ],
+                    href="/3A-Equity",
+                    active="exact",
+                ),
+
+                dbc.NavLink(
+                    [
+                        html.I(className="fa-regular fa-credit-card me-2"),
+                        html.Span("Debt Sleeve Detail"),
+                    ],
+                    href="/3B-Debt",
+                    active="exact",
+                ),
+                dbc.NavLink(
+                    [
+                        html.I(className="fa-solid fa-coins me-2"),
+                        html.Span("Alternate Sleeve Detail"),
+                    ],
+                    href="/3C-Alternate",
                     active="exact",
                 ),
                 html.Hr(),
@@ -656,7 +683,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_1_2 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
@@ -692,7 +727,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_1_3 = (f_CalcReturnTable(
@@ -730,7 +773,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_1_4 = (f_CalcReturnTable(
@@ -767,7 +818,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_1_5 = (f_CalcReturnTable(
@@ -805,7 +864,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         ## Populate Charts for Page 1-Performance
@@ -924,7 +991,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         # Based on 30 day Window - Daily Data annualised (252 trading days)
@@ -953,7 +1028,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         # Based on 90 day Window - Daily Data annualised (252 trading days)
@@ -982,7 +1065,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         # Based on 1 Year Monthly data Windows - Monthly Data annualised (12 months)
@@ -1011,7 +1102,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_2_5 = f_CalcRollingMonthlyVol(
@@ -1039,7 +1138,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_2_6 = f_CalcRollingMonthlySharpe(
@@ -1067,7 +1174,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_2_7 = f_CalcRollingMonthlyBattingAverage(
@@ -1095,7 +1210,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_2_8 = f_CalcRollingDrawdown(
@@ -1123,7 +1246,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_2_9 = f_CalcRollingMonthlyTrackingError(
@@ -1151,7 +1282,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         # Calmar Ratio
@@ -1181,7 +1320,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
 
@@ -1215,7 +1362,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
 
@@ -1380,11 +1535,15 @@ def render_page_content(pathname):
             template="plotly_white"
         )
         figure_3_2.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
             legend=dict(
                 orientation="h",
                 yanchor="top",  # Change this to "top" to move the legend below the chart
@@ -1441,14 +1600,17 @@ def render_page_content(pathname):
 
         figure_3_1.update_layout(
             showlegend=False,
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            yaxis_title='Allocation Range (%)'
+            yaxis_title='Allocation Range (%)',
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
-
 
         filtered_df_3_3 = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
@@ -1474,7 +1636,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_3_4 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
@@ -1501,7 +1671,15 @@ def render_page_content(pathname):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         BM_AustShares_Portfolio = All_Portfolios[availablePortfolios.index("IOZ-AU")]
@@ -1544,6 +1722,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         figure_3_6 = px.sunburst(
@@ -1559,6 +1745,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_3_7 = filtered_df_3_5
@@ -1609,6 +1803,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         figure_3_8 = px.sunburst(
@@ -1624,6 +1826,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         # Portfolio and Benchmark Averages
@@ -1666,6 +1876,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         figure_3_11 = px.scatter(
@@ -1698,6 +1916,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         figure_3_12 = px.scatter(
@@ -1730,6 +1956,14 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
 
         filtered_df_3_10 = filtered_df_3_7[(filtered_df_3_7['Type'] == 'ASXStock')].copy()
@@ -1750,9 +1984,15 @@ def render_page_content(pathname):
                 "font": {"size": 11}  # Adjust the font size as needed
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
         )
-
-
 
         ## Populate Charts for Page 3-Allocation
         return [
@@ -1878,6 +2118,85 @@ def render_page_content(pathname):
                     ], align="center", className="mb-3"),
 
 
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+        ]
+
+
+    elif pathname == "/3A-Equity":
+
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Equity Allocation Characteristics',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+        ]
+
+    elif pathname == "/3B-Debt":
+
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Debt Allocation Characteristics',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3")
+
+        ]
+
+    elif pathname == "/3C-Alternate":
+
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Alternate Allocation Characteristics',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
@@ -2077,6 +2396,7 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3")
         ]
+
     elif pathname == "/5-Contribution":
 
         filtered_df_5_1 = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)

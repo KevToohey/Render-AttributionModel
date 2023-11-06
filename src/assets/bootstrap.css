@@ -69,8 +69,8 @@ body {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 4rem;
-  padding: 2rem 0rem;
+  width: 3.5rem;
+  padding: 1rem 0rem;
   background-color: #3D555E;
   z-index: 1050;
   transition: width 0.2s ease-in-out;
@@ -151,13 +151,13 @@ body {
 
 /* position the content relative to the collapsed sidebar */
 .content {
-  margin-left: 7rem;
+  margin-left: 5rem;
   margin-right: 2rem;
   padding: 2rem 1rem;
 }
 
 .sidebar .nav-link i {
-  font-size: 1.8rem; /* Adjust the font-size as needed */
+  font-size: 1.5rem; /* Adjust the font-size as needed */
   vertical-align: top; /* Align the icons vertically in the middle */
   text-align: left;
   color: #1DC8F2;

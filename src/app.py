@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import dash
 import os
+import re
 import shutil
 import socket
 from dash import dcc, html, Input, Output, State, Dash
@@ -14,6 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 from datetime import timedelta
+from scipy.stats import percentileofscore
 import datetime as dt
 import calendar
 from pandas.tseries.offsets import MonthEnd
@@ -2025,55 +2027,106 @@ def render_page_content(pathname):
         print(filtered_df_3A_1)
 
         # Portfolio and Benchmark Averages
-        selected_avg_GrowthofNetIncome = (filtered_df_3A_1['GrowthofNetIncome(%)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_MarketCap = (filtered_df_3A_1['MarketCap'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_PE_Ratio = (filtered_df_3A_1['PE_Ratio'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_EarningsYield = (filtered_df_3A_1['EarningsYield'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_NetProfitMargin = (filtered_df_3A_1['NetProfitMargin(%)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_ReturnonTotalEquity = (filtered_df_3A_1['ReturnonTotalEquity(%)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_GrowthofNetSales = (filtered_df_3A_1['GrowthofNetSales(%)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_GrowthofFreeCashflow = (filtered_df_3A_1['GrowthofFreeCashFlow(%)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_PayoutRatio = (filtered_df_3A_1['PayoutRatio'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_GearingRatio = (filtered_df_3A_1['TotalDebt/TotalAssets'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_InterestCoverRatio = (filtered_df_3A_1['InterestCover(EBIT)'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
-        selected_avg_ShortSellRatio = (filtered_df_3A_1['ShortSell%'].astype(float) * filtered_df_3A_1[
-            'Current Weight'] / 100).sum()
+        def calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
+            # Calculate the percentile of the selected value in the data distribution
+            percentile_selected = percentileofscore(data[metric].dropna(), selected_avg)
 
-        BM_avg_GrowthofNetIncome = (BM_AustShares_df_3A_1['GrowthofNetIncome(%)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_MarketCap = (BM_AustShares_df_3A_1['MarketCap'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_PE_Ratio = (BM_AustShares_df_3A_1['PE_Ratio'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_EarningsYield = (BM_AustShares_df_3A_1['EarningsYield'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_NetProfitMargin = (BM_AustShares_df_3A_1['NetProfitMargin(%)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_ReturnonTotalEquity = (BM_AustShares_df_3A_1['ReturnonTotalEquity(%)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_GrowthofNetSales = (BM_AustShares_df_3A_1['GrowthofNetSales(%)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_GrowthofFreeCashflow = (BM_AustShares_df_3A_1['GrowthofFreeCashFlow(%)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_PayoutRatio = (BM_AustShares_df_3A_1['PayoutRatio'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_GearingRatio = (BM_AustShares_df_3A_1['TotalDebt/TotalAssets'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_InterestCoverRatio = (BM_AustShares_df_3A_1['InterestCover(EBIT)'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
-        BM_avg_ShortSellRatio = (BM_AustShares_df_3A_1['ShortSell%'].astype(float) * BM_AustShares_df_3A_1[
-            'Current Weight'] / 100).sum()
+            # Calculate the percentile of the benchmark value in the data distribution
+            percentile_bm = percentileofscore(data[metric].dropna(), bm_avg)
+
+            return percentile_selected, percentile_bm
+
+        def create_valid_variable_name(measure):
+            # Remove special characters and spaces
+            valid_name = re.sub(r'[^a-zA-Z0-9]', '', measure)
+            return f"selected_avg_{valid_name}", f"BM_avg_{valid_name}"
+
+        # Define a list of all the measures
+        measures = [
+            'GrowthofNetIncome(%)',
+            'MarketCap',
+            'PE_Ratio',
+            'EarningsYield',
+            'NetProfitMargin(%)',
+            'ReturnonTotalEquity(%)',
+            'GrowthofNetSales(%)',
+            'GrowthofFreeCashFlow(%)',
+            'PayoutRatio',
+            'TotalDebt/TotalAssets',
+            'InterestCover(EBIT)',
+            'ShortSell%'
+        ]
+
+        # Create an empty DataFrame to store the results
+        columnsfordf1 = ['Measure', 'Selected Avg', 'Selected Normalized', 'Benchmark Avg',
+                         'Benchmark Normalized']
+        df_portfolioAESummary = pd.DataFrame(columns=columnsfordf1)
+
+        # Calculate averages for each measure
+        averages = {}
+        for measure in measures:
+            selected_var, bm_var = create_valid_variable_name(measure)
+            selected_avg = (filtered_df_3A_1[measure].astype(float) * filtered_df_3A_1['Current Weight'] / 100).sum()
+            bm_avg = (BM_AustShares_df_3A_1[measure].astype(float) * BM_AustShares_df_3A_1[
+                'Current Weight'] / 100).sum()
+
+            averages[selected_var] = selected_avg
+            averages[bm_var] = bm_avg
+
+            # Avoid division by zero for measures with zero benchmark average
+            if bm_avg == 0:
+                bm_avg = 1e-10
+
+            normalized_percentile_selected, normalized_percentile_bm = calculate_normalized_percentile(selected_avg,
+                                                                                                       bm_avg,
+                                                                                                       filtered_df_3A_1,
+                                                                                                       measure)
+
+            # Append results to the DataFrame
+            df_portfolioAESummary = pd.concat([df_portfolioAESummary, pd.DataFrame({
+                'Measure': [measure],
+                'Selected Avg': [selected_avg],
+                'Selected Normalized': [normalized_percentile_selected],
+                'Benchmark Avg': [bm_avg],
+                'Benchmark Normalized': [normalized_percentile_bm]
+            })], ignore_index=True)
+
+
+        # Now create Polar dataframe sets for summary chart
+        fig_polar_3A = go.Figure()
+        fig_polar_3A.add_trace(go.Scatterpolar(
+            r=df_portfolioAESummary['Selected Normalized'],
+            theta=df_portfolioAESummary['Measure'],
+            hovertext=df_portfolioAESummary['Selected Avg'],
+            fill='toself',
+            name='Weighted Portfolio: '+Selected_Portfolio.portfolioCode
+        ))
+        # Add a second trace for Benchmark Normalized Percentile
+        fig_polar_3A.add_trace(go.Scatterpolar(
+            r=df_portfolioAESummary['Benchmark Normalized'],
+            theta=df_portfolioAESummary['Measure'],
+            hovertext=df_portfolioAESummary['Benchmark Avg'],
+            fill='toself',
+            name='Weighted Benchmark: '+BM_AustShares_Portfolio.portfolioCode
+        ))
+
+        fig_polar_3A.update_layout(
+            title={
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+        )
+
+
 
         # The Below Groups Holding Weights Where Multiple Products have same Look Through Exposure
         filtered_df_3A_2 = filtered_df_3A_1.copy()
@@ -2100,14 +2153,14 @@ def render_page_content(pathname):
                         'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
                         'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
         )
-        selected_trace_3A_2G = go.Scatter(x=[selected_avg_GrowthofNetIncome], y=[selected_avg_MarketCap],
+        selected_trace_3A_2G = go.Scatter(x=[averages['selected_avg_GrowthofNetIncome']], y=[averages['selected_avg_MarketCap']],
                                          mode='markers+text',
                                          marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='black', width=1)),
                                          text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                          textposition='bottom right',
                                          showlegend=False)
-        BM_trace_3A_2G = go.Scatter(x=[BM_avg_GrowthofNetIncome], y=[BM_avg_MarketCap],
+        BM_trace_3A_2G = go.Scatter(x=[averages['BM_avg_GrowthofNetIncome']], y=[averages['BM_avg_MarketCap']],
                                    mode='markers+text',
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
@@ -2141,14 +2194,14 @@ def render_page_content(pathname):
                         'TotalDebt/TotalAssets', 'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
                         'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
         )
-        selected_trace_3A_3G = go.Scatter(x=[selected_avg_NetProfitMargin], y=[selected_avg_ReturnonTotalEquity],
+        selected_trace_3A_3G = go.Scatter(x=[averages['selected_avg_NetProfitMargin']], y=[averages['selected_avg_ReturnonTotalEquity']],
                                          mode='markers+text',
                                          marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='black', width=1)),
                                          text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                          textposition='bottom right',
                                          showlegend=False)
-        BM_trace_3A_3G = go.Scatter(x=[BM_avg_NetProfitMargin], y=[BM_avg_ReturnonTotalEquity],
+        BM_trace_3A_3G = go.Scatter(x=[averages['BM_avg_NetProfitMargin']], y=[averages['BM_avg_ReturnonTotalEquity']],
                                    mode='markers+text',
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
@@ -2181,14 +2234,14 @@ def render_page_content(pathname):
                         'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
                         'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
         )
-        selected_trace_3A_4G = go.Scatter(x=[selected_avg_PE_Ratio], y=[selected_avg_ReturnonTotalEquity],
+        selected_trace_3A_4G = go.Scatter(x=[averages['selected_avg_PERatio']], y=[averages['selected_avg_ReturnonTotalEquity']],
                                          mode='markers+text',
                                          marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='black', width=1)),
                                          text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                          textposition='bottom right',
                                          showlegend=False)
-        BM_trace_3A_4G = go.Scatter(x=[BM_avg_PE_Ratio], y=[BM_avg_ReturnonTotalEquity],
+        BM_trace_3A_4G = go.Scatter(x=[averages['BM_avg_PERatio']], y=[averages['BM_avg_ReturnonTotalEquity']],
                                    mode='markers+text',
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
@@ -2223,14 +2276,14 @@ def render_page_content(pathname):
                         'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'],
             template="plotly_white"
         )
-        selected_trace_3A_5G = go.Scatter(x=[selected_avg_EarningsYield], y=[selected_avg_GrowthofNetIncome],
+        selected_trace_3A_5G = go.Scatter(x=[averages['selected_avg_EarningsYield']], y=[averages['selected_avg_GrowthofNetIncome']],
                                           mode='markers+text',
                                           marker=dict(size=12, color='black', symbol="cross",
                                                       line=dict(color='black', width=1)),
                                           text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
                                           textposition='bottom left',
                                           showlegend=False)
-        BM_trace_3A_5G = go.Scatter(x=[BM_avg_EarningsYield], y=[BM_avg_GrowthofNetIncome],
+        BM_trace_3A_5G = go.Scatter(x=[averages['BM_avg_EarningsYield']], y=[averages['BM_avg_GrowthofNetIncome']],
                                     mode='markers+text',
                                     marker=dict(size=12, color='black', symbol="star",
                                                 line=dict(color='black', width=1)),
@@ -2292,6 +2345,22 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
+
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Table.from_dataframe(df_portfolioAESummary, striped=True, bordered=True, hover=True)
+                            # End of Centre Work Area
+                        ], width=8, align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Portfolio Summary Characteristics (Normalised)"),
+                            dbc.CardBody(dcc.Graph(figure=fig_polar_3A, style={'height': '800px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([

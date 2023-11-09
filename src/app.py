@@ -2044,14 +2044,14 @@ def render_page_content(pathname):
 
         # Define a list of all the measures
         measures = [
-            'GrowthofNetIncome(%)',
             'MarketCap',
             'PE_Ratio',
             'EarningsYield',
-            'NetProfitMargin(%)',
             'ReturnonTotalEquity(%)',
+            'GrowthofNetIncome(%)',
             'GrowthofNetSales(%)',
             'GrowthofFreeCashFlow(%)',
+            'NetProfitMargin(%)',
             'PayoutRatio',
             'TotalDebt/TotalAssets',
             'InterestCover(EBIT)',
@@ -2086,6 +2086,7 @@ def render_page_content(pathname):
             # Append results to the DataFrame
             df_portfolioAESummary = pd.concat([df_portfolioAESummary, pd.DataFrame({
                 'Measure': [measure],
+                'Category': [category],
                 'Selected Avg': [selected_avg],
                 'Selected Normalized': [normalized_percentile_selected],
                 'Benchmark Avg': [bm_avg],
@@ -2128,15 +2129,15 @@ def render_page_content(pathname):
         )
 
         fig_bar_3A = px.bar(
-            df_portfolioAESummary['Selected Normalized', 'Benchmark Normalized'],
-            x=df_portfolioAESummary.index,
-            y=[c for c in df_portfolioAESummary['Selected Normalized', 'Benchmark Normalized'].columns],
+            df_portfolioAESummary,
+            x='Measure',
+            y=['Selected Normalized', 'Benchmark Normalized'],
             labels={"x": "Characteristic", "y": "Values"},
             template="plotly_white",
             barmode='group'
         )
-        figure_1_4.update_layout(
-            yaxis_title="Return (%, %p.a.)",
+        fig_bar_3A.update_layout(
+            yaxis_title="Normalized Score",
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -2390,7 +2391,7 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Characteristics (Normalised)"),
-                            dbc.CardBody(dcc.Graph(figure=fig_polar_3A, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),

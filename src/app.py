@@ -1979,6 +1979,7 @@ def render_page_content(pathname):
 
 
         # Find if any of the held investments - are also available in the dataset as products with look through holdings
+
         underlying_df_3A_1 = []
         for index, value in enumerate(filtered_df_3A_0.index):
             if value in availablePortfolios:
@@ -2125,6 +2126,38 @@ def render_page_content(pathname):
                 layer="below"
             )],
         )
+
+        fig_bar_3A = px.bar(
+            df_portfolioAESummary['Selected Normalized', 'Benchmark Normalized'],
+            x=df_portfolioAESummary.index,
+            y=[c for c in df_portfolioAESummary['Selected Normalized', 'Benchmark Normalized'].columns],
+            labels={"x": "Characteristic", "y": "Values"},
+            template="plotly_white",
+            barmode='group'
+        )
+        figure_1_4.update_layout(
+            yaxis_title="Return (%, %p.a.)",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+        )
+
+
 
 
 

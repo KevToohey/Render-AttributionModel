@@ -2029,13 +2029,18 @@ def render_page_content(pathname):
 
         # Portfolio and Benchmark Averages
         def calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
-            # Calculate the percentile of the selected value in the data distribution
-            percentile_selected = percentileofscore(data[metric].dropna(), selected_avg)
+            # Calculate the percentile of the selected value in the equal-weighted data distribution
+            EW_perc_selected = percentileofscore(data[metric].dropna(), selected_avg)
+            EW_perc_bm = percentileofscore(data[metric].dropna(), bm_avg)
 
-            # Calculate the percentile of the benchmark value in the data distribution
-            percentile_bm = percentileofscore(data[metric].dropna(), bm_avg)
+            # Calculate the market capitalization-weighted percentile for the selected value
+            MCap_perc_bm = 50
+            if EW_perc_selected > EW_perc_bm:
+                MCap_perc_selected = 50 + (((EW_perc_selected - EW_perc_bm) / (100 - EW_perc_bm)) * 50)
+            else:
+                MCap_perc_selected = 50 - (((EW_perc_bm - EW_perc_selected) / EW_perc_bm) * 50)
 
-            return percentile_selected, percentile_bm
+            return EW_perc_selected, EW_perc_bm, MCap_perc_selected, MCap_perc_bm
 
         def create_valid_variable_name(measure):
             # Remove special characters and spaces
@@ -2058,18 +2063,32 @@ def render_page_content(pathname):
             'ShortSell%'
         ]
 
+        measures_category = [
+            'Size',
+            'Value',
+            'Value',
+            'Value',
+            'Growth',
+            'Growth',
+            'Growth',
+            'Quality',
+            'Quality',
+            'Quality',
+            'Quality',
+            'Variability'
+        ]
+
         # Create an empty DataFrame to store the results
-        columnsfordf1 = ['Measure', 'Selected Avg', 'Selected Normalized', 'Benchmark Avg',
-                         'Benchmark Normalized']
+        columnsfordf1 = ['Measure', 'Category', 'Selected Avg', 'Selected MCap Normalized', 'Selected EW Normalized',
+                         'Benchmark Avg', 'Benchmark MCap Normalized', 'Benchmark EW Normalized']
         df_portfolioAESummary = pd.DataFrame(columns=columnsfordf1)
 
         # Calculate averages for each measure
         averages = {}
-        for measure in measures:
+        for measure, category in zip(measures, measures_category):
             selected_var, bm_var = create_valid_variable_name(measure)
             selected_avg = (filtered_df_3A_1[measure].astype(float) * filtered_df_3A_1['Current Weight'] / 100).sum()
-            bm_avg = (BM_AustShares_df_3A_1[measure].astype(float) * BM_AustShares_df_3A_1[
-                'Current Weight'] / 100).sum()
+            bm_avg = (BM_AustShares_df_3A_1[measure].astype(float) * BM_AustShares_df_3A_1['Current Weight'] / 100).sum()
 
             averages[selected_var] = selected_avg
             averages[bm_var] = bm_avg
@@ -2078,41 +2097,69 @@ def render_page_content(pathname):
             if bm_avg == 0:
                 bm_avg = 1e-10
 
-            normalized_percentile_selected, normalized_percentile_bm = calculate_normalized_percentile(selected_avg,
+            EW_norm_perc_selected, EW_norm_perc_bm, MCap_norm_perc_selected, MCap_norm_perc_bm = calculate_normalized_percentile(selected_avg,
                                                                                                        bm_avg,
                                                                                                        filtered_df_3A_1,
                                                                                                        measure)
+
+
 
             # Append results to the DataFrame
             df_portfolioAESummary = pd.concat([df_portfolioAESummary, pd.DataFrame({
                 'Measure': [measure],
                 'Category': [category],
                 'Selected Avg': [selected_avg],
-                'Selected Normalized': [normalized_percentile_selected],
+                'Selected MCap Normalized': [MCap_norm_perc_selected],
+                'Selected EW Normalized': [EW_norm_perc_selected],
                 'Benchmark Avg': [bm_avg],
-                'Benchmark Normalized': [normalized_percentile_bm]
+                'Benchmark MCap Normalized': [MCap_norm_perc_bm],
+                'Benchmark EW Normalized': [EW_norm_perc_bm]
             })], ignore_index=True)
 
 
         # Now create Polar dataframe sets for summary chart
         fig_polar_3A = go.Figure()
+
         fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Selected Normalized'],
-            theta=df_portfolioAESummary['Measure'],
-            hovertext=df_portfolioAESummary['Selected Avg'],
-            fill='toself',
-            name='Weighted Portfolio: '+Selected_Portfolio.portfolioCode
-        ))
-        # Add a second trace for Benchmark Normalized Percentile
-        fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Benchmark Normalized'],
+            r=df_portfolioAESummary['Selected MCap Normalized'],
             theta=df_portfolioAESummary['Measure'],
             hovertext=df_portfolioAESummary['Benchmark Avg'],
             fill='toself',
-            name='Weighted Benchmark: '+BM_AustShares_Portfolio.portfolioCode
+            name='MCap Weighted: ' + Selected_Portfolio.portfolioCode
+        ))
+
+        fig_polar_3A.add_trace(go.Scatterpolar(
+            r=df_portfolioAESummary['Benchmark MCap Normalized'],
+            theta=df_portfolioAESummary['Measure'],
+            hovertext=df_portfolioAESummary['Benchmark Avg'],
+            fill='toself',
+            name='MCap Weighted: ' + BM_AustShares_Portfolio.portfolioCode
+        ))
+
+        fig_polar_3A.add_trace(go.Scatterpolar(
+            r=df_portfolioAESummary['Selected EW Normalized'],
+            theta=df_portfolioAESummary['Measure'],
+            hovertext=df_portfolioAESummary['Selected Avg'],
+            fill='toself',
+            name='Equal Weighted: '+Selected_Portfolio.portfolioCode,
+            visible='legendonly'
+        ))
+
+        fig_polar_3A.add_trace(go.Scatterpolar(
+            r=df_portfolioAESummary['Benchmark EW Normalized'],
+            theta=df_portfolioAESummary['Measure'],
+            hovertext=df_portfolioAESummary['Benchmark Avg'],
+            fill='toself',
+            name='Equal Weighted: '+BM_AustShares_Portfolio.portfolioCode,
+            visible='legendonly'
         ))
 
         fig_polar_3A.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    range=[0, 100]  # Set the range to always show 0 to 100
+                )
+            ),
             title={
                 "text": f"As at {dt_end_date:%d-%b-%Y}",
                 "font": {"size": 11}  # Adjust the font size as needed
@@ -2128,16 +2175,17 @@ def render_page_content(pathname):
             )],
         )
 
-        fig_bar_3A = px.bar(
+        fig_bar_3A_EW = px.bar(
             df_portfolioAESummary,
             x='Measure',
-            y=['Selected Normalized', 'Benchmark Normalized'],
-            labels={"x": "Characteristic", "y": "Values"},
+            y=['Selected EW Normalized'],
+            labels={"x": "Factor", "y": "Values"},
             template="plotly_white",
-            barmode='group'
+            barmode='group',
+            color='Category'
         )
-        fig_bar_3A.update_layout(
-            yaxis_title="Normalized Score",
+        fig_bar_3A_EW.update_layout(
+            yaxis_title="Equal Weighted Normalized Score",
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -2156,6 +2204,59 @@ def render_page_content(pathname):
                 xanchor="right", yanchor="bottom",
                 layer="below"
             )],
+            yaxis=dict(
+                range=[0, 100],
+            )
+        )
+        fig_bar_3A_EW.add_shape(
+            go.layout.Shape(
+                type='line',
+                x0=-0.5, x1=len(df_portfolioAESummary['Measure']) - 0.5,
+                y0=50, y1=50,
+                line=dict(color='grey', width=1, dash='dot')
+            )
+        )
+
+        fig_bar_3A_MCapW = px.bar(
+            df_portfolioAESummary,
+            x='Measure',
+            y=['Selected MCap Normalized'],
+            labels={"x": "Factor", "y": "Values"},
+            template="plotly_white",
+            barmode='group',
+            color='Category'
+        )
+        fig_bar_3A_MCapW.update_layout(
+            yaxis_title="Market Cap Normalized Score",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.3,
+                xanchor="center",
+                x=0.5,
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+            yaxis=dict(
+                range=[0, 100],
+            )
+        )
+        fig_bar_3A_MCapW.add_shape(
+            go.layout.Shape(
+                type='line',
+                x0=-0.5, x1=len(df_portfolioAESummary['Measure']) - 0.5,
+                y0=50, y1=50,
+                line=dict(color='grey', width=1, dash='dot')
+            )
         )
 
 
@@ -2368,7 +2469,7 @@ def render_page_content(pathname):
 
         return [
             html.Div(style={'height': '2rem'}),
-            html.H2('Equity Allocation Characteristics',
+            html.H2('Equity Allocation - Factor Analysis',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
@@ -2381,24 +2482,8 @@ def render_page_content(pathname):
                 dbc.Col([
 
                     dbc.Row([
-                        dbc.Col([
-                            dbc.Table.from_dataframe(df_portfolioAESummary, striped=True, bordered=True, hover=True)
-                            # End of Centre Work Area
-                        ], width=8, align="center", className="mb-3"),
-                    ], align="center", className="mb-3"),
-
-
-                    dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Portfolio Summary Characteristics (Normalised)"),
-                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
-                        ], color="primary", outline=True), align="center", className="mb-3"),
-                    ], align="center", className="mb-3"),
-
-                    dbc.Row([
-                        dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1 Drill Through Aus Eq Characteristics"),
+                            dbc.CardHeader("Chart 1 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_2G, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -2406,7 +2491,7 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2 Drill Through Aus Eq Characteristics"),
+                            dbc.CardHeader("Chart 2 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_3G, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -2414,7 +2499,7 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 3 Drill Through Aus Eq Characteristics"),
+                            dbc.CardHeader("Chart 3 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_4G, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -2422,7 +2507,7 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 4 Drill Through Aus Eq Characteristics"),
+                            dbc.CardHeader("Chart 4 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_5G, style={'height': '800px'})),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
@@ -2436,6 +2521,36 @@ def render_page_content(pathname):
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Portfolio Summary Factor Characteristics (Equal Weight Normalised)"),
+                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A_EW, style={'height': '800px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Portfolio Summary Factor Characteristics (Market Cap Weight Normalised)"),
+                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A_MCapW, style={'height': '800px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Portfolio Summary Factor Characteristics (EW Weight Normalised)"),
+                            dbc.CardBody(dcc.Graph(figure=fig_polar_3A, style={'height': '800px'})),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Table.from_dataframe(df_portfolioAESummary, striped=True, bordered=True, hover=True)
+                            # End of Centre Work Area
+                        ], width=8, align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),

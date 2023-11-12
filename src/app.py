@@ -2052,6 +2052,7 @@ def render_page_content(pathname):
             'MarketCap',
             'PE_Ratio',
             'EarningsYield',
+            'PriceBook',
             'ReturnonTotalEquity(%)',
             'GrowthofNetIncome(%)',
             'GrowthofNetSales(%)',
@@ -2065,6 +2066,7 @@ def render_page_content(pathname):
 
         measures_category = [
             'Size',
+            'Value',
             'Value',
             'Value',
             'Value',

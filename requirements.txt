@@ -6,3 +6,4 @@ plotly
 pyarrow
 dash-bootstrap-components
 dash-daq
+python-docx

@@ -5,6 +5,13 @@ import numpy as np
 import dash
 import os
 import re
+import docx
+from docx import Document
+from docx.shared import Pt
+from docx.enum.style import WD_STYLE_TYPE
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+from docx.shared import Inches
 import shutil
 import socket
 from dash import dcc, html, Input, Output, State, Dash
@@ -3820,6 +3827,84 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
 )
 def save_report_to_terminal(n_clicks, selected_report):
     if n_clicks is not None:
+
+        # Define Content for Word Report
+        if selected_report == 'R1':
+            print('Report is Portfolio Summary')
+
+        elif selected_report == 'R2':
+            print('Report is Product Quant Analysis')
+
+        else:
+            return None
+
+        ########################################## Create & Populate Word document #######################
+        print("Current Working Directory:", os.getcwd())
+
+        doc = Document('./assets/Template.docx')
+        table_number = 1
+        figure_number = 1
+        # Header section
+        # header_section = doc.sections[0]
+        # header = header_section.header
+        # header_text = header.paragraphs[0]
+        # header_text.text = "ATCHISON"
+        ## Heading page
+        title_para = doc.add_paragraph()
+        title = title_para.add_run(Selected_Name)
+        title.alignment = 2
+        title.font.name = 'Arial'
+        title.font.size = docx.shared.Pt(26)
+        title.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+        sub = doc.add_paragraph()
+        subsub = sub.add_run('Review of Investment Portfolio ' + str(dt_end_date))
+        subsub.alignment = 1
+        subsub.font.name = 'Arial'
+        subsub.font.size = docx.shared.Pt(16)
+        subsub.font.color.rgb = docx.shared.RGBColor(255, 255, 255)
+        doc.add_page_break()
+        ## Table of content
+        ToC = doc.add_paragraph()
+        toc_run = ToC.add_run('Table of Contents')
+        toc_run.font.name = 'Arial'
+        toc_run.font.size = docx.shared.Pt(16)
+        toc_run.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+        paragraph = doc.add_paragraph()
+        run = paragraph.add_run()
+        fldChar = OxmlElement('w:fldChar')  # creates a new element
+        fldChar.set(qn('w:fldCharType'), 'begin')  # sets attribute on element
+        instrText = OxmlElement('w:instrText')
+        instrText.set(qn('xml:space'), 'preserve')  # sets attribute on element
+        instrText.text = 'TOC \\o "1-5" \\h \\z \\u'  # change 1-3 depending on heading levels you need
+        fldChar2 = OxmlElement('w:fldChar')
+        fldChar2.set(qn('w:fldCharType'), 'separate')
+        fldChar3 = OxmlElement('w:t')
+        fldChar3.text = "Right-click to update field."
+        fldChar2.append(fldChar3)
+        fldChar4 = OxmlElement('w:fldChar')
+        fldChar4.set(qn('w:fldCharType'), 'end')
+        r_element = run._r
+        r_element.append(fldChar)
+        r_element.append(instrText)
+        r_element.append(fldChar2)
+        r_element.append(fldChar4)
+        p_element = paragraph._p
+        doc.add_page_break()
+        ############################################### 1 Executive Summary ########################################
+        doc.add_heading("Executive Summary", 1)
+
+
+        # Save Document to Local System
+
+
+        SAVEDIR = "./Outputs/"+Selected_Code
+        CHECK_FOLDER = os.path.isdir(SAVEDIR)
+        if not CHECK_FOLDER: os.makedirs(SAVEDIR)
+
+        docsavename = SAVEDIR+"/"+Selected_Name+" Quant Analysis - "+text_End_Date+".docx"
+        doc.save(docsavename)
+
+
         f_save_report(selected_report)
         print(f'Report generated for {selected_report}.')
     return None

@@ -1,0 +1,1807 @@
+
+
+
+def Optimiser_Run_Report():
+    if len(Strategies_save[0].recom_saved_p) == 0:
+        ## get recom_saved_p
+        for i in range(len(Strategies_save)):
+            for j in range(len(Strategies_save[i].saved_p)):
+                if Strategies_save[i].recom_portfolio != None:
+                    df_xx = Strategies_save[i].saved_p[j].copy()
+                    if 'Current TAA' not in Strategies_save[i].saved_p[j].columns:
+                        df_xx.insert(2, 'Recommended', Strategies_save[i].saved_p[j][Strategies_save[i].recom_portfolio])
+                    else:
+                        df_xx.insert(3, 'Recommended', Strategies_save[i].saved_p[j][Strategies_save[i].recom_portfolio])
+                    del df_xx[Strategies_save[i].recom_portfolio]
+                    Strategies_save[i].recom_saved_p.append(df_xx)
+                else:
+                    Strategies_save[i].recom_saved_p.append(Strategies_save[i].saved_p[j])
+    else:
+        for i in range(len(Strategies_save)):
+            for j in range(len(Strategies_save[i].recom_saved_p)):
+                if len(Strategies_save[i].saved_p[j].columns) > len(Strategies_save[i].recom_saved_p[j].columns):
+                    for k in range(len(Strategies_save[i].saved_p[j].columns)):
+                        if Strategies_save[i].saved_p[j].columns[k] not in Strategies_save[i].recom_saved_p[j].columns:
+                            Strategies_save[i].recom_saved_p[j][Strategies_save[i].saved_p[j].columns[k]] = Strategies_save[i].saved_p[j][Strategies_save[i].saved_p[j].columns[k]].tolist()
+                        if Strategies_save[i].recom_portfolio != None:
+                            if 'Current TAA' not in Strategies_save[i].recom_saved_p[j].columns:
+                                Strategies_save[i].recom_saved_p[j].insert(2, 'Recommended', Strategies_save[i].recom_saved_p[j][Strategies_save[i].recom_portfolio])
+                            else:
+                                Strategies_save[i].recom_saved_p[j].insert(3, 'Recommended', Strategies_save[i].recom_saved_p[j][Strategies_save[i].recom_portfolio])
+                            del Strategies_save[i].recom_saved_p[j][Strategies_save[i].recom_portfolio]
+
+    single_ac = False
+    for i in range(len(Strategies_save[0].assetClassConstraints)):
+        if float(Strategies_save[0].assetClassConstraints.loc[i, 'Current SAA']) == 100:
+            fundbool = False
+            for k in range(len(AssetClasses)):
+                if Strategies_save[0].assetClassConstraints.loc[i, 'AssetClassName'] == AssetClasses[k].name:
+                    fundbool = True
+                    break
+            if fundbool == False:
+                single_ac = True
+            break
+
+    ################################ Variables ######################################################
+    all_acs = []
+    for i in range(len(AssetClasses)):
+        all_acs.append(AssetClasses[i].name)
+    temp = int(global_EndPeriodDate.month / 3)
+    """
+    if temp == 4:
+        quarter_date = 'Q4 ' + str(global_EndPeriodDate.year)
+        report_date = '31 December ' + str(global_EndPeriodDate.year)
+    else:
+        quarter_date = 'Q' + str(temp) + ' ' + str(global_EndPeriodDate.year)
+        if temp == 1:
+            report_date = '31 March ' + str(global_EndPeriodDate.year)
+        elif temp == 2:
+            report_date = '30 June ' + str(global_EndPeriodDate.year)
+        elif temp == 3:
+            report_date = '30 September ' + str(global_EndPeriodDate.year)
+    """
+
+    report_date = calendar.month_name[int(global_EndPeriodDate.month)] +' '+ str(global_EndPeriodDate.year)
+    ###################################### Frame ##########################################################
+    kf.clear_frame(right_scroll_frame)
+    right_canvas.create_window((0, 0), window=right_scroll_frame, anchor="nw")
+    pic_frame = Frame(right_scroll_frame)
+    pic_frame.grid(row=1, column=4, pady=10, rowspan=20, padx=20)
+
+    def client_selection():
+        temp_client = client_combo.get()
+        temp_strg = []
+        for i in range(len(Strategies_save)):
+            if Strategies_save[i].client == temp_client:
+                temp_strg.append(Strategies_save[i].name)
+        for item in strg_tree.get_children():
+            strg_tree.delete(item)
+        for i in range(len(temp_strg)):
+            strg_tree.change_state('', 'checked')
+            strg_tree.insert("", i, values=(temp_strg[i],))
+        return
+
+    def sce_click(event):
+        rowid = sce_tree.focus()
+        sce_name = sce_tree.item(rowid, "values")[0]
+        no_s = int(sce_name.split(' ')[1]) - 1
+        input_window = Tk()
+        input_window.title("Scenario information")
+        input_window.geometry('500x500')
+        ## active scenario info display
+        Label(input_window, text="Information for scenario " + str(no_s + 1) + " :").grid(row=1, column=0, sticky='w', padx=10, pady=20, columnspan=2)
+        info_frame = Frame(input_window)
+        info_frame.grid(row=2, column=0, sticky='w', padx=10, pady=10, columnspan=2)
+        Label(info_frame, text='Data Type: ' + Scenarios[no_s].dataBasis).grid(row=0, column=0, sticky='w')
+        Label(info_frame, text='Confidence Level: ' + str(Scenarios[no_s].confidence)).grid(row=1, column=0, sticky='w')
+        if Scenarios[no_s].hist_or_forecast == 'Historical':
+            Label(info_frame, text='Data for Return, Volatility and Correlations: ' + Scenarios[no_s].hist_or_forecast + " " +
+                                   str(Scenarios[no_s].hist_period) + '-year').grid(row=2, column=0, sticky='w')
+        elif Scenarios[no_s].hist_or_forecast == 'Forecast':
+            Label(info_frame, text='Data for Return and Volatility ' + Scenarios[no_s].hist_or_forecast + " " +
+                                   str(Scenarios[no_s].forecast_period) + '-year').grid(row=2, column=0, sticky='w')
+            if Scenarios[no_s].f_c_horf == 'Historical':
+                Label(info_frame, text='Data for Correlations: ' + Scenarios[no_s].hist_or_forecast + " " +
+                                       str(Scenarios[no_s].f_histperiod) + '-year').grid(row=3, column=0, sticky='w')
+                if Scenarios[no_s].c_option == "Option1":
+                    Label(info_frame, text='Method applied is: Option1: Covariance Matrix').grid(row=4, column=0, sticky='w')
+                else:
+                    Label(info_frame, text='Method applied is: Option2: Modern Portfolio Theory').grid(row=4, column=0, sticky='w')
+            elif Scenarios[no_s].f_c_horf == 'Forecast':
+                Label(info_frame, text='Data for Correlations: ' + Scenarios[no_s].hist_or_forecast).grid(row=3, column=0, sticky='w')
+        return
+
+    tk.Label(right_scroll_frame, text='Choose below and save file', anchor="w", pady=20, padx=10, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=0)
+    ########################################## choose client ####################################################
+    tk.Label(right_scroll_frame, text='Please select the client: ', pady=10, padx=10, bg=colour1,
+             fg=colour4, font=textFont).grid(column=0, row=1, sticky='w')
+    client_list = []
+    for i in range(len(Strategies_save)):
+        client_list.append(Strategies_save[i].client)
+    client_list = list(set(client_list))
+    client_combo = ttk.Combobox(right_scroll_frame, state='readonly', width=30, height=5)
+    client_combo.grid(column=1, row=1)
+    client_combo['value'] = client_list
+    client_combo.current(0)
+    Button(right_scroll_frame, text='OK', command=client_selection, width=10).grid(column=2, row=1, sticky='w')
+    ########################################## choose strg ####################################################
+    temp_client = client_combo.get()
+    temp_strg = []
+    temp_strg_id = []
+    for i in range(len(Strategies_save)):
+        if Strategies_save[i].client == temp_client:
+            temp_strg.append(Strategies_save[i].name)
+            temp_strg_id.append(i)
+    tk.Label(right_scroll_frame, text='Please select strategies: ', pady=10, padx=10, bg=colour1,
+             fg=colour4, font=textFont).grid(column=0, row=2, sticky='w')
+    strg_tree = CheckboxTreeview(right_scroll_frame, columns=("Strategies"), height=len(temp_strg))
+    strg_tree.grid(column=1, row=3, columnspan=3)
+    strg_tree.column("#0", width=50)
+    strg_tree.column("Strategies", width=250)
+    strg_tree.heading("Strategies", text="Strategies")
+    for i in range(len(temp_strg)):
+        strg_tree.change_state('', 'checked')
+        strg_tree.insert("", i, values=(temp_strg[i],))
+    ########################################## choose scenario ####################################################
+    sce_list = []
+    for i in range(len(Scenarios)):
+        sce_list.append('Scenario ' + str(i + 1))
+    tk.Label(right_scroll_frame, text='Please select scenarios: ', pady=10, padx=10, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=4, sticky='w')
+    sce_tree = CheckboxTreeview(right_scroll_frame, columns=("Scenarios"), height=len(sce_list))
+    sce_tree.grid(column=1, row=5, columnspan=3)
+    sce_tree.column("#0", width=50)
+    sce_tree.column("Scenarios", width=250)
+    sce_tree.heading("Scenarios", text="Scenarios")
+    for i in range(len(sce_list)):
+        sce_tree.change_state('', 'checked')
+        sce_tree.insert("", i, values=(sce_list[i],))
+    sce_tree.bind('<Double-Button-1>', sce_click)
+
+    ########################################## choose pics ####################################################
+    tk.Label(right_scroll_frame, text='Please select charts: ', pady=10, padx=10, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=6, sticky='w')
+
+    def pics(event):
+        strg_list = []
+        for i in range(len(Strategies_save)):
+            if Strategies_save[i].client == temp_client:
+                strg_list.append(i)
+        temp_strg = strg_tree.get_checked()
+        strg_no_list = []
+        for i in range(len(strg_list)):
+            for j in range(len(temp_strg)):
+                if Strategies_save[strg_list[i]].name == strg_tree.item(temp_strg[j], 'values')[0]:
+                    strg_no_list.append(strg_list[i])
+                    Strategies_save[strg_no_list[-1]].active_assetclasses()
+        temp_sce = sce_tree.get_checked()
+        sce_no_list = []
+        for i in range(len(temp_sce)):
+            sce_no_list.append(int(sce_tree.item(temp_sce[i], 'values')[0].split(' ')[1]) - 1)
+        rowid = pic_tree.focus()
+        picname = pic_tree.item(rowid, "values")[0]
+        if picname == "Asset Allocation":
+            for widget in pic_frame.winfo_children():
+                widget.destroy()
+            for i in strg_no_list:
+                name = Strategies_save[i].client + Strategies_save[i].name + 'AssetAllocation.png'
+                kf.AssetAllocation(Strategies_save[i].recom_saved_p[0], Strategies_save[i].active_ac, name)
+                assetallocation_pic = ImageTk.PhotoImage(Image.open(name))
+                labelbubble = Label(pic_frame, image=assetallocation_pic)
+                labelbubble.image = assetallocation_pic
+                labelbubble.grid(row=i, column=0, sticky='n')
+        elif picname == "Risk Characteristics":
+            for widget in pic_frame.winfo_children():
+                widget.destroy()
+            for i in strg_no_list:
+                name = Strategies_save[i].client + Strategies_save[i].name + 'RiskCharacteristics.png'
+                for j in sce_no_list:
+                    kf.RiskCharacteristics(Strategies_save[i].recom_saved_p[0], Strategies_save[i].active_ac, name, AssetClasses, Scenarios[j], global_EndPeriodDate)
+                    riskcharacteristics_pic = ImageTk.PhotoImage(Image.open(name))
+                    labelbubble = Label(pic_frame, image=riskcharacteristics_pic)
+                    labelbubble.image = riskcharacteristics_pic
+                    labelbubble.grid(row=i, column=0, sticky='n')
+        elif picname == "BubbleScatter":
+            for widget in pic_frame.winfo_children():
+                widget.destroy()
+            temp_name = []
+            temp_return = []
+            temp_vol = []
+            temp_sharpe = []
+            for i in range(len(Strategies_save)):
+                temp = Strategies_save[i].saved_p[0].columns
+                for j in range(1, len(temp)):
+                    temp_name.append(Strategies_save[i].name + " " + temp[j])
+                    temp_return.append(float(Strategies_save[i].recom_saved_p[0].loc[13, temp[j]]))
+                    temp_vol.append(float(Strategies_save[i].recom_saved_p[0].loc[14, temp[j]]))
+                    temp_sharpe.append(float(Strategies_save[i].recom_saved_p[0].loc[15, temp[j]]))
+            temp_df = pd.DataFrame()
+            temp_df['name'] = temp_name
+            temp_df['return'] = temp_return
+            temp_df['vol'] = temp_vol
+            temp_df['sharpe'] = temp_sharpe
+            kf.BubbleScatter(temp_df)
+            bubble_pic = ImageTk.PhotoImage(Image.open("BubbleScatter.png"))
+            labelbubble = Label(pic_frame, image=bubble_pic)
+            labelbubble.image = bubble_pic
+            labelbubble.grid(row=0, column=0, sticky='n')
+        return
+
+    chart_list = ['Asset Allocation', 'Risk Characteristics', 'BubbleScatter']
+    pic_tree = CheckboxTreeview(right_scroll_frame, columns=("Charts"), height=len(chart_list))
+    pic_tree.grid(column=1, row=7, columnspan=3)
+    pic_tree.column("#0", width=50)
+    pic_tree.column("Charts", width=250)
+    pic_tree.heading("Charts", text="Charts")
+    for i in range(len(chart_list)):
+        pic_tree.insert("", i, values=[chart_list[i]])
+    """
+    if single_ac == False:
+        for i in temp_strg_id:
+            name = Strategies_save[i].client + Strategies_save[i].name + 'AssetAllocation.png'
+            kf.AssetAllocation(Strategies_save[i].recom_saved_p[0], Strategies_save[i].active_ac, name)
+            assetallocation_pic = ImageTk.PhotoImage(Image.open(name))
+            labelbubble = Label(pic_frame, image=assetallocation_pic)
+            labelbubble.image = assetallocation_pic
+            labelbubble.grid(row=i, column=0, sticky='n')
+    """
+    pic_tree.bind('<Double-Button-1>', pics)
+
+    def save_output():
+        ############################# info ###################################################
+        temp_client = client_combo.get()
+        strg_list = []
+        for i in range(len(Strategies_save)):
+            if Strategies_save[i].client == temp_client:
+                strg_list.append(i)
+        temp_strg = strg_tree.get_checked()
+        temp_sce = sce_tree.get_checked()
+        temp_pic = pic_tree.get_checked()
+        strg_no_list = []
+        sce_no_list = []
+        picname_list = []
+        for i in range(len(strg_list)):
+            for j in range(len(temp_strg)):
+                if Strategies_save[strg_list[i]].name == strg_tree.item(temp_strg[j], 'values')[0]:
+                    strg_no_list.append(strg_list[i])
+                    Strategies_save[strg_no_list[-1]].active_assetclasses()
+        for i in range(len(temp_sce)):
+            sce_no_list.append(int(sce_tree.item(temp_sce[i], 'values')[0].split(' ')[1]) - 1)
+        for i in range(len(temp_pic)):
+            picname_list.append(pic_tree.item(temp_pic[i], 'values')[0])
+
+        com_acsid = Strategies_save[strg_no_list[0]].rowid_ac.copy()
+        com_acs = []
+        for i in range(len(strg_no_list)):
+            for j in range(len(Strategies_save[strg_no_list[i]].rowid_ac)):
+                if Strategies_save[strg_no_list[i]].rowid_ac[j] not in com_acsid:
+                    com_acsid.append(Strategies_save[strg_no_list[i]].rowid_ac[j])
+        list.sort(com_acsid)
+        for i in range(len(com_acsid)):
+            com_acs.append(AssetClasses[com_acsid[i]].name)
+
+        fee_type = []
+        for i in strg_no_list:
+            xx = []
+            for j in sce_no_list:
+                xx.append(kf2.Fee_Type(Scenarios[j].dataBasis, Strategies_save[i].taxType))
+            fee_type.append(xx)
+
+        ############################ OUTPUT #######################################
+        if len(temp_strg) == 0 or len(temp_sce) == 0:
+            Hintwindow = Tk()
+            Hintwindow.title("Message")
+            tk.Label(Hintwindow, text='Please select at least one strategy and one scenario').pack()
+        else:
+            ########################################## Create word document #######################
+            doc = Document('Template.docx')
+            table_number = 1
+            figure_number = 1
+            # Header section
+            # header_section = doc.sections[0]
+            # header = header_section.header
+            # header_text = header.paragraphs[0]
+            # header_text.text = "ATCHISON"
+            ## Heading page
+            title_para = doc.add_paragraph()
+            title = title_para.add_run(temp_client)
+            title.alignment = 2
+            title.font.name = 'Arial'
+            title.font.size = docx.shared.Pt(26)
+            title.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+            sub = doc.add_paragraph()
+            if single_ac == False:
+                subsub = sub.add_run('Review of Investment Objectives & Asset Allocation ' + str(report_date))
+            else:
+                subsub = sub.add_run('AMG Approved List Stress Testing ' + str(report_date))
+            subsub.alignment = 1
+            subsub.font.name = 'Arial'
+            subsub.font.size = docx.shared.Pt(16)
+            subsub.font.color.rgb = docx.shared.RGBColor(255, 255, 255)
+            doc.add_page_break()
+            ## Table of content
+            ToC = doc.add_paragraph()
+            toc_run = ToC.add_run('Table of Content')
+            toc_run.font.name = 'Arial'
+            toc_run.font.size = docx.shared.Pt(16)
+            toc_run.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+            paragraph = doc.add_paragraph()
+            run = paragraph.add_run()
+            fldChar = OxmlElement('w:fldChar')  # creates a new element
+            fldChar.set(qn('w:fldCharType'), 'begin')  # sets attribute on element
+            instrText = OxmlElement('w:instrText')
+            instrText.set(qn('xml:space'), 'preserve')  # sets attribute on element
+            instrText.text = 'TOC \\o "1-5" \\h \\z \\u'  # change 1-3 depending on heading levels you need
+            fldChar2 = OxmlElement('w:fldChar')
+            fldChar2.set(qn('w:fldCharType'), 'separate')
+            fldChar3 = OxmlElement('w:t')
+            fldChar3.text = "Right-click to update field."
+            fldChar2.append(fldChar3)
+            fldChar4 = OxmlElement('w:fldChar')
+            fldChar4.set(qn('w:fldCharType'), 'end')
+            r_element = run._r
+            r_element.append(fldChar)
+            r_element.append(instrText)
+            r_element.append(fldChar2)
+            r_element.append(fldChar4)
+            p_element = paragraph._p
+            doc.add_page_break()
+            ############################################### 1 Executive Summary ########################################
+            doc.add_heading("Executive Summary", 1)
+
+            if single_ac == False:
+                if intro_entry.get() == '':
+                    doc.add_paragraph('The Trustees of the ' + temp_client + ', consistent with the obligation to act in the best interests of beneficiaries, '
+                                                                             'is required to implement a sound investment governance framework which focuses on managing relevant risks and returns of the investment strategy.',
+                                      style='BodyStyle')
+                    doc.add_paragraph('The Asset Consultant has been requested to review the strategic asset allocation (SAA) to provide the Trustee with an understanding of the expected return, '
+                                      'time horizon, volatility, risk objective, expected behaviour under stressed scenarios, and expected liquidity.', style='BodyStyle')
+                else:
+                    doc.add_paragraph(intro_entry.get(), style='BodyStyle')
+
+                doc.add_paragraph(temp_client + ' will offer the choice of the following diversified investment options. Refer Table '+str(table_number)+' below.', style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': Investment Options', style='T-Title')
+                io_table = doc.add_table(rows=len(Strategies_save) + 1, cols=2, style='Table2')
+                row = io_table.rows[0]
+                row.cells[0].text = 'Investment Strategy'
+                row.cells[1].text = 'Growth/Defensive Allocations'
+                for i in range(len(Strategies_save)):
+                    row = io_table.rows[i + 1]
+                    gid = Strategies_save[i].recom_saved_p[0].loc[Strategies_save[i].recom_saved_p[0]['Category'] == 'Growth(%)'].index[0]
+                    did = Strategies_save[i].recom_saved_p[0].loc[Strategies_save[i].recom_saved_p[0]['Category'] == 'Defensive(%)'].index[0]
+                    row.cells[0].text = Strategies_save[i].client + " " + Strategies_save[i].name
+                    try:
+                        row.cells[1].text = "{:.1f}".format(Strategies_save[i].recom_saved_p[0].loc[gid, 'Current SAA']) \
+                                        +'% Growth assets/'+ "{:.1f}".format(Strategies_save[i].recom_saved_p[0].loc[did, 'Current SAA']) +'% Defensive assets'
+                    except:
+                        row.cells[1].text = Strategies_save[i].recom_saved_p[0].loc[gid, 'Current SAA']+ '% Growth assets/' \
+                                            +Strategies_save[i].recom_saved_p[0].loc[did, 'Current SAA'] + '% Defensive assets'
+
+                table_number += 1
+                doc.add_paragraph('The scope of this review has been conducted in accordance with APRA Prudential Standard 530 Investment Governance Guidelines and summarised '
+                                  'in Table ' + str(table_number) + ' below:', style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': The scope of this review', style='T-Title')
+                temp_head = ['Investment Strategy', 'SAA Review', 'Investment Objective', 'Standard Risk Measure', 'Scenario Stress Testing', 'ESG Stress Testing', 'Liquidity Stress Testing']
+                content_table = doc.add_table(rows=len(Strategies_save) + 1, cols=len(temp_head), style='Table2')
+                row = content_table.rows[0]
+                for i in range(len(temp_head)):
+                    row.cells[i].text = temp_head[i]
+                for i in range(len(Strategies_save)):
+                    row = content_table.rows[i + 1]
+                    row.cells[0].text = Strategies_save[i].client + " " + Strategies_save[i].name
+                    for j in range(1, len(temp_head)):
+                        row.cells[j].text = '✓'
+                for cell in content_table.columns[0].cells:
+                    cell.width = Inches(3.5)
+                table_number += 1
+                doc.add_paragraph('More specially, this review encompasses: ', style='BodyStyle')
+                doc.add_paragraph('Review of Strategic Asset Allocation, Investment Objectives and Standard Risk Measures', style='BoldBody')
+                doc.add_paragraph('Asset Allocations and investment objectives have been analysed to ascertain whether the SAA, asset allocation ranges, '
+                                  'investment objective and SRM for ' + temp_client + ' remain current. ', style='BodyStyle')
+                temp = False
+                for x in range(len(Strategies_save)):
+                    if Strategies_save[x].recom_portfolio != None:
+                        temp = True
+                        break
+                if temp == True:
+                    doc.add_paragraph('Following this review, the Asset Consultant concludes and recommends changes to ' + temp_client + ' as detailed in the table below.', style='BodyStyle')
+
+                doc.add_paragraph('Conducting Scenario Stress Testing', style='BoldBody')
+                doc.add_paragraph('Stress testing scenarios have been performed on ' + temp_client + ' strategies in accordance with APRA Prudential Standard SPS 530, factoring investment returns, '
+                                                                                                     'SAA, and risk factors that have the potential to influence major asset classes and therefore have '
+                                                                                                     'an impact on the investment performance of the investment strategy.', style='BodyStyle')
+                doc.add_paragraph('A probability of greater than 50% is sought for an investment objective to be considered adequate. ' + 'The ' + temp_client
+                                  + ' strategies would have achieved its investment objective more than 50% of the time.', style='list_bullet')
+                doc.add_paragraph('As a result of this review, the trigger level has been derived as a pre-emptive flag to be monitored as part of '
+                                  'the ongoing supervision of the investment strategy included in Appendix B.', style='list_bullet')
+                doc.add_paragraph('On a quarterly basis, the performance of the ' + temp_client
+                                  + ' strategies is to be monitored against the trigger level to ensure that the investment strategy maintains at '
+                                    'least a 50% probability to achieve its investment objective.', style='list_bullet')
+                doc.add_paragraph('The investment option ranges have been stress tested by the addition of the most volatile portfolio (P1) for each investment option', style='list_bullet')
+
+                doc.add_paragraph('Conducting ESG Stress Testing', style='BoldBody')
+                doc.add_paragraph('Review of how the investment options performed during key environment disasters.', style='BodyStyle')
+                doc.add_paragraph('None of the environment disasters were a significant contributor (either negative or positive) to portfolio returns, '
+                                  'likely due to the slow impact of climate change on asset class returns and the ability to take corrective actions as and when detrimental '
+                                  'disasters etc. occur', style='list_bullet')
+
+                doc.add_paragraph('Conducting Liquidity Stress Testing', style='BoldBody')
+                doc.add_paragraph('The liquidity position of ' + temp_client + ' has been reviewed taking into consideration relevant asset classes and underlying investments.', style='BodyStyle')
+                temp = doc.add_paragraph('Consideration has been given to the liquidity of the underlying investments in normal and stressed market conditions for ' + temp_client + '. ',
+                                         style='list_bullet')
+                temp.add_run('The asset allocation is expected to remain liquid under stressed market scenarios.')
+                doc.add_paragraph('It is recommended that cash flow requirements are closely monitored to ensure sufficient cash is available to meet liabilities as they arise.', style='list_bullet')
+            else:
+                doc.add_paragraph('This report provides the Trustee of '+temp_client+' (Fund) an '
+                                  'understanding and gauge of how severe the impact would be on a Fund’s investment performance in the event of an'
+                                  'extraordinary market conditions. The analysis was conducted in accordance with APRA Prudential Standard SPS530, '
+                                  '"Investment Governance" and is intended to assist the Trustee to deliver quality retirement outcomes for members '
+                                  'of the Fund and meet its obligations in relation to the Fund’s Investment Strategy.', style='BodyStyle')
+                doc.add_paragraph('The Fund is a registered superannuation entity under the SIS Act. '
+                                  'It is not an employer-sponsored fund. but a member directed fund, '
+                                  'generally only available to investors who have appointed a financial adviser in relation to the Fund.', style='BodyStyle')
+                doc.add_paragraph('The total funds administered across the first three APLs (as tabled above) as at 30 September 2022 is $1,333,570,759. '
+                                  'Refer to Figure 1 for segmentation by major asset classes and corresponding value.', style='BodyStyle')
+                doc.add_paragraph('', style='BodyStyle')
+                doc.add_paragraph('', style='BodyStyle')
+
+            doc.add_page_break()
+
+            ############################################### 2 conclusions and recommendations ########################################
+            if single_ac == False:
+                doc.add_heading("Conclusions and Recommendations", 1)
+                doc.add_paragraph('Annual Review', style='BoldBody')
+                doc.add_paragraph('SAAs and investment objectives have been analysed on a historical and forecast basis to ascertain whether '
+                                  'the existing and proposed SAA, asset allocation ranges, investment objectives and standard risk measure (SRM) for the investment '
+                                  'options remain current (after investment management fees and tax) and whether the proposed SAA has a material detrimental consequence '
+                                  'on member outcomes.', style='BodyStyle')
+                if len(Strategies_save) > 1:
+                    doc.add_paragraph('Table '+str(table_number)+' to '+str(table_number+len(Strategies_save)-1)+' below provide a comparison for '+temp_client+' investment options '
+                                                                                                           'between their current investment objectives, SAA, asset class ranges, '
+                                  'and SRMs against the Asset Consultants proposed recommendation based on this review. ', style='BodyStyle')
+                else:
+                    doc.add_paragraph('Table ' + str(table_number) + ' below provide a comparison for '+temp_client+' investment options '
+                                                                                                                     'between their current investment objectives, SAA, asset class ranges, '
+                                                                                                                     'and SRMs against the Asset Consultants proposed recommendation based on this review. ',
+                                  style='BodyStyle')
+                doc.add_paragraph('', style='BodyStyle')
+                for x in range(len(Strategies_save)):
+                    doc.add_paragraph(Strategies_save[x].client + ' ' + Strategies_save[x].name, style='BoldBody')
+                    doc.add_paragraph('The following table provides information of '+Strategies_save[x].client + ' ' + Strategies_save[x].name+' Investment Strategy on the investment objective, SAA, '
+                                      'asset allocation ranges, and SRM with the Asset '
+                                      'Consultants recommendation based on this review.',style='BodyStyle')
+                    doc.add_paragraph('Table ' + str(table_number) + ': Current and recommended asset allocation of ' + Strategies_save[x].client + ' ' + Strategies_save[x].name, style='T-Title')
+                    temp_head = ['Strategic Asset Allocation (%)', 'Current', '', 'Recommended', '']
+                    gd_table = doc.add_table(rows=2, cols=len(temp_head), style='Table2')
+                    ga = [None, None]
+                    da = [None, None]
+                    rd_option = rd_var.get()
+                    for k in range(len(Strategies_save[x].recom_saved_p[0])):
+                        if Strategies_save[x].recom_saved_p[0].iloc[k, 0] == 'Growth(%)':
+                            ga[0] = Strategies_save[x].recom_saved_p[0].iloc[k, 1]
+                            try:
+                                if rd_option == 1:
+                                    ga[1] = kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[k, 'Recommended']))
+                                else:
+                                    ga[1] = Strategies_save[x].recom_saved_p[0].loc[k, 'Recommended']
+                            except:
+                                pass
+                                # doc.add_paragraph('No recommended allocation is chosen for this strategy.', style='BodyStyle')
+                        if Strategies_save[x].recom_saved_p[0].iloc[k, 0] == 'Defensive(%)':
+                            da[0] = Strategies_save[x].recom_saved_p[0].iloc[k, 1]
+                            try:
+                                if rd_option == 1:
+                                    da[1] = kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[k, 'Recommended']))
+                                else:
+                                    da[1] = Strategies_save[x].recom_saved_p[0].loc[k, 'Recommended']
+                            except:
+                                pass
+                        if Strategies_save[x].recom_saved_p[0].iloc[k, 0] == 'Risk Level':
+                            try:
+                                recom_rl = Strategies_save[x].recom_saved_p[0].loc[k, 'Recommended']
+                            except:
+                                pass
+                    row = gd_table.rows[0]
+                    for i in range(len(temp_head)):
+                        row.cells[i].text = temp_head[i]
+                    row.cells[1].merge(row.cells[2])
+                    row.cells[3].merge(row.cells[4])
+
+                    row = gd_table.rows[1]
+                    row.cells[0].text = 'Growth/Defensive Allocation (%)'
+                    row.cells[1].text = str(ga[0]) + '/' + str(da[0])
+                    row.cells[2].text = '100'
+                    if Strategies_save[x].recom_portfolio == None:
+                        row.cells[3].text = str(ga[0]) + '/' + str(da[0])
+                        row.cells[4].text = '100'
+                    else:
+                        row.cells[3].text = str(ga[1]) + '/' + str(da[1])
+                        row.cells[4].text = '100'
+
+                    for cell in gd_table.columns[0].cells:
+                        cell.width = Inches(3.2)
+                    doc.add_paragraph('', style='BoldBody')
+
+                    temp_head = ['Asset Class', 'Current SAA(%)', 'Ranges(%)', 'Recommended SAA(%)', 'Ranges(%)']
+                    aca_table = doc.add_table(rows=len(Strategies_save[x].active_ac) + 3, cols=len(temp_head), style='Table2')
+                    row = aca_table.rows[0]
+                    for i in range(len(temp_head)):
+                        row.cells[i].text = temp_head[i]
+                    if Strategies_save[x].recom_portfolio != None:
+                        recom_list = []
+                        for i in range(len(Strategies_save[x].active_ac)):
+                            if rd_option == 1:
+                                temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[i + 1, 'Recommended']))
+                            else:
+                                temp = float(Strategies_save[x].recom_saved_p[0].loc[i + 1, 'Recommended'])
+                            if len(Strategies_save[x].fund_id) == 0:
+                                if i == len(Strategies_save[x].growth_id)-1:
+                                    temp_sum = 0
+                                    if len(Strategies_save[x].growth_id) > 1:
+                                        for m in range(1, len(Strategies_save[x].growth_id)):
+                                            if rd_option ==1:
+                                                temp_sum += kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[m, 'Recommended']))
+                                            else:
+                                                temp_sum += float(Strategies_save[x].recom_saved_p[0].loc[m, 'Recommended'])
+                                    if rd_option == 1:
+                                        temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[len(Strategies_save[x].rowid_ac) + 2, 'Recommended'])) - temp_sum
+                                    else:
+                                        temp = float(Strategies_save[x].recom_saved_p[0].loc[len(Strategies_save[x].rowid_ac) + 2, 'Recommended']) - temp_sum
+                                    if temp <= 0:
+                                        Hintwindow = Tk()
+                                        Hintwindow.title("Message")
+                                        tk.Label(Hintwindow, text="Too small to round, result is not accurate").pack()
+                                if i == len(Strategies_save[x].rowid_ac)-1:
+                                    temp_sum = 0
+                                    if len(Strategies_save[x].defensive_id) > 1:
+                                        for m in range(len(Strategies_save[x].growth_id) + 1, len(Strategies_save[x].rowid_ac)):
+                                            if rd_option ==1:
+                                                temp_sum += kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[m, 'Recommended']))
+                                            else:
+                                                temp_sum += float(Strategies_save[x].recom_saved_p[0].loc[m, 'Recommended'])
+                                    if rd_option ==1:
+                                        temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[0].loc[len(Strategies_save[x].rowid_ac) + 3, 'Recommended'])) - temp_sum
+                                    else:
+                                        temp = float(Strategies_save[x].recom_saved_p[0].loc[len(Strategies_save[x].rowid_ac) + 3, 'Recommended']) - temp_sum
+                                    if temp <= 0:
+                                        Hintwindow = Tk()
+                                        Hintwindow.title("Message")
+                                        tk.Label(Hintwindow, text="Too small to round, result is not accurate").pack()
+                            recom_list.append("{:.1f}".format(temp))
+                    for i in range(len(Strategies_save[x].active_ac)):
+                        row = aca_table.rows[i + 1]
+                        row.cells[0].text = Strategies_save[x].active_ac[i]
+                        row.cells[1].text = str(Strategies_save[x].recom_saved_p[0].iloc[i + 1, 1])
+                        row.cells[2].text = str(Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Min']) + '-' + str(
+                            Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Max'])
+                        if Strategies_save[x].recom_portfolio != None:
+                            if pd.isna(Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Recommended Min']) == False:
+                                row.cells[3].text = str(recom_list[i])
+                                row.cells[4].text = str(Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Recommended Min']) + '-' + str(
+                                    Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Recommended Max'])
+                            else:
+                                row.cells[3].text = str(recom_list[i])
+                                row.cells[4].text = str(Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Min']) + '-' + str(
+                                    Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Max'])
+                        else:
+                            row.cells[3].text = str(Strategies_save[x].recom_saved_p[0].iloc[i + 1, 1])
+                            row.cells[4].text = str(Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Min']) + '-' + str(
+                                Strategies_save[x].assetClassConstraints.loc[Strategies_save[x].rowid_ac[i], 'Current Max'])
+
+                    row = aca_table.rows[len(Strategies_save[x].active_ac) + 1]
+                    run = row.cells[0].paragraphs[0].add_run('Investment Objective')
+                    run.bold = True
+                    for m in (1, 3):
+                        if Strategies_save[x].recom_obj[0] == None:
+                            run = row.cells[m].paragraphs[0].add_run(str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].TRObjectiveHurdle) + '% pa over rolling ' + str(
+                                int(Strategies_save[x].TRObjectiveHorizon)) + '-year periods ')
+                            run.bold = True
+                        else:
+                            run = row.cells[m].paragraphs[0].add_run(str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over rolling ' + str(
+                                int(Strategies_save[x].recom_obj[1])) + '-year periods ')
+                            run.bold = True
+                        row.cells[m].merge(row.cells[m+1])
+                    row = aca_table.rows[len(Strategies_save[x].active_ac) + 2]
+                    run = row.cells[0].paragraphs[0].add_run('Standard Risk Measure')
+                    run.bold = True
+                    run = row.cells[1].paragraphs[0].add_run(Strategies_save[x].SRM)
+                    run.bold = True
+                    row.cells[1].merge(row.cells[2])
+                    run = row.cells[3].paragraphs[0].add_run(Strategies_save[x].recom_srm)
+                    run.bold = True
+                    row.cells[3].merge(row.cells[4])
+
+                    for cell in aca_table.columns[0].cells:
+                        cell.width = Inches(3.2)
+                    table_number += 1
+
+                    doc.add_paragraph('Conclusion', style='GreenBody')
+                    if Strategies_save[x].recom_portfolio == None:
+                        doc.add_paragraph('Maintain the current Strategic Asset Allocation', style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt the recommended Strategic Asset Allocation', style='list_bullet')
+                    if Strategies_save[x].recom_obj[0] == None:
+                        doc.add_paragraph('Maintain the current investment objective of '+ str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].TRObjectiveHurdle)
+                                          + '% pa over rolling ' + str(int(Strategies_save[x].TRObjectiveHorizon)) + '-year periods ', style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt the investment objective of ' + str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over rolling ' + str(
+                                int(Strategies_save[x].recom_obj[1])) + '-year periods ', style='list_bullet')
+                    if Strategies_save[x].SRM == Strategies_save[x].recom_srm:
+                        doc.add_paragraph('Maintain the current SRM of '+Strategies_save[x].SRM, style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt an SRM of ' + Strategies_save[x].recom_srm, style='list_bullet')
+                    doc.add_paragraph('Recommendation', style='GreenBody')
+
+                    doc.add_paragraph('The above tabled recommendations to be approved', style='list_bullet')
+                    doc.add_paragraph('It is also recommended that a review of SAA, investment objectives, '
+                                      'asset class ranges and SRM be conducted in accordance with APRA Prudential Standard 530 Investment Governance on an annual basis', style='list_bullet')
+                    doc.add_paragraph('', style='BodyStyle')
+
+                doc.add_paragraph('Scenario Stress Testing', style='BoldBody')
+                doc.add_paragraph('Stress testing scenarios have been performed on the Fund’s multi-asset investment options in accordance with APRA '
+                                  'Prudential Standard SPS 530, factoring investment returns, SAA and risk factors that have the potential to influence major '
+                                  'asset classes and therefore have an impact on the investment performance of the investment options.', style='BodyStyle')
+                doc.add_paragraph('Conclusion', style='GreenBody')
+                doc.add_paragraph('Stress testing demonstrates that all multi-asset investment options are likely achieve their respective '
+                                  'investment objective at least greater than 50% of the time', style='list_bullet')
+                doc.add_paragraph('The recommended risk disclosures for all multi-asset investment options remain suitable', style='BodyStyle')
+                doc.add_paragraph('Recommendation', style='GreenBody')
+                doc.add_paragraph('On a quarterly basis, performance of the investment options is to be monitored against their trigger levels to ensure that '
+                                  'the options maintain at least a 50% probability to achieve their respective investment objectives. Trigger levels are '
+                                  'derived using a 2 standard deviation event from the mean expected return of the respective portfolio. 2 standard '
+                                  'deviations from the mean reflect a confidence interval of 95%. ', style='BodyStyle')
+                doc.add_paragraph('A trigger level represents the minimum tolerance of a strategy’s quarterly absolute performance. A breach of the trigger '
+                                  'level i.e. a defined loss or minimum return to be achieved by the investment option between formal annual reviews. '
+                                  'Should the actual investment performance fall below the relevant trigger level, the strategy may be deemed unlikely to '
+                                  'meet its investment objective over the rest of the investment horizon and therefore will initiate a review of the investment '
+                                  'strategy.', style='BodyStyle')
+                doc.add_paragraph('', style='BodyStyle')
+                doc.add_paragraph('Environmental Stress Testing', style='BoldBody')
+                doc.add_paragraph('An RSE licensee is required to consider the environmental (ESG) impacts of investments when formulating and '
+                                  'implementing an investment strategy. APRA CPG 229 provides guidance on APRA’s view of sound practice in particular '
+                                  'areas in relation to prudent practices to climate change financial risk management.', style='BodyStyle')
+                doc.add_paragraph('Given the unique nature and asset allocations, the approach taken by the asset consultant to managing environmental '
+                                  'risk is to test the '+Strategies_save[0].client+' multi-asset investment portfolios expected investment performance through various significant '
+                                  'historical environmental disasters. Refer to Appendix B.', style='BodyStyle')
+                doc.add_paragraph('Conclusion', style='GreenBody')
+                doc.add_paragraph('None of the environment disasters was a significant contributor (either negative or positive) to portfolio '
+                                  'returns, likely due to the slow impact of climate change on asset class returns and the ability to take corrective '
+                                  'actions as and when detrimental disasters etc. occur', style='list_bullet')
+                doc.add_paragraph('Recommendation', style='GreenBody')
+                doc.add_paragraph('ESG stress testing to be performed annually', style='list_bullet')
+                doc.add_paragraph('', style='BodyStyle')
+                doc.add_paragraph('Liquidity Stress Testing', style='BoldBody')
+                doc.add_paragraph('The SIS Act requires an RSE licensee to consider the liquidity of investments when formulating and implementing an '
+                                  'investment strategy, while also considering the expected cash flow requirements of the RSE.', style='BodyStyle')
+                doc.add_paragraph('The '+temp_client+' Administrator reports contribution flows and member exits/outflows to the Trustee and investment manager to '
+                                  'assist in the early identification of unusual patterns.', style='BodyStyle')
+                doc.add_paragraph('In managing liquidity risk the following matters may be included:', style='BodyStyle')
+                doc.add_paragraph('Cash flow projections and past cash flow will be prepared on a regular basis to check the liquidity level needed', style='list_bullet')
+                doc.add_paragraph('Whether there are appropriate early warning indicators of liquidity risk for the single investment of the '+temp_client+', and', style='list_bullet')
+                doc.add_paragraph('Reporting to the Research and Investment Team, Trustee Investment Committee and Board.', style='list_bullet')
+                doc.add_paragraph('Conclusion', style='GreenBody')
+                doc.add_paragraph('The majority of the assets can be liquidated in 30 days under both normal and stressed liquidity conditions', style='list_bullet')
+                doc.add_paragraph('These investment options are therefore deemed liquid', style='list_bullet')
+                doc.add_paragraph('Recommendation', style='GreenBody')
+                doc.add_paragraph('It is recommended that cash flow requirements are closely monitored to ensure sufficient cash is available to '
+                                  'meet liabilities as they arise', style='list_bullet')
+            doc.add_page_break()
+
+            ############################################### 2 Introduction ########################################
+            yes_hist = []
+            yes_forecast = []
+            for i in sce_no_list:
+                if Scenarios[i].hist_or_forecast == 'Historical':
+                    yes_hist.append(i)
+                elif Scenarios[i].hist_or_forecast == 'Forecast':
+                    yes_forecast.append(i)
+            if single_ac == False:
+                doc.add_heading('Introduction', 1)
+                if intro_entry.get() == '':
+                    doc.add_paragraph('The Trustees of the ' + temp_client + ', consistent with the obligation to act in the best interests of beneficiaries, '
+                                                                             'is required to implement a sound investment governance framework which focuses on managing relevant risks and returns of the investment strategy.',
+                                      style='BodyStyle')
+                    doc.add_paragraph('The key requirements are that the Trustee:', style='BodyStyle')
+                    doc.add_paragraph('Formulate specific and measurable investment objectives for the investment portfolio, including return and risk objectives;', style='list_bullet')
+                    doc.add_paragraph('Develop, maintain and implement an effective due diligence process for the selection of investments;', style='list_bullet')
+                    doc.add_paragraph('Determine appropriate measures to monitor and assess the performance of investments on an ongoing basis;', style='list_bullet')
+                    doc.add_paragraph('Review the investment objectives and investment strategies on a periodic basis;', style='list_bullet')
+                    doc.add_paragraph('Develop, maintain and implement a comprehensive investment stress testing program;', style='list_bullet')
+                    doc.add_paragraph('Formulate a liquidity management plan; and', style='list_bullet')
+                    doc.add_paragraph('Develop, maintain, and implement an effective valuation governance framework.', style='list_bullet')
+                    doc.add_paragraph('The Asset Consultant has been requested to review the strategic asset allocation (SAA) '
+                                      'to provide the Trustee with an understanding of the expected return, time horizons, volatility, '
+                                      'risk objective, expected behaviour under stressed scenarios, and expected liquidity.', style='BodyStyle')
+                else:
+                    doc.add_paragraph(intro_entry.get(), style='BodyStyle')
+                doc.add_paragraph('The scope of this review has been conducted in accordance with APRA Prudential Standard 530 Investment Governance Guidelines and summarised in Table 3 below:',
+                                  style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': The scope of this review', style='T-Title')
+                temp_head = ['Investment Strategy', 'SAA Review', 'Investment Objective', 'Standard Risk Measure', 'Scenario Stress Testing', 'ESG Stress Testing', 'Liquidity Stress Testing']
+                content_table = doc.add_table(rows=len(Strategies_save) + 1, cols=len(temp_head), style='Table2')
+                row = content_table.rows[0]
+                for i in range(len(temp_head)):
+                    row.cells[i].text = temp_head[i]
+                for i in range(len(Strategies_save)):
+                    row = content_table.rows[i + 1]
+                    row.cells[0].text = Strategies_save[i].client + " " + Strategies_save[i].name
+                    for j in range(1, len(temp_head)):
+                        row.cells[j].text = '✓'
+                for cell in content_table.columns[0].cells:
+                    cell.width = Inches(3.5)
+                table_number += 1
+                ## allocation table
+                # doc.add_paragraph('Strategic Asset Allocation', style='BoldBody')
+                # doc.add_paragraph('SAA applies a rules-based investment strategy to assist in defining a long-term investment allocation goal that '
+                # 'is designed to maximise an investment portfolio’s return objective, subject to its tolerance for risk.',style='BodyStyle')
+                # doc.add_paragraph('The general approach to asset allocation strategy is to determine which asset classes to invest in based on investor risk tolerance and return objectives. '
+                # 'Portfolio implementation decisions must separate two important concepts: asset allocation and diversification. '
+                # 'Asset allocation in its most basic form is the decision of how to weight stocks, bonds and cash in a portfolio in a way that provides the potential for '
+                # 'the best investment return for the amount of risk you’re willing to accept.', style='BodyStyle')
+                # doc.add_paragraph('In this instance the Asset Consultant has been provided with the asset classes and the proposed allocation to each of the asset classes, '
+                # 'termed as strategic asset allocation (SAA)', style='BodyStyle')
+                doc.add_page_break()
+                ############################################### 3 Review of Investment Strategy ################################
+                doc.add_heading('Review of Investment Strategies', 1)
+                doc.add_paragraph(
+                    'A review of the current and proposed investment strategy and policy has been conducted. The investment objective, asset allocation and risk label have been examined.',
+                    style='BodyStyle')
+                doc.add_heading('Scenario Analysis', 2)
+                doc.add_paragraph('Scenario analysis, on a forecast and historical basis, of annual portfolio returns and volatility of returns, growth/defensive asset allocation '
+                                  'and probability of a negative return for ' + temp_client
+                                  + ' has been undertaken and analysis is presented in Table ' + str(table_number) + '.', style='BodyStyle')
+                doc.add_paragraph('Value at risk measures the largest loss likely to be incurred over one year with a '
+                                  'confidence level (varies upon scenarios). Standard Risk Measure, as per the FSC/AFSA guidelines '
+                                  'has been derived for each investment option.', style='BodyStyle')
+                doc.add_paragraph('Scenarios will be applied across strategy analysis, detailed information is shown in Table ' + str(table_number) + '.', style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': Scenarios settings', style='T-Title')
+                sce_catlist = ['Date Type', 'Confidence Level', 'Return and Volatility', 'Correlation and methods', 'CPI']
+                sceinfo_table = doc.add_table(rows=len(sce_catlist) + 1, cols=len(Scenarios) + 1, style='Table2')
+                row = sceinfo_table.rows[0]
+                row.cells[0].text = 'Category'
+                for i in range(len(Scenarios)):
+                    row.cells[i + 1].text = 'Scenario ' + str(i + 1)
+                for i in range(len(sce_catlist)):
+                    row = sceinfo_table.rows[i + 1]
+                    row.cells[0].text = sce_catlist[i]
+                    for j in range(len(Scenarios)):
+                        if i == 0:
+                            if Scenarios[j].dataBasis == 'Gross':
+                                row.cells[j + 1].text = 'Before management fees and tax'
+                            else:
+                                if Strategies_save[0].taxType == "Zero/NFP":
+                                    row.cells[j + 1].text = 'After management fees and pre-tax'
+                                else:
+                                    row.cells[j + 1].text = 'After management fees and tax'
+                        elif i == 1:
+                            row.cells[j + 1].text = str(Scenarios[j].confidence * 100) + '%'
+                        elif i == 2:
+                            if Scenarios[j].hist_or_forecast == "Historical":
+                                row.cells[j + 1].text = "Historical " + str(Scenarios[j].hist_period) + '-year'
+                            else:
+                                row.cells[j + 1].text = "Forecast " + str(Scenarios[j].forecast_period) + '-year'
+                        elif i == 3:
+                            if Scenarios[j].hist_or_forecast == "Historical":
+                                row.cells[j + 1].text = "Historical " + str(Scenarios[j].hist_period) + '-year'
+                            else:
+                                if Scenarios[j].f_c_horf == "Historical":
+                                    if Scenarios[j].c_option == 'Option1':
+                                        row.cells[j + 1].text = "Historical " + str(Scenarios[j].f_histperiod) + '-year, using Covariance Matrix'
+                                    else:
+                                        row.cells[j + 1].text = "Historical " + str(Scenarios[j].f_histperiod) + '-year, using Modern Portfolio Theory'
+                                else:
+                                    row.cells[j + 1].text = "Forecast " + str(Scenarios[j].forecast_period) + '-year'
+                        elif i == 4:
+                            row.cells[j + 1].text = "{:.2f}".format(Scenarios[j].cpi * 100) + '%'
+                table_number += 1
+                doc.add_paragraph('', style='BodyStyle')
+
+                ## obtain data for current saa and recommended saa
+                saa_list = []  ## no_strg * no_sce [SRM , prob, year, confidence, VaR, no_neg_return_in_20year]
+                recom_list = []
+                for z in strg_no_list:
+                    ori0 = []
+                    recom0 = []
+                    for y in range(len(Strategies_save[z].recom_saved_p)):
+                        ori = []
+                        recom = []
+                        for k in range(len(Strategies_save[z].recom_saved_p[y])):
+                            a = Strategies_save[z].recom_saved_p[y].iloc[k, 0]
+                            x = a.split('%')
+                            if len(x) > 2:
+                                test_hurdle = x[0].split('+')[-1]
+                                test_horizon = x[1].split('-')[0].split(' ')[-1]
+                                ## need check
+                                if float(test_hurdle) == float(Strategies_save[z].TRObjectiveHurdle) and int(test_horizon) == int(Strategies_save[z].TRObjectiveHorizon):
+                                    ori.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Current SAA'])
+                                if Strategies_save[z].recom_portfolio != None:
+                                    if Strategies_save[z].recom_obj[0] != None and Strategies_save[z].recom_obj[1] != None:
+                                        if float(test_hurdle) == float(Strategies_save[z].recom_obj[0]) and int(test_horizon) == int(Strategies_save[z].recom_obj[1]):
+                                            recom.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Recommended'])
+                                    elif float(test_hurdle) == float(Strategies_save[z].TRObjectiveHurdle) and int(test_horizon) == int(Strategies_save[z].TRObjectiveHorizon):
+                                        recom.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Recommended'])
+                                else:
+                                    recom.append('')
+                            if a in ['1 in 20 year event(%)', '1 in 10 year event(%)', '1 in 100 year event(%)']:
+                                ori.append(a.split(' ')[2])
+                                recom.append(a.split(' ')[2])
+                                if a.split(' ')[2] == '20':
+                                    ori.append('95%')
+                                    recom.append('95%')
+                                elif a.split(' ')[2] == '10':
+                                    ori.append('90%')
+                                    recom.append('95%')
+                                else:
+                                    ori.append('100%')
+                                    recom.append('95%')
+                                ori.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Current SAA'])
+                                if Strategies_save[z].recom_portfolio != None:
+                                    recom.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Recommended'])
+                                else:
+                                    recom.append('')
+                            if a == 'Risk Level':
+                                ori.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Current SAA'])
+                                if Strategies_save[z].recom_portfolio != None:
+                                    recom.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Recommended'])
+                                else:
+                                    recom.append('')
+                            if a == 'Number of Negative Annual Return in any 20-year period':
+                                ori.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Current SAA'])
+                                if Strategies_save[z].recom_portfolio != None:
+                                    recom.append(Strategies_save[z].recom_saved_p[y].loc[k, 'Recommended'])
+                                else:
+                                    recom.append('')
+                        ori0.append(ori.copy())
+                        recom0.append(recom.copy())
+                    saa_list.append(ori0.copy())
+                    recom_list.append(recom0.copy())
+                ######### different strategies included for same client
+                cat_list = ['Asset Classes', 'Total', 'Scenario Analysis', "Annualised Value at Risk", "Frequency of Negative Annual Total Return"]
+                for x in strg_no_list:
+                    cat_list.insert(3, 'Probability of Achieving ' + Strategies_save[x].TRObjectiveType + '-based Return Target')
+                    doc.add_heading('Analysis of Strategy: ' + Strategies_save[x].name, 2)
+                    doc.add_heading('Analysis of Asset Allocation', 3)
+                    if 'Asset Allocation' in picname_list:
+                        doc.add_paragraph('Figure ' + str(figure_number) + ' displays the allocation for each asset class in different portfolios.', style='BodyStyle')
+                        doc.add_paragraph('', style='BodyStyle')
+                        doc.add_paragraph('Figure ' + str(figure_number) + ': Asset Allocation', style='T-Title')
+                        name = Strategies_save[x].client + Strategies_save[x].name + 'AssetAllocation.png'
+                        kf.AssetAllocation(Strategies_save[x].recom_saved_p[0], Strategies_save[x].active_ac, name)
+                        doc.add_picture(name)
+                        figure_number += 1
+                    if Strategies_save[x].recom_obj[0] == None:
+                        obj = Strategies_save[x].TRObjectiveType + '+' + str(round(float(Strategies_save[x].TRObjectiveHurdle), 1)) + "%p.a. over a " \
+                              + str(int(Strategies_save[x].TRObjectiveHorizon)) + "-year rolling period(%)"
+                    else:
+                        obj = Strategies_save[x].TRObjectiveType + '+' + str(round(float(Strategies_save[x].TRObjectiveHurdle), 1)) + "%p.a. over a " \
+                              + str(int(Strategies_save[x].TRObjectiveHorizon)) + "-year rolling period(%)"
+                    for k in sce_no_list:
+                        ## now using selected hurdle and horizon
+                        if Strategies_save[x].recom_obj[0] == None:
+                            doc.add_paragraph(
+                                'Table ' + str(table_number) + ' tests and demonstrates the returns, volatility of returns and the probabilities of the current SAA meeting the '
+                                                               'current stated investment objective of CPI + ' + str(Strategies_save[x].TRObjectiveHurdle) + '% pa over ' + str(
+                                    Strategies_save[x].TRObjectiveHorizon) +
+                                '-year periods, on a ' + Scenarios[k].hist_or_forecast.lower() + ' basis, ' + fee_type[x][k] + '.', style='BodyStyle')
+                            doc.add_paragraph('Table ' + str(table_number) + ': Scenario ' + str(k + 1) + ' ' + Scenarios[k].hist_or_forecast
+                                              + ' Analysis – Strategic Asset Allocations', style='T-Title')
+                        else:
+                            doc.add_paragraph(
+                                'Table ' + str(table_number) + ' tests and demonstrates the returns, volatility of returns and the probabilities of the current and proposed SAA meeting the '
+                                                               'current stated investment objective of CPI + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over ' + str(
+                                    Strategies_save[x].recom_obj[1]) +
+                                '-year periods, on a ' + Scenarios[k].hist_or_forecast.lower() + ' basis, ' + fee_type[x][k] + '.', style='BodyStyle')
+                            doc.add_paragraph('Table ' + str(table_number) + ': Scenario ' + str(k + 1) +' '+Scenarios[k].hist_or_forecast
+                                              + ' Analysis – Strategic Asset Allocations', style='T-Title')
+                        op_table = doc.add_table(rows=len(Strategies_save[x].recom_saved_p[0]) + 1, cols=len(Strategies_save[x].recom_saved_p[0].columns), style='Table2')
+                        row = op_table.rows[0]
+                        for i in range(len(Strategies_save[x].recom_saved_p[0].columns)):
+                            row.cells[i].text = Strategies_save[x].recom_saved_p[0].columns[i]
+                        ## first column
+                        for i in range(len(Strategies_save[x].recom_saved_p[k])):
+                            row = op_table.rows[i + 1]
+                            if Strategies_save[x].recom_saved_p[k].iloc[i, 0] in cat_list:
+                                run = row.cells[0].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, 0]))
+                                run.bold = True
+                            else:
+                                temp_x = '  ' + Strategies_save[x].recom_saved_p[k].iloc[i, 0]
+                                if Strategies_save[x].recom_saved_p[k].iloc[i, 0] == obj:
+                                    row.cells[0].paragraphs[0].style = 'Mark1'
+                                    row.cells[0].paragraphs[0].add_run(temp_x)
+                                else:
+                                    row.cells[0].paragraphs[0].add_run(temp_x)
+                        for i in range(len(Strategies_save[x].recom_saved_p[0])):
+                            row = op_table.rows[i + 1]
+                            for j in range(1, len(Strategies_save[x].recom_saved_p[0].columns)):
+                                if Strategies_save[x].recom_saved_p[k].iloc[i, 0] in cat_list:
+                                    run = row.cells[j].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                                    run.bold = True
+                                else:
+                                    n = Strategies_save[x].recom_saved_p[k].iloc[i, 0].split('%')
+                                    if len(n) > 2:
+                                        test_hurdle = n[0].split('+')[-1]
+                                        test_horizon = n[1].split('-')[0].split(' ')[-1]
+                                    try:
+                                        if Strategies_save[x].recom_saved_p[k].iloc[i, 0] == obj:
+                                            row.cells[j].paragraphs[0].style = 'Mark1'
+                                            row.cells[j].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                                        else:
+                                            row.cells[j].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                                    except:
+                                        rd_option = rd_var.get()
+                                        if rd_option == 1:
+                                            if Strategies_save[x].recom_saved_p[0].columns[j] not in ('Current SAA', 'Current TAA') and i >= 1 and i <= len(Strategies_save[x].rowid_ac) + 3:
+                                                temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                                                if len(Strategies_save[x].fund_id) == 0:
+                                                    if i == len(Strategies_save[x].growth_id):
+                                                        temp_sum = 0
+                                                        if len(Strategies_save[x].growth_id) > 1:
+                                                            for m in range(1, len(Strategies_save[x].growth_id)):
+                                                                temp_sum += kf2.rounding(float(Strategies_save[x].recom_saved_p[k].iloc[m, j]))
+                                                        temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[k].iloc[len(Strategies_save[x].rowid_ac) + 2, j])) - temp_sum
+                                                        if temp <= 0:
+                                                            Hintwindow = Tk()
+                                                            Hintwindow.title("Message")
+                                                            tk.Label(Hintwindow, text="Too small to round, result is not accurate").pack()
+                                                    if i == len(Strategies_save[x].rowid_ac):
+                                                        temp_sum = 0
+                                                        if len(Strategies_save[x].defensive_id) > 1:
+                                                            for m in range(len(Strategies_save[x].growth_id) + 1, len(Strategies_save[x].rowid_ac)):
+                                                                temp_sum += kf2.rounding(float(Strategies_save[x].recom_saved_p[k].iloc[m, j]))
+                                                        temp = kf2.rounding(float(Strategies_save[x].recom_saved_p[k].iloc[len(Strategies_save[x].rowid_ac) + 3, j])) - temp_sum
+                                                        if temp <= 0:
+                                                            Hintwindow = Tk()
+                                                            Hintwindow.title("Message")
+                                                            tk.Label(Hintwindow, text="Too small to round, result is not accurate").pack()
+                                                row.cells[j].paragraphs[0].add_run(str(temp))
+                                            else:
+                                                row.cells[j].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                                        else:
+                                            row.cells[j].paragraphs[0].add_run(str(Strategies_save[x].recom_saved_p[k].iloc[i, j]))
+                        for cell in op_table.columns[0].cells:
+                            cell.width = Inches(3.5)
+                        table_number += 1
+                        doc.add_paragraph('', style='BodyStyle')
+                        if 'Risk Characteristics' in picname_list:
+                            doc.add_paragraph('Figure ' + str(figure_number) + ' displays the allocation for each asset class in different portfolios.', style='BodyStyle')
+                            name = Strategies_save[x].client + Strategies_save[x].name + 'RiskCharacteristics.png'
+                            kf.RiskCharacteristics(Strategies_save[x].recom_saved_p[0], Strategies_save[x].active_ac, name, AssetClasses, Scenarios[k], global_EndPeriodDate)
+                            doc.add_picture(name)
+                            figure_number += 1
+                    doc.add_heading('Current Investment Strategy', 3)
+                    doc.add_paragraph('The current SAA for the investment strategy has been tested against a series of CPI-based investment objectives. '
+                                      'Specific assessment seeking to confirm that the current SAA remains acceptable and that the current investment '
+                                      'objective is likely to be achieved.', style='BodyStyle')
+                    doc.add_paragraph('A probability of greater than 50% is sought to indicate that an investment objective is likely to be achieved.', style='BodyStyle')
+                    for k in sce_no_list:
+                        doc.add_paragraph('Analysis for Scenario ' + str(k + 1) + ' has been conducted ' + fee_type[x][k] + ':', style='BodyStyle')
+                        if Strategies_save[z].recom_obj[0] == None:
+                            doc.add_paragraph('Under Scenario ' + str(k + 1) + ' the current investment objective of CPI + ' + str(Strategies_save[x].TRObjectiveHurdle) + '% pa over a ' + str(
+                                int(Strategies_save[x].TRObjectiveHorizon)) + '-year rolling period is likely to be achieved at a ' + str(
+                                saa_list[x][k][1]) + '% probability. ' +
+                                              'Value at Risk upon a 1 in ' + str(saa_list[x][k][2]) + '-year event (' + str(saa_list[x][k][3]) + ' probability) is expected at ' +
+                                              str(saa_list[x][k][4]) + '% for the current allocation. ' + 'The level of investment risk, as captured by SRM, is ' + str(saa_list[x][k][0]) +
+                                              ' for the current SAA.', style='list_bullet')
+                        else:
+                            doc.add_paragraph('Under Scenario ' + str(k + 1) + ' the current investment objective of CPI + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over a ' + str(
+                                int(Strategies_save[x].recom_obj[1])) + '-year rolling period is likely to be achieved at a ' + str(
+                                saa_list[x][k][1]) + '% probability. ' +
+                                              'Value at Risk upon a 1 in ' + str(saa_list[x][k][2]) + '-year event (' + str(saa_list[x][k][3]) + ' probability) is expected at ' +
+                                              str(saa_list[x][k][4]) + '% for the current allocation. ' + 'The level of investment risk, as captured by SRM, is ' + str(saa_list[x][k][0]) +
+                                              ' for the current SAA.', style='list_bullet')
+                    if Strategies_save[x].recom_portfolio != None:
+                        doc.add_heading('Recommended Investment Strategy', 3)
+                        doc.add_paragraph('The proposed SAA for the investment strategy has been tested against a series of CPI based investment objectives. '
+                                          'Specific assessment seeking to confirm that the proposed SAA is acceptable, and that the investment objective is likely to be achieved. ', style='BodyStyle')
+                        doc.add_paragraph('A probability of 50% or above is sought to indicate that an investment objective is likely to be achieved.', style='BodyStyle')
+                        doc.add_paragraph('Strategy - ' + Strategies_save[x].name + ':', style='BodyStyle')
+                        for k in sce_no_list:
+                            doc.add_paragraph('Analysis for Scenario ' + str(k + 1) + ' has been conducted ' + fee_type[x][k] + ':', style='BodyStyle')
+                            if Strategies_save[z].recom_obj[0] == None:
+                                doc.add_paragraph('Under Scenario ' + str(k + 1) + ' the recommended investment objective of CPI + ' + str(Strategies_save[x].TRObjectiveHurdle) + '% pa over a '
+                                                  + str(int(Strategies_save[x].TRObjectiveHorizon)) + '-year rolling period is likely to be achieved at a ' + str(
+                                    recom_list[x][k][1]) + '% probability (below the +50% probability minimum). ' +
+                                                  'Value at Risk upon a 1 in ' + str(recom_list[x][k][2]) + '-year event (' + str(recom_list[x][k][3]) + ' probability) is expected at ' + str(
+                                    recom_list[x][k][4]) + '% for the recommended allocation. ' + 'The level of investment risk, as captured by SRM, is ' + str(
+                                    recom_list[x][k][0]) + ' for the recommended SAA. ', style='list_bullet')
+                            else:
+                                doc.add_paragraph('Under Scenario ' + str(k + 1) + ' the recommended investment objective of CPI + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over a '
+                                                  + str(int(Strategies_save[x].recom_obj[1])) + '-year rolling period is likely to be achieved at a ' + str(
+                                    recom_list[x][k][1]) + '% probability (below the +50% probability minimum). ' +
+                                                  'Value at Risk upon a 1 in ' + str(recom_list[x][k][2]) + '-year event (' + str(recom_list[x][k][3]) + ' probability) is expected at ' + str(
+                                    recom_list[x][k][4]) + '% for the recommended allocation. ' + 'The level of investment risk, as captured by SRM, is ' + str(
+                                    recom_list[x][k][0]) + ' for the recommended SAA. ', style='list_bullet')
+                    doc.add_heading('Recommendations', 3)
+                    if Strategies_save[x].recom_portfolio == None:
+                        doc.add_paragraph('Maintain the current Strategic Asset Allocation', style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt the recommended Strategic Asset Allocation', style='list_bullet')
+                    if Strategies_save[x].recom_obj[0] == None:
+                        doc.add_paragraph('Maintain the current investment objective of '+ str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].TRObjectiveHurdle)
+                                          + '% pa over rolling ' + str(int(Strategies_save[x].TRObjectiveHorizon)) + '-year periods ', style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt the investment objective of ' + str(Strategies_save[x].TRObjectiveType) + ' + ' + str(Strategies_save[x].recom_obj[0]) + '% pa over rolling ' + str(
+                                int(Strategies_save[x].recom_obj[1])) + '-year periods ', style='list_bullet')
+                    if Strategies_save[x].SRM == Strategies_save[x].recom_srm:
+                        doc.add_paragraph('Maintain the current SRM of '+Strategies_save[x].SRM, style='list_bullet')
+                    else:
+                        doc.add_paragraph('Adopt an SRM of ' + Strategies_save[x].recom_srm, style='list_bullet')
+
+                doc.add_paragraph('', style='BodyStyle')
+
+                doc.add_heading('Stress Testing', 2)
+                doc.add_heading('Scenario Stress Testing', 3)
+                doc.add_paragraph('Stress testing scenarios have been performed on the proposed investment strategy in accordance with APRA Prudential Standard SPS 530, factoring investment returns, '
+                                  'SAA and risk factors that have the potential to influence the asset classes and therefore have an impact on the investment performance of the investment strategy.',
+                                  style='BodyStyle')
+                doc.add_paragraph('Scenario stress testing has been considered for investment strategy; risk factors in relation to designated asset classes, respective asset allocation '
+                                  'and investment objective.', style='BodyStyle')
+                if yes_hist != 0 and yes_forecast != 0:
+                    doc.add_paragraph('Scenarios have been analysed on both a historical and forecast basis.', style='BodyStyle')
+                elif yes_hist != 0:
+                    doc.add_paragraph('Scenarios have been analysed on both a historical basis.', style='BodyStyle')
+                elif yes_forecast != 0:
+                    doc.add_paragraph('Scenarios have been analysed on both a forecast basis.', style='BodyStyle')
+                doc.add_paragraph('Detailed stress testing analysis is included in Appendix B.', style='BodyStyle')
+
+                doc.add_paragraph('Conclusions', style='BoldBody')
+                doc.add_paragraph('The following conclusions have been reached: ', style='BodyStyle')
+                doc.add_paragraph('Investment objectives: ', style='list_number')
+                doc.add_paragraph('On a historical basis, the proposed investment strategy assessed would have achieved ''its respective investment objective more than 50% of the time.',
+                                  style='list_bullet')
+                doc.add_paragraph('On a forecast basis, stress testing demonstrates that the investment strategy is likely to achieve its respective investment objectives at least 50% of the time.',
+                                  style='list_bullet')
+                doc.add_paragraph('Risk Analysis: ', style='list_number')
+                doc.add_paragraph('Over the 20-year period to ' + report_date + ', the proposed investment strategy would have achieved its respective risk objectives.', style='list_bullet')
+                doc.add_paragraph('On a forecast basis, the current risk remains suitable.', style='list_bullet')
+
+                doc.add_paragraph('Recommendations', style='BoldBody')
+                doc.add_paragraph('It is recommended that the performance of the proposed investment strategy is monitored against the relevant trigger level on a quarterly basis.', style='BodyStyle')
+                doc.add_paragraph('', style='BodyStyle')
+                if StressTestings.df_trigger_level.empty == False:
+                    doc.add_paragraph('Table ' + str(table_number) + ': Trigger Levels', style='T-Title')
+                    tl_table = doc.add_table(rows=len(StressTestings.df_trigger_level) + 1,
+                                             cols=len(StressTestings.df_trigger_level.columns), style='Table2')
+                    row = tl_table.rows[0]
+                    for i in range(len(StressTestings.df_trigger_level.columns)):
+                        row.cells[i].text = StressTestings.df_trigger_level.columns[i]
+                    for i in range(len(StressTestings.df_trigger_level)):
+                        row = tl_table.rows[i + 1]
+                        for j in range(len(StressTestings.df_trigger_level.columns)):
+                            row.cells[j].text = StressTestings.df_trigger_level.iloc[i, j]
+                    table_number += 1
+
+                doc.add_heading('Environmental Stress Testing', 3)
+                doc.add_paragraph('An RSE licensee is required to consider the environmental (ESG) impacts of investments when formulating and '
+                                  'implementing an investment strategy. APRA CPG 229 provides guidance on APRA’s view of sound practice in particular '
+                                  'areas in relation to prudent practices to climate change financial risk management.', style='BodyStyle')
+                doc.add_paragraph('Given the unique nature and asset allocations, the approach taken by the asset consultant to managing environmental '
+                                  'risk is to test the ' + Strategies_save[0].client + ' multi-asset investment portfolios expected investment performance through various significant '
+                                                                                       'historical environmental disasters. Refer to Appendix B.', style='BodyStyle')
+                doc.add_paragraph('Conclusion', style='BoldBody')
+                doc.add_paragraph('None of the environment disasters was a significant contributor (either negative or positive) to portfolio '
+                                  'returns, likely due to the slow impact of climate change on asset class returns and the ability to take corrective '
+                                  'actions as and when detrimental disasters etc. occur', style='list_bullet')
+                doc.add_paragraph('Recommendation', style='BoldBody')
+                doc.add_paragraph('ESG stress testing to be performed annually', style='list_bullet')
+                doc.add_paragraph('', style='BodyStyle')
+
+                doc.add_heading('Liquidity Stress Testing', 2)
+                doc.add_paragraph('The SIS Act requires an RSE licensee to consider the liquidity of investments when formulating and implementing an investment strategy, while also considering '
+                                  'the expected cash flow requirements of the RSE. Given the unique nature and asset allocations, '
+                                  'the approach taken to managing liquidity risk is primarily focused on the ' + temp_client + ' meeting its financial obligations and cash flow'
+                                                                                                                               ' requirements in the best interests of the Trust members.',
+                                  style='BodyStyle')
+                doc.add_paragraph('In view of the nature of the underlying investment, the Asset Consultant concludes that performing, in accordance with the APRA Prudential '
+                                  'Standard SPS 530 liquidity stress testing programs, is deemed appropriate as there are adequate liquid assets in the asset allocations '
+                                  'to meet fund members’ redemption requests.  The detailed liquidity testing analysis and methodology are included in Appendix C.', style='BodyStyle')
+                doc.add_paragraph('Conclusion', style='BoldBody')
+                doc.add_paragraph('Consideration has been given to the liquidity of the underlying investments in stressed market conditions for ' + temp_client + '. All strategies are '
+                                                                                                                                                                   'expected to remain liquid under stressed market scenarios.',
+                                  style='BodyStyle')
+                doc.add_paragraph('Recommendation', style='BoldBody')
+                doc.add_paragraph('It is recommended that cash flow requirements are closely monitored to ensure sufficient cash is available to meet liabilities as they arise.',
+                                  style='BodyStyle')
+                doc.add_page_break()
+            ############################################### 4 Appendix A – Forecasts – Return and Volatility of Returns ###
+            doc.add_heading('Appendix A – Assumptions and Optimisation', 1)
+            doc.add_heading('Analysis of Asset Classes', 2)
+            if single_ac == False:
+                if len(yes_forecast) != 0:
+                    doc.add_paragraph('Forecast returns and volatility of returns for the relevant asset classes used in the asset allocation study are shown in Table ' + str(table_number) +
+                                      ' below. Forecast returns are compound annual returns. In respect of the forecast of returns and volatility of returns, no allowance has been made for '
+                                      'prospective value add through active investment management or the '
+                                      'inclusion of sub-asset classes, except where specifically identified.', style='BodyStyle')
+                if len(yes_hist) != 0:
+                    doc.add_paragraph('Historical returns and volatility of returns for the major asset classes to ' + str(report_date) + ' are shown in Table ' + str(table_number) + '.',
+                                      style='BodyStyle')
+            else:
+                doc.add_paragraph('Forecast returns and volatility of returns for the relevant asset classes used in the asset allocation study are shown in Table ' + str(table_number)
+                                  + ' below. Forecast returns are compound annual returns. Refer to Appendix A for asset class return and volatility of return forecasts. In respect of the forecast '
+                                    'of returns and volatility of returns, no allowance has been made for prospective value add through active investment management or the '
+                                    'inclusion of sub-asset classes, except where specifically identified.', style='BodyStyle')
+                doc.add_paragraph('Historical returns and volatility of returns for the major asset classes to ' + str(report_date) + ' are also shown in Table ' + str(table_number) + '.',
+                                  style='BodyStyle')
+            df_acrv = pd.DataFrame()
+            df_acrv['Asset Class'] = com_acs
+            if yes_hist != 0:
+                for i in yes_hist:
+                    temp1 = 'Historical ' + str(Scenarios[i].hist_period) + ' Years Return(% p.a.)'
+                    temp2 = 'Historical ' + str(Scenarios[i].hist_period) + ' Years Volatility(% p.a.)'
+                    for j in range(len(com_acsid)):
+                        df_acrv.loc[j, temp1] = Scenarios[i].df_assetclasses_gross.iloc[com_acsid[j], 0]
+                        df_acrv.loc[j, temp2] = Scenarios[i].df_assetclasses_gross.iloc[com_acsid[j], 1]
+            if yes_forecast != 0:
+                for i in yes_forecast:
+                    temp1 = 'Forecast ' + str(Scenarios[i].forecast_period) + ' Years Return(% p.a.)'
+                    temp2 = 'Forecast ' + str(Scenarios[i].forecast_period) + ' Years Volatility(% p.a.)'
+                    for j in range(len(com_acsid)):
+                        df_acrv.loc[j, temp1] = Scenarios[i].df_assetclasses_gross.iloc[com_acsid[j], 0]
+                        df_acrv.loc[j, temp2] = Scenarios[i].df_assetclasses_gross.iloc[com_acsid[j], 1]
+            ## table Investment Returns and Volatility of Returns
+            doc.add_paragraph('Table ' + str(table_number) + ': Investment Returns and Volatility of Returns', style='T-Title')
+            acrv_table = doc.add_table(rows=len(df_acrv) + 1, cols=len(df_acrv.columns), style='Table2')
+            row = acrv_table.rows[0]
+            for i in range(len(df_acrv.columns)):
+                row.cells[i].text = df_acrv.columns[i]
+            for i in range(len(df_acrv)):
+                row = acrv_table.rows[i + 1]
+                for j in range(len(df_acrv.columns)):
+                    if j == 0:
+                        row.cells[j].text = str(df_acrv.iloc[i, j])
+                    else:
+                        row.cells[j].text = "{:.1f}".format(df_acrv.iloc[i, j] * 100)
+            for cell in acrv_table.columns[0].cells:
+                cell.width = Inches(3.5)
+            table_number += 1
+            # doc.add_paragraph('^ Before management fees and tax', style='Note')
+            if single_ac == False and global_no_weights > 20:
+                doc.add_heading('Optimisation Process', 2)
+                for x in strg_no_list:
+                    doc.add_paragraph('The optimisation process performed for ' + Strategies_save[x].name + ' is the selection of the optimal asset allocation strategy from '
+                                      + str(int(Strategies_save[x].no_weights))
+                                      + ' randomised portfolios given the minimum and maximum constraints for each asset class.', style='BodyStyle')
+                    doc.add_paragraph('Figure ' + str(figure_number) + ' below shows the return and volatility of current and randomised allocations for ' + Strategies_save[x].name
+                                      + ' under different scenarios. The color gradients represent the Sharpe ratios of randomised portfolios with dark green referring to a higher value. '
+                                        'The results for the current SAA and recommended SAA are marked as orange.', style='BodyStyle')
+                    doc.add_paragraph('Figure ' + str(figure_number) + ': Return and Volatility of ' + Strategies_save[x].name, style='T-Title')
+                    para = doc.add_paragraph()
+                    user_name = getpass.getuser()
+                    for k in sce_no_list:
+                        name = 'C:/Users/' + user_name + '/Downloads/Optimiser V2/' +Strategies_save[x].client+'/'+ Strategies_save[x].client + Strategies_save[x].name + str(k) + \
+                               "Volatility_Return.png"
+                        run = para.add_run()
+                        run.add_picture(name, width=Inches(3.25), height=Inches(2.4375))  # 8vs6
+                    figure_number += 1
+            doc.add_page_break()
+            ############################################### 5 Appendix B – Scenario Stress Testing ########################################
+            doc.add_heading('Appendix B – Scenario Stress Testing', 1)
+            doc.add_heading('Background', 2)
+            doc.add_paragraph('In July 2013, APRA released Prudential Standard SPS 530 ‘Investment Governance’ for '
+                              'RSE licensees to implement a framework to understand and gauge how severe the impact '
+                              'on a Fund’s investment performance would be in the event of an extraordinary market '
+                              'condition. Among the requirements for the framework is for an RSE licensee to conduct '
+                              'appropriate stress testing scenarios for each investment strategy.', style='BodyStyle')
+            doc.add_paragraph('To meet APRA’s prudential standard, the Asset Consultant has been commissioned by the Trustee of the Trust to '
+                              'develop and conduct scenario stress testing on ' + temp_client + ' based on the proposed SAA.', style='BodyStyle')
+            doc.add_paragraph('A range of stress testing scenarios have been developed and conducted on ' + temp_client + '.', style='BodyStyle')
+            doc.add_paragraph('The Asset Consultant has considered the following when conducting stress testing scenarios:', style='BodyStyle')
+            doc.add_paragraph('Strategic asset allocations', style='list_bullet')
+            doc.add_paragraph('Return objectives', style='list_bullet')
+            doc.add_paragraph('Risk factors that can influence major asset classes', style='list_bullet')
+            doc.add_paragraph('Scenario stress testing has considered risk factors in nominated asset classes, '
+                              'asset allocation and investment objectives of ' + temp_client + '.', style='BodyStyle')
+            doc.add_paragraph('The trigger level has been determined for ' + temp_client + '.', style='BodyStyle')
+            doc.add_paragraph('A breach of the trigger level i.e. a defined loss or minimum return to be achieved by ' + temp_client +
+                              ' in any one year may prompt a review of the causes of the loss and/or reconsider the ongoing suitability of the underlying strategy',
+                              style='list_bullet')
+
+            doc.add_paragraph('Atchison Consultants has utilised a proxy approach to generate the most volatile portfolio for each investment option, denoted as P1. '
+                              'This portfolio has been structured to ensure that the allocation of assets conforms to the minimum range requirement for each asset class, '
+                              'while concurrently allocating the maximum range value to the most volatile asset classes. The performance of P1 will be presented in '
+                              'Tables '+str(table_number+2)+' & '+str(table_number+3)+' & '+str(table_number+4)+', alongside the strategic asset allocation.', style='BodyStyle')
+
+
+            doc.add_heading('Investment Option', 2)
+            doc.add_paragraph(
+                'Following this review of the underlying investment strategies of ' + temp_client + ', scenario stress testing is being conducted on recommended SAA and investment objective '
+                                                                                                    'incorporating the Asset Consultants historical and forecast returns and volatilities per asset class.',
+                style='BodyStyle')
+            doc.add_paragraph('The recommended investment objective of the ' + temp_client + ' and respective Standard Risk Measure (SRM - as a measure of risk) '
+                                                                                             'is presented in Table ' + str(table_number) + ' below.', style='BodyStyle')
+            doc.add_paragraph('Table ' + str(table_number) + ': Investment Objective', style='T-Title')
+            aa = ['Investment Strategy', 'Investment Objectives', 'Risk Objectives']
+            iob_table = doc.add_table(rows=len(Strategies_save) + 1, cols=len(aa), style='Table2')
+            row = iob_table.rows[0]
+            for i in range(len(aa)):
+                row.cells[i].text = aa[i]
+            for i in range(len(strg_no_list)):
+                row = iob_table.rows[i + 1]
+                row.cells[0].text = Strategies_save[strg_no_list[i]].client + ' ' + Strategies_save[strg_no_list[i]].name
+                if Strategies_save[i].recom_obj[0] != None and Strategies_save[i].recom_obj[1] != None:
+                    row.cells[1].text = Strategies_save[i].TRObjectiveType +'+'+ str(Strategies_save[strg_no_list[i]].recom_obj[0]) + '% pa over rolling ' + str(
+                        int(Strategies_save[strg_no_list[i]].recom_obj[1])) + '-year periods'
+                else:
+                    if single_ac == False:
+                        row.cells[1].text = Strategies_save[i].TRObjectiveType+'+' + str(Strategies_save[strg_no_list[i]].TRObjectiveHurdle) + '% pa over rolling ' + str(
+                            int(Strategies_save[strg_no_list[i]].TRObjectiveHorizon)) + '-year periods'
+                    else:
+                        ## just use 30 years
+                        for l in range(len(AssetClasses)):
+                            if AssetClasses[l].name == Strategies_save[strg_no_list[i]].name:
+                                break
+                        if Scenarios[0].dataBasis == 'Net':
+                            temp_return = AssetClasses[l].hist30yrTR_Net
+                        else:
+                            temp_return = AssetClasses[l].hist30yrTR_Gross
+                        row.cells[1].text = Strategies_save[i].TRObjectiveType + ' ' + "{:.1f}".format(temp_return * 100) + '% pa over rolling ' + str(
+                            int(Strategies_save[strg_no_list[i]].TRObjectiveHorizon)) + '-year periods'
+                row.cells[2].text = kf2.rl_to_freq(Strategies_save[i].SRM) + ' (' + str(Strategies_save[i].SRM) + ')'
+
+            table_number += 1
+            # doc.add_paragraph('^Number of negative annual returns over any 20-year period', style='Note')
+
+            doc.add_heading('Risk Factors', 2)
+            doc.add_paragraph('The Asset Consultants portfolio construction process takes into consideration forward '
+                              'looking return, volatility of return and correlation forecasts across asset classes. '
+                              'These forecasts represent the aggregation of risk factors and their estimated impact at the asset class level.', style='BodyStyle')
+            doc.add_paragraph('Risk factor modelling assists in the assessment of the sensitivity of a portfolio to underlying risk-factors.', style='BodyStyle')
+            doc.add_paragraph('The rationale behind risk-factor modelling is that asset classes represent the grouping of underlying securities or investments which '
+                              'demonstrate similar types of underlying risk characteristics. Risk factors may be broadly divided into systematic and unsystematic '
+                              'categories and have varying types and levels of impact across different asset classes. Unsystematic risk, also known as ‘specific risk’, '
+                              'is the type of uncertainty that comes with the company or industry invested in. Unsystematic risk can be reduced through diversification.', style='BodyStyle')
+            doc.add_paragraph('Changes in the underlying risk-factors are due to changing macro and micro-economic conditions as well as financial market perceptions. These changes drive the'
+                              ' risk-return profiles of assets over time and are generally not consistent. This is demonstrated through inconsistent historical asset class correlations across time.',
+                              style='BodyStyle')
+
+            doc.add_heading('Example of Risk Factors', 3)
+            doc.add_paragraph(
+                'Asset classes and asset sub-classes have different primary risk attributes. Table ' + str(table_number) + ' provides an example of primary risk factors within asset classes.',
+                style='BodyStyle')
+            doc.add_paragraph('Table ' + str(table_number) + ': Indicative Primary Risk Attributes across Asset Classes', style='T-Title')
+            df_riskfactor = pd.DataFrame()
+            df_riskfactor['Asset Classes'] = ['Australian Equities', 'International Equities', 'Australian Listed Property', 'International Listed Property', 'Australian Fixed Interest',
+                                              'International Fixed Interest', 'Cash']
+            df_riskfactor['Inflation'] = ['✓', '✓', '✓', '✓', '✓', '✓', '✓']
+            # df_riskfactor['Liquidity'] = ['✓', '✓', '✓', '✓', '✓', '✓', '']
+            df_riskfactor['Revenue Growth'] = ['✓', '✓', '✓', '✓', '', '', '']
+            df_riskfactor['Margins'] = ['✓', '✓', '', '', '', '', '']
+            df_riskfactor['Interest Rate'] = ['', '', '✓', '✓', '✓', '✓', '✓']
+            df_riskfactor['Credit Spreads'] = ['', '', '', '', '✓', '✓', '']
+            # df_riskfactor['Sovereign'] = ['✓', '✓', '✓', '✓', '✓', '✓', '']
+            df_riskfactor['Currency'] = ['', '✓', '', '✓', '', '✓', '✓']
+            # df_riskfactor['Equity'] = ['✓', '✓', '', '', '', '', '']
+            # df_riskfactor['Property'] = ['', '', '✓', '✓', '', '', '']
+            riskf_table = doc.add_table(rows=len(df_riskfactor) + 1, cols=len(df_riskfactor.columns), style='Table2')
+            row = riskf_table.rows[0]
+            for i in range(len(df_riskfactor.columns)):
+                row.cells[i].text = df_riskfactor.columns[i]
+            for i in range(len(df_riskfactor)):
+                row = riskf_table.rows[i + 1]
+                for j in range(len(df_riskfactor.columns)):
+                    row.cells[j].text = df_riskfactor.iloc[i, j]
+            for cell in riskf_table.columns[0].cells:
+                cell.width = Inches(3.5)
+            table_number += 1
+
+            doc.add_heading('Methodology', 2)
+            doc.add_heading('Scenario Stress Testing', 3)
+            doc.add_paragraph('Extensive scenario testing of investment returns, the frequency and depth of drawdowns, and investment objective based on the SAA has been conducted for ' + temp_client
+                              + '. ', style='BodyStyle')
+            doc.add_paragraph('20-year historical analysis has incorporated actual asset class returns generated for each annual period to ' + report_date, style='list_bullet')
+            doc.add_paragraph('Forecast analysis has utilised randomly generated returns to generate large number '
+                              'of possible scenarios, each simulating asset class performance over periods in '
+                              'alignment with the options’ specific investment objectives', style='list_bullet')
+            doc.add_paragraph('Cholesky modelling has been employed to forecast a set of randomly correlated '
+                              'asset class returns in collaboration with the Asset Consultant asset class return '
+                              'and volatility forecast and the Monte Carlo Simulation modelling to test large number '
+                              'of investment return simulations. A brief overview of the Cholesky decomposition and '
+                              'Monte Carlo Simulation follows.', style='BodyStyle')
+
+            doc.add_heading('Cholesky Modelling', 3)
+            doc.add_paragraph('Cholesky modelling generates a series of randomly correlated returns on basis of '
+                              'historical asset class returns. The underlying assumption is that correlation of future '
+                              'returns will be similar to historical correlations. ', style='BodyStyle')
+            doc.add_paragraph('Below is a brief overview of the steps involved in Cholesky modelling.', style='BodyStyle')
+            doc.add_paragraph('A matrix of historical correlation between asset classes has been calculated '
+                              'over a 20-year period to ' + report_date + '. This historical correlation '
+                                                                          'informs the Cholesky decomposition', style='list_bullet')
+            doc.add_paragraph('A large set of uncorrelated return scenarios are generated using the expected return '
+                              'and volatility of return profile of asset classes', style='list_bullet')
+            doc.add_paragraph('The Cholesky decomposition technique transforms the set of uncorrelated returns into '
+                              'returns that are similarly correlated to the historical correlation matrix',
+                              style='list_bullet')
+            doc.add_paragraph('The Cholesky decomposition is commonly used in conjunction with Monte Carlo simulation '
+                              'to run a large range of scenarios. Results of the scenarios are analysed from '
+                              'a statistical perspective.', style='BodyStyle')
+
+            doc.add_heading('Monte Carlo Simulation Analysis', 3)
+            doc.add_paragraph('Monte Carlo simulation is a widely used technique in scenario analysis. Analysis has '
+                              'been conducted by performing 1,000 iterations of randomly generated, Cholesky '
+                              'decomposition correlated asset class returns series. ', style='BodyStyle')
+            doc.add_paragraph('The model subsequently generates a series of probable outputs, from which the average '
+                              'or mean, ranges and 95% confidence limit for a particular test can be observed.', style='BodyStyle')
+            doc.add_paragraph('Monte Carlo simulation is a widely used mathematical technique that allows '
+                              'financial analysts and investment managers to account for variability in their '
+                              'process, thus enhancing quantitative analysis and decision-making processes.',
+                              style='BodyStyle')
+            if len(yes_hist) != 0:
+                doc.add_heading('Historical Analysis – Results', 2)
+                doc.add_paragraph('The proposed and recommended SAA for ' + temp_client + ' has been stress tested on basis of historical annual asset class returns to '
+                                  + report_date + '. The analysis assumes that ' + temp_client + ' is rebalanced to the proposed and recommended SAA on an annual frequency.',
+                                  style='BodyStyle')
+                doc.add_paragraph('The analysis is founded on market returns from asset classes and therefore does not '
+                                  'take into account the active management of asset classes or sub-classes. ', style='BodyStyle')
+
+                doc.add_heading('Historical Drawdowns', 3)
+                if StressTestings.df_hist_drawdown.empty == False:
+                    doc.add_paragraph(temp_client + ' has been stress tested through historical drawdown periods. Table ' + str(table_number)
+                                      + ' demonstrates the market and the ' + temp_client + ' performances during these periods.', style='BodyStyle')
+
+                    doc.add_paragraph('Table ' + str(table_number) + ': Historical Drawdown', style='T-Title')
+                    temp_df_hist_drawdown = StressTestings.df_hist_drawdown.replace(np.nan, '-')
+                    hd_table = doc.add_table(rows=len(StressTestings.df_hist_drawdown) + 1, cols=len(StressTestings.df_hist_drawdown.columns), style='Table2')
+                    row = hd_table.rows[0]
+                    for i in range(len(temp_df_hist_drawdown.columns)):
+                        row.cells[i].text = temp_df_hist_drawdown.columns[i]
+                    for i in range(len(StressTestings.df_hist_drawdown)):
+                        row = hd_table.rows[i + 1]
+                        for j in range(len(temp_df_hist_drawdown.columns)):
+                            if temp_df_hist_drawdown.iloc[i, 0] in all_acs:
+                                if j == 0:
+                                    row.cells[j].text = temp_df_hist_drawdown.iloc[i, j]
+                                else:
+                                    try:
+                                        row.cells[j].text = "{:.1f}".format(float(temp_df_hist_drawdown.iloc[i, j]))
+                                    except:
+                                        row.cells[j].text = temp_df_hist_drawdown.iloc[i, j]
+                            elif temp_client in temp_df_hist_drawdown.iloc[i, 0]:
+                                if j == 0:
+                                    run = row.cells[j].paragraphs[0].add_run(temp_df_hist_drawdown.iloc[i, j])
+                                    run.bold = True
+                                else:
+                                    try:
+                                        run = row.cells[j].paragraphs[0].add_run("{:.1f}".format(float(temp_df_hist_drawdown.iloc[i, j])))
+                                    except:
+                                        run = row.cells[j].paragraphs[0].add_run(temp_df_hist_drawdown.iloc[i, j])
+                                    run.bold = True
+                    for cell in hd_table.columns[0].cells:
+                        cell.width = Inches(3.5)
+                    table_number += 1
+
+                    doc.add_paragraph('Current SAA', style = 'BoldBody')
+                    gfc = doc.add_paragraph('During the GFC drawdown period, ', style='list_bullet')
+                    afc = doc.add_paragraph('During the Asian Financial Crisis drawdown period, ', style='list_bullet')
+                    tb = doc.add_paragraph('During the Tech Bubble drawdown period, ', style='list_bullet')
+                    edc = doc.add_paragraph('During the European Debt Crisis 2009-10 drawdown period, ', style='list_bullet')
+                    covid = doc.add_paragraph('During the Covid-19 drawdown period, ', style='list_bullet')
+                    strike = doc.add_paragraph('During the Inflation Spike 2022 drawdown period, ', style='list_bullet')
+
+                    for i in range(len(StressTestings.df_hist_drawdown)):
+                        if 'Current SAA' in StressTestings.df_hist_drawdown.iloc[i, 0]:
+                            gfc.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Global Financial Crisis (11/2007-02/2009)%']) + '%, ')
+                            afc.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Emerging Market Debt Crisis (07/1997-08/1998)%']) + '%, ')
+                            tb.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Tech Reck (03/2000-10/2002)%']) + '%, ')
+                            edc.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'European Debt Crisis (01/2009-12/2010)%']) + '%. ')
+                            covid.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Covid-19 Market Drawdown (12/2019-04/2020)%']) + '%, ')
+                            strike.add_run(StressTestings.df_hist_drawdown.iloc[i, 0]  + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Inflation Spike ('
+                                                                                                                                                                           '01/2022-10/2022)%']) + '%, ')
+
+                    gfc.add_run('mainly driven by the significant underperformances of growth assets in the recession')
+                    afc.add_run('as global emerging equity markets came under severe pressure bringing many governments in the region close to defaulting on their debts')
+                    tb.add_run('as Nasdaq fall 78% from its peak but there were strong performances from holding real assets')
+                    edc.add_run('It began in Greece and threatened the survival of the EU single currency, EU and IMF stepped in an attempt to halt the spread of the crisis')
+                    covid.add_run('as global quarantine measures disrupted the business supply chain and deteriorated revenue, leading to poor returns for most assets')
+                    strike.add_run('as rising yields and widening spreads caused bond valuations to reverse resulting in unprecedented losses')
+
+                    doc.add_paragraph('Most Volatile Portfolio (P1)', style='BoldBody')
+                    gfc2 = doc.add_paragraph('During the GFC drawdown period, ', style='list_bullet')
+                    afc2 = doc.add_paragraph('During the Asian Financial Crisis drawdown period, ', style='list_bullet')
+                    tb2 = doc.add_paragraph('During the Tech Bubble drawdown period, ', style='list_bullet')
+                    edc2 = doc.add_paragraph('During the European Debt Crisis 2009-10 drawdown period, ', style='list_bullet')
+                    covid2 = doc.add_paragraph('During the Covid-19 drawdown period, ', style='list_bullet')
+                    strike2 = doc.add_paragraph('During the Inflation Spike 2022 drawdown period, ', style='list_bullet')
+
+                    for i in range(len(StressTestings.df_hist_drawdown)):
+                        if 'P1' in StressTestings.df_hist_drawdown.iloc[i, 0]:
+                            gfc2.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(
+                                StressTestings.df_hist_drawdown.loc[i, 'Global Financial Crisis (11/2007-02/2009)%']) + '%, ')
+                            afc2.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(
+                                StressTestings.df_hist_drawdown.loc[i, 'Emerging Market Debt Crisis (07/1997-08/1998)%']) + '%, ')
+                            tb2.add_run(
+                                StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Tech Reck (03/2000-10/2002)%']) + '%, ')
+                            edc2.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(
+                                StressTestings.df_hist_drawdown.loc[i, 'European Debt Crisis (01/2009-12/2010)%']) + '%. ')
+                            covid2.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(
+                                StressTestings.df_hist_drawdown.loc[i, 'Covid-19 Market Drawdown (12/2019-04/2020)%']) + '%, ')
+                            strike2.add_run(StressTestings.df_hist_drawdown.iloc[i, 0] + ' would have generated a return of ' + str(StressTestings.df_hist_drawdown.loc[i, 'Inflation Spike ('
+                                                                                                                                                                          '01/2022-10/2022)%']) + '%, ')
+
+                doc.add_heading('Environmental Drawdowns', 3)
+                if StressTestings.df_esg_drawdown.empty == False:
+                    doc.add_paragraph('In accordance with the Prudential Standard SPG 530 Investment Governance, November 2022, APRA expects an RSE licensee to demonstrate '
+                                      'an understanding of the risk and opportunities present in a range of Environmental, Social and Governance (ESG) factors. To which extent '
+                                      'they may have a material impact on the financial risk-return profile of the RSE’s licensee’s investment portfolio, including an '
+                                      'assessment of climate risk exposures. In this respect the asset consultant has considered major environmental drawdown periods '
+                                      'for each investment option e.g. nuclear disasters, hurricanes, oil leaks and other extreme climate conditions. Table '+
+                                      str(table_number) +' evaluates the impact of the major historical environmental events on climate change and the performance of the investment options.',
+                                      style='BodyStyle')
+                    doc.add_paragraph('Table ' + str(table_number) + ': Environmental Drawdown', style='T-Title')
+                    temp_df_esg_drawdown = StressTestings.df_esg_drawdown.replace(np.nan, '-')
+                    ed_table = doc.add_table(rows=len(StressTestings.df_esg_drawdown) + 1, cols=len(StressTestings.df_esg_drawdown.columns), style='Table2')
+                    row = ed_table.rows[0]
+                    for i in range(len(temp_df_esg_drawdown.columns)):
+                        row.cells[i].text = temp_df_esg_drawdown.columns[i]
+                    for i in range(len(StressTestings.df_esg_drawdown)):
+                        row = ed_table.rows[i + 1]
+                        for j in range(len(temp_df_esg_drawdown.columns)):
+                            if temp_df_esg_drawdown.iloc[i, 0] in all_acs:
+                                if j == 0:
+                                    row.cells[j].text = temp_df_esg_drawdown.iloc[i, j]
+                                else:
+                                    try:
+                                        row.cells[j].text = "{:.1f}".format(float(temp_df_esg_drawdown.iloc[i, j]))
+                                    except:
+                                        row.cells[j].text = temp_df_esg_drawdown.iloc[i, j]
+                            elif temp_client in temp_df_esg_drawdown.iloc[i, 0]:
+                                if j == 0:
+                                    run = row.cells[j].paragraphs[0].add_run(temp_df_esg_drawdown.iloc[i, j])
+                                    run.bold = True
+                                else:
+                                    try:
+                                        run = row.cells[j].paragraphs[0].add_run("{:.1f}".format(float(temp_df_esg_drawdown.iloc[i, j])))
+                                    except:
+                                        run = row.cells[j].paragraphs[0].add_run(temp_df_esg_drawdown.iloc[i, j])
+                                    run.bold = True
+                    for cell in ed_table.columns[0].cells:
+                        cell.width = Inches(3.5)
+                    table_number += 1
+                    doc.add_paragraph('In terms of the returns for each option:', style='BodyStyle')
+                    doc.add_paragraph('There is no prominent underperformance for each asset class across all the environmental drawdown periods mentioned above', style='list_bullet')
+                    doc.add_paragraph('Some downtrends might be driven by the market drawdown or other economic indicators', style='list_bullet')
+
+                doc.add_heading('Risk Objectives', 3)
+                if StressTestings.df_risk_obj.empty == False:
+                    doc.add_paragraph(
+                        'The number of negative annual returns generated by ' + temp_client + ' over twenty years to ' + report_date
+                        + ' is shown in Table 14 and a comparison has been made to their respective number of negative annual returns over any 20-year '
+                          'period (Standard Risk Measure) for ' + temp_client+'.', style='BodyStyle')
+                    doc.add_paragraph('Table ' + str(table_number) + ': Risk Objectives', style='T-Title')
+                    ro_table = doc.add_table(rows=len(StressTestings.df_risk_obj) + 1, cols=len(StressTestings.df_risk_obj.columns), style='Table2')
+                    row = ro_table.rows[0]
+                    for i in range(len(StressTestings.df_risk_obj.columns)):
+                        row.cells[i].text = StressTestings.df_risk_obj.columns[i]
+                    for i in range(len(StressTestings.df_risk_obj)):
+                        row = ro_table.rows[i + 1]
+                        for j in range(len(StressTestings.df_risk_obj.columns)):
+                            row.cells[j].text = str(StressTestings.df_risk_obj.iloc[i, j])
+                    for cell in ro_table.columns[0].cells:
+                        cell.width = Inches(3.5)
+                    table_number += 1
+
+                    lno = list(StressTestings.df_risk_obj.loc[StressTestings.df_risk_obj['Risk Objective Met'] == 'No'].index)
+                    if len(lno) == 0:
+                        doc.add_paragraph('All strategies of '+temp_client + ' have achieved the number of negative annual returns over the 20-year period to ' + report_date + '.',
+                                          style='BodyStyle')
+                    elif len(lno) == 1:
+                        doc.add_paragraph(StressTestings.df_risk_obj.loc[lno[0], 'Options']+' has not achieved the number of negative annual returns over the 20-year period to ' +
+                                          report_date+'. Refer to the Conclusion and Recommendations for recommended standard risk measures.', style='BodyStyle')
+                    else:
+                        doc.add_paragraph('The following options have not achieved the number of negative annual returns over the 20-year period to ' +
+                                          report_date+'. Refer to the Conclusion and Recommendations for recommended standard risk measures.', style='BodyStyle')
+                        for l in lno:
+                            doc.add_paragraph(StressTestings.df_risk_obj.loc[l, 'Options'], style='list_bullet')
+
+            if len(yes_forecast) != 0 and StressTestings.df_f_return.empty == False and StressTestings.df_f_risk.empty == False:
+                doc.add_heading('Forecast Analysis – Results', 2)
+                doc.add_heading('Return Analysis', 3)
+                doc.add_paragraph('Table ' + str(table_number) + ' shows the return characteristics of the asset allocations '
+                                                                 'using simulated investment returns over their investment horizons correspondingly.', style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': Forecast Return Distribution', style='T-Title')
+                fra_table = doc.add_table(rows=len(StressTestings.df_f_return) + 1, cols=len(StressTestings.df_f_return.columns), style='Table2')
+                row = fra_table.rows[0]
+                for i in range(len(StressTestings.df_f_return.columns)):
+                    row.cells[i].text = StressTestings.df_f_return.columns[i]
+                for i in range(len(StressTestings.df_f_return)):
+                    row = fra_table.rows[i + 1]
+                    for j in range(len(StressTestings.df_f_return.columns)):
+                        row.cells[j].text = StressTestings.df_f_return.iloc[i, j]
+                table_number += 1
+
+                doc.add_paragraph('With a confidence level of 95%, ', style='BodyStyle')
+                for i in range(len(StressTestings.df_f_return)):
+                    doc.add_paragraph(StressTestings.df_f_return.loc[i, 'Investment Option'] + ' is expected to return between ' +StressTestings.df_f_return.loc[i, '5% Confidence Interval']+
+                                      '% p.a. and '+StressTestings.df_f_return.loc[i, '95% Confidence Interval'] + '% p.a., with an average return of '+
+                                      StressTestings.df_f_return.loc[i, '50% Confidence Interval'] +'% p.a.' , style='list_bullet')
+
+                doc.add_heading('Risk Analysis', 3)
+                doc.add_paragraph('Table ' + str(table_number) + ' shows the expected number of negative years for the strategic asset '
+                                                                 'allocations relative to their respective number of negative annual returns over any 20-year '
+                                                                 'period as proxied by their current risk disclosures (Standard Risk Measure):', style='BodyStyle')
+                doc.add_paragraph('Forecasted returns and volatility of returns, and', style='list_bullet')
+                doc.add_paragraph('Simulated 1,000 scenarios of 20-year investment periods. Assessment for '
+                                  'the scenario stress testing was conducted on basis of the average number of negative annual returns.', style='list_bullet')
+                doc.add_paragraph('Table ' + str(table_number) + ': Number of Negative Annual Returns in a 20-year Period', style='T-Title')
+                frisk_table = doc.add_table(rows=len(StressTestings.df_f_risk) + 1, cols=len(StressTestings.df_f_risk.columns), style='Table2')
+                row = frisk_table.rows[0]
+                for i in range(len(StressTestings.df_f_risk.columns)):
+                    row.cells[i].text = StressTestings.df_f_risk.columns[i]
+                for i in range(len(StressTestings.df_f_risk)):
+                    row = frisk_table.rows[i + 1]
+                    for j in range(len(StressTestings.df_f_risk.columns)):
+                        row.cells[j].text = StressTestings.df_f_risk.iloc[i, j]
+                table_number += 1
+            doc.add_heading('Trigger levels', 2)
+            doc.add_paragraph('Whilst it is proposed that ' + temp_client + ' be reviewed annually, a trigger level has been '
+                                                                            'defined to approximate a loss or minimum return that will erode the level of confidence '
+                                                                            'in achieving the investment objective of ' + temp_client + ' over the defined investment '
+                                                                                                                                        'horizon to a probability of less than 50%.', style='BodyStyle')
+            doc.add_paragraph('On a quarterly basis, performance of ' + temp_client + ' is to be monitored against the '
+                                                                                      'trigger level to ensure that ' + temp_client + ' maintains at least a 50% '
+                                                                                                                                      'probability to achieve its investment objective',
+                              style='BodyStyle')
+            doc.add_paragraph('A breach of the trigger level i.e. a defined loss or minimum return to be achieved by ' + temp_client +
+                              ' between formal annual reviews, should prompt a review of the causes of the loss and/or reconsider the ongoing suitability of ' + temp_client + ' underlying strategy.',
+                              style='BodyStyle')
+            doc.add_paragraph('Trigger level have been determined for ' + temp_client + ' and provided in Table ' + str(table_number) + ' below.', style='BodyStyle')
+            if StressTestings.df_trigger_level.empty == False:
+                doc.add_paragraph('Table ' + str(table_number) + ': Trigger Levels', style='T-Title')
+                tl_table = doc.add_table(rows=len(StressTestings.df_trigger_level) + 1,
+                                         cols=len(StressTestings.df_trigger_level.columns), style='Table2')
+                row = tl_table.rows[0]
+                for i in range(len(StressTestings.df_trigger_level.columns)):
+                    row.cells[i].text = StressTestings.df_trigger_level.columns[i]
+                for i in range(len(StressTestings.df_trigger_level)):
+                    row = tl_table.rows[i + 1]
+                    for j in range(len(StressTestings.df_trigger_level.columns)):
+                        row.cells[j].text = StressTestings.df_trigger_level.iloc[i, j]
+                table_number += 1
+            doc.add_heading('Conclusions', 2)
+            doc.add_paragraph(
+                'Stress testing scenarios have been performed on ' + temp_client + ' in accordance with APRA Prudential Standard SPS 530, factoring investment returns, asset allocations '
+                                                                                   'and risk factors that have the potential to influence major asset classes which therefore '
+                                                                                   'have an impact on the investment performance of each investment strategy/option.', style='BodyStyle')
+
+            if StressTestings.df_hypothetical.empty == False:
+                doc.add_heading('Hypothetical Analysis – Results', 2)
+                doc.add_paragraph('The hypothetical stress testing is conducted to estimate the portfolio performance against specific factors as shown in Table ' + str(table_number)
+                                  + '. In this scenario, factors include: ', style='BodyStyle')
+                factor_name = []
+                factor_change = []
+                for g in range(1, len(StressTestings.df_hypothetical.columns)):
+                    doc.add_paragraph(StressTestings.df_hypothetical.columns[g], style='list_bullet')
+                    temp = StressTestings.df_hypothetical.columns[g].split(' ')
+                    factor_change.append(temp[-1])
+                    x = temp[0]
+                    for var in temp[1:len(temp) - 2]:
+                        x += ' ' + var
+                    factor_name.append(x)
+                doc.add_paragraph('Table ' + str(table_number) + ': Regularisation Results', style='T-Title')
+                hypo_table = doc.add_table(rows=len(StressTestings.df_hypothetical) + 1, cols=len(StressTestings.df_hypothetical.columns), style='Table2')
+                row = hypo_table.rows[0]
+                for i in range(len(StressTestings.df_hypothetical.columns)):
+                    row.cells[i].text = StressTestings.df_hypothetical.columns[i]
+                for i in range(len(StressTestings.df_hypothetical)):
+                    row = hypo_table.rows[i + 1]
+                    for j in range(len(StressTestings.df_hypothetical.columns)):
+                        try:
+                            row.cells[j].text = "{:.2f}".format(StressTestings.df_hypothetical.iloc[i, j])
+                        except:
+                            row.cells[j].text = StressTestings.df_hypothetical.iloc[i, j]
+                table_number += 1
+
+                for i in range(len(factor_name)):
+                    for j in range(len(StressTestings.df_hypothetical)):
+                        if StressTestings.df_hypothetical.iloc[j, 0] not in all_acs:
+                            if float(StressTestings.df_hypothetical.iloc[j, i + 1]) > 0:
+                                temp = 'increase'
+                            elif float(StressTestings.df_hypothetical.iloc[j, i + 1]) < 0:
+                                temp = 'decrease'
+                            else:
+                                temp = 'stay unchanged'
+                            doc.add_paragraph('For a ' + factor_change[i] + ' change in ' + factor_name[i] + ' , the return of the ' + StressTestings.df_hypothetical.iloc[j, 0]
+                                              + ' is estimated to ' + temp + ' for ' + "{:.2f}".format(StressTestings.df_hypothetical.iloc[j, i + 1]) + '%.', style='list_bullet')
+
+            doc.add_page_break()
+            ######################################## 6 Appendix C -- Liquidity Stress Testing ###########################
+            if Strategies_save[0].df_liq_ac.empty == False:
+                doc.add_heading('Appendix C - Liquidity Stress Testing', 1)
+                doc.add_paragraph('The SIS Act requires an RSE licensee to consider the liquidity of investments when formulating and implementing an investment strategy, while also considering the '
+                                  'expected cash flow requirements of the RSE. Given the unique nature and asset allocations, the approach taken to managing liquidity risk is primarily focused on the '
+                                  + temp_client + ' meeting its financial obligations and cash flow requirements in the best interests of the Trust members.', style='BodyStyle')
+                doc.add_paragraph('In view of the nature of the underlying investment, the Asset Consultant concludes that performing, in accordance with the APRA Prudential '
+                                  'Standard SPS 530 liquidity stress testing programs, is deemed appropriate as there are adequate liquid assets in the asset allocations '
+                                  'to meet fund members’ redemption requests. ', style='BodyStyle')
+                if Strategies_save[0].recom_portfolio != None:
+                    doc.add_paragraph('The tables below show the liquidity assets allocation of the current SAA and the recommended SAA in normal and stressed liquidity condition. The assets '
+                                      'that cannot be readily liquidated within 30 days are deemed illiquid.', style='BodyStyle')
+                else:
+                    doc.add_paragraph('The tables below show the liquidity assets allocation of the current SAA in normal and stressed liquidity condition. The assets '
+                                      'that cannot be readily liquidated within 30 days are deemed illiquid.', style='BodyStyle')
+                if single_ac == False:
+                    for i in strg_no_list:
+                        if Strategies_save[i].recom_portfolio != None:
+                            doc.add_paragraph('Table ' + str(table_number) + ': Liquidity asset allocation for ' + Strategies_save[i].client + ' ' + Strategies_save[i].name, style='T-Title')
+                            la_table = doc.add_table(rows=len(Strategies_save[i].df_liq_asset) + 1, cols=len(Strategies_save[i].df_liq_asset.columns), style='Table2')
+                            row = la_table.rows[0]
+                            for k in range(len(Strategies_save[i].df_liq_asset.columns)):
+                                row.cells[k].text = Strategies_save[i].df_liq_asset.columns[k]
+                            for j in range(len(Strategies_save[i].df_liq_asset)):
+                                row = la_table.rows[j + 1]
+                                for k in range(len(Strategies_save[i].df_liq_asset.columns)):
+                                    row.cells[k].text = str(Strategies_save[i].df_liq_asset.iloc[j, k])
+                            table_number += 1
+                        else:
+                            doc.add_paragraph('Table ' + str(table_number) + ': Liquidity asset allocation for ' + Strategies_save[i].client + ' ' + Strategies_save[i].name, style='T-Title')
+                            la_table = doc.add_table(rows=len(Strategies_save[i].df_liq_asset) + 1, cols=len(Strategies_save[i].df_liq_asset.columns) - 2, style='Table2')
+                            row = la_table.rows[0]
+                            for k in range(len(Strategies_save[i].df_liq_asset.columns) - 2):
+                                row.cells[k].text = Strategies_save[i].df_liq_asset.columns[k]
+                            for j in range(len(Strategies_save[i].df_liq_asset)):
+                                row = la_table.rows[j + 1]
+                                for k in range(len(Strategies_save[i].df_liq_asset.columns) - 2):
+                                    row.cells[k].text = str(Strategies_save[i].df_liq_asset.iloc[j, k])
+                            table_number += 1
+
+                doc.add_heading('Liquidity Profile', 2)
+                doc.add_paragraph('The tables below indicate the Asset Consultants expected time to liquidate assets within each single asset class and each allocation under a normal and stressed '
+                                  'economic environment and the stacked bar charts display the liquidity profile of both the actual and strategic asset allocations under normal and stressed '
+                                  'liquidity conditions. The licensee is required to be aware of the likely liquidity of different underlying investment strategies under stressed financial '
+                                  'market conditions.', style='BodyStyle')
+                doc.add_paragraph('Table ' + str(table_number) + ': Liquidity in days per asset class', style='T-Title')
+                acliq_table = doc.add_table(rows=len(Strategies_save[0].df_liq_ac) + 1, cols=len(Strategies_save[0].df_liq_ac.columns), style='Table2')
+                row = acliq_table.rows[0]
+                for k in range(len(Strategies_save[0].df_liq_ac.columns)):
+                    row.cells[k].text = Strategies_save[0].df_liq_ac.columns[k]
+                for j in range(len(Strategies_save[0].df_liq_ac)):
+                    row = acliq_table.rows[j + 1]
+                    for k in range(len(Strategies_save[0].df_liq_ac.columns)):
+                        row.cells[k].text = str(Strategies_save[0].df_liq_ac.iloc[j, k])
+                table_number += 1
+
+                if single_ac == False:
+                    for i in strg_no_list:
+                        doc.add_paragraph(Strategies_save[i].client + ' ' + Strategies_save[i].name, style = 'BoldBody')
+                        doc.add_paragraph('Table ' + str(table_number) + ': Liquidity in days for investment strategy', style='T-Title')
+                        pliq_table = doc.add_table(rows=len(Strategies_save[i].df_liq_p) + 1, cols=len(Strategies_save[i].df_liq_p.columns), style='Table2')
+                        row = pliq_table.rows[0]
+                        for k in range(len(Strategies_save[i].df_liq_p.columns)):
+                            row.cells[k].text = Strategies_save[i].df_liq_p.columns[k]
+                        for j in range(len(Strategies_save[i].df_liq_p)):
+                            row = pliq_table.rows[j + 1]
+                            for k in range(len(Strategies_save[i].df_liq_p.columns)):
+                                row.cells[k].text = str(Strategies_save[i].df_liq_p.iloc[j, k])
+                        table_number += 1
+                        if Strategies_save[i].recom_portfolio != None:
+                            for g in range(len(Strategies_save[i].df_liq_p)):
+                                if 'Recommended' in Strategies_save[i].df_liq_p.iloc[g, 0].split(' '):
+                                    temp1 = Strategies_save[i].df_liq_p.iloc[g, 1]
+                                    temp2 = Strategies_save[i].df_liq_p.iloc[g, 2]
+                        else:
+                            temp1 = Strategies_save[i].df_liq_p.iloc[0, 1]
+                            temp2 = Strategies_save[i].df_liq_p.iloc[0, 2]
+                        doc.add_paragraph('Under normal market conditions, on weighted average basis, the recommended strategy is invested 100% in assets with ' + temp1
+                                          + ' days or less liquidity.', style='list_bullet')
+                        doc.add_paragraph('Under stressed market conditions, on weighted average basis, the recommended strategy is invested 100% in assets with ' + temp2
+                                          + ' days or less liquidity.', style='list_bullet')
+
+                        ######### picture ############
+                        doc.add_paragraph('', style='BodyStyle')
+                        doc.add_paragraph('Figure ' + str(figure_number) + ' below shows percentage of assets by asset class, that are liquid illustrated over various time horizons.',
+                                          style='BodyStyle')
+                        doc.add_paragraph(
+                            'The expected time to liquidate 100% assets for the current SAA is ' + str(kf.liq_period(Strategies_save[i].csaa_norm_liq)) + ' under normal market condition but ' +
+                            str(kf.liq_period(Strategies_save[i].csaa_strs_liq)) + ' under stressed market condition.', style='list_bullet')
+                        if Strategies_save[i].recom_portfolio != None:
+                            doc.add_paragraph('The expected time to liquidate 100% assets for the recommended SAA is ' + kf.liq_period(Strategies_save[i].rsaa_norm_liq)
+                                              + ' under normal market condition but ' +
+                                              str(kf.liq_period(Strategies_save[i].rsaa_strs_liq)) + ' under stressed market condition.', style='list_bullet')
+                        user_name = getpass.getuser()
+                        name = 'C:/Users/' + user_name + '/Downloads/Optimiser V2/' + Strategies_save[i].client+'/'+ Strategies_save[i].client + Strategies_save[i].name + 'liq_chart.png'
+                        doc.add_paragraph('Figure ' + str(figure_number) + ': Liquidity Profiles of ' + Strategies_save[i].client + ' ' + Strategies_save[i].name, style='T-Title')
+                        para = doc.add_paragraph()
+                        run = para.add_run()
+                        if Strategies_save[i].recom_portfolio == None:
+                            run.add_picture(name, width=Inches(3.4), height=Inches(4))  ##6, 7
+                        else:
+                            run.add_picture(name, width=Inches(6), height=Inches(3.8))  ##11, 7
+                        figure_number += 1
+
+                    doc.add_paragraph('The liquidity analysis was performed across the asset allocations under various liquidity conditions: ', style='BodyStyle')
+                    doc.add_paragraph('Extreme market conditions would deteriorate the liquidity expectation leading to longer period for ' + temp_client
+                                      + ' to liquidate 100% of the assets.', style='list_bullet')
+                    try:
+                        if Strategies_save[i].recom_portfolio != None:
+                            if Strategies_save[i].rsaa_norm_liq < Strategies_save[i].csaa_norm_liq and Strategies_save[i].rsaa_strs_liq < Strategies_save[i].csaa_strs_liq:
+                                doc.add_paragraph('Under both normal and stressed liquidity conditions, the liquidity expectation of the recommended SAA is lower than that of the current SAA',
+                                                  style='list_bullet')
+                            elif Strategies_save[i].rsaa_norm_liq > Strategies_save[i].csaa_norm_liq and Strategies_save[i].rsaa_strs_liq > Strategies_save[i].csaa_strs_liq:
+                                doc.add_paragraph('Under both normal and stressed liquidity conditions, the liquidity expectation of the recommended SAA is higher than that of the current SAA',
+                                                  style='list_bullet')
+                            elif Strategies_save[i].rsaa_norm_liq == Strategies_save[i].csaa_norm_liq and Strategies_save[i].rsaa_strs_liq == Strategies_save[i].csaa_strs_liq:
+                                doc.add_paragraph('Under both normal and stressed liquidity conditions, the liquidity expectation of the recommended SAA is equivalent to that of the current SAA',
+                                                  style='list_bullet')
+                            elif Strategies_save[i].rsaa_norm_liq >= Strategies_save[i].csaa_norm_liq and Strategies_save[i].rsaa_strs_liq <= Strategies_save[i].csaa_strs_liq:
+                                doc.add_paragraph(
+                                    'Under normal liquidity conditions, the liquidity expectation of the recommended SAA is higher than that of the current SAA, yet situation is the opposite '
+                                    'under stressed market environment.', style='list_bullet')
+                            elif Strategies_save[i].rsaa_norm_liq <= Strategies_save[i].csaa_norm_liq and Strategies_save[i].rsaa_strs_liq >= Strategies_save[i].csaa_strs_liq:
+                                doc.add_paragraph(
+                                    'Under normal liquidity conditions, the liquidity expectation of the recommended SAA is lower than that of the current SAA, yet situation is the opposite '
+                                    'under stressed market environment.', style='list_bullet')
+                    except:
+                        pass
+                else:
+                    liq_no = []
+                    illiq_no = []
+                    all_rowid = []
+                    for i in strg_no_list:
+                        for j in range(len(AssetClasses)):
+                            if Strategies_save[i].name == AssetClasses[j].name:
+                                all_rowid.append(j)
+                                break
+                    for i in all_rowid:
+                        if float(AssetClasses[i].liq) <= 30:
+                            liq_no.append(i)
+                        else:
+                            illiq_no.append(i)
+                    doc.add_paragraph('The table below shows four illustrative allocations as examples using chosen asset classes, while the figures displayed their liquidity expectation '
+                                      'under normal and stressed market condition.', style='BodyStyle')
+                    doc.add_paragraph('Table ' + str(table_number) + ': Illustrative allocations', style='T-Title')
+                    w_table = doc.add_table(rows=len(Strategies_save[0].df_liq_p) + 1, cols=len(Strategies_save[0].df_liq_p.columns), style='Table2')
+                    row = w_table.rows[0]
+                    row.cells[0].text = Strategies_save[0].df_liq_p.columns[0]
+                    for i in range(1, len(Strategies_save[0].df_liq_p.columns)):
+                        row.cells[i].text = 'Allocation ' + str(i)
+                    for i in range(len(Strategies_save[0].df_liq_p)):
+                        row = w_table.rows[i + 1]
+                        for j in range(len(Strategies_save[0].df_liq_p.columns)):
+                            row.cells[j].text = str(Strategies_save[0].df_liq_p.iloc[i, j])
+                    table_number += 1
+
+                    for h in range(4):
+                        doc.add_paragraph('Figure ' + str(figure_number) + ': Liquidity Profiles of Allocation ' + str(h + 1), style='T-Title')
+                        temp_name = str(h) + 'liq_chart.png'
+                        doc.add_picture(temp_name)
+                        figure_number += 1
+
+                doc.add_heading('Liquidity Risk Management', 2)
+                doc.add_paragraph(
+                    'The ' + temp_client + ' Administrator reports contribution flows and member exits/outflows to the Trustee and investment manager to assist in the early identification '
+                                           'of unusual patterns.', style='BodyStyle')
+                doc.add_paragraph('In managing liquidity risk the following matters may be included: ', style='BodyStyle')
+                doc.add_paragraph('Cash flow projections and past cash flow will be prepared on a regular basis to check the liquidity level needed', style='list_bullet')
+                doc.add_paragraph('Whether there are appropriate early warning indicators of liquidity risk for the single investment of the ' + temp_client + ', and', style='list_bullet')
+                doc.add_paragraph('Reporting to the Research and Investment Team, Trustee Investment Committee and Board.', style='list_bullet')
+                doc.add_heading('Conclusion', 3)
+                doc.add_paragraph('Consideration has been given to the liquidity of the underlying investments in stressed market conditions for ' + temp_client + '. All strategies are '
+                                'expected to remain liquid under stressed market scenarios.', style='BodyStyle')
+                doc.add_heading('Recommendation', 3)
+                doc.add_paragraph('It is recommended that cash flow requirements are closely monitored to ensure sufficient cash is available to meet liabilities as they arise.', style='BodyStyle')
+            ################################################ END #########################################################
+            # Find Portfolio Record
+            t1 = entryBox1.get()
+            t2 = t1 + ".docx"
+            doc.save(t2)
+            tk.Label(right_scroll_frame, text='Successfully saved output as: ' + t2, anchor="nw", pady=50, padx=20, bg=colour1, fg=colour4,
+                     font=textFont).grid(column=0, row=15, columnspan=3)
+            os.system("start " + t2)
+
+    ## enter introduction
+    Label(right_scroll_frame, text='Please Enter introduction: ', pady=20, padx=20, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=10, sticky='w')
+    intro_entry = Entry(right_scroll_frame, width=50)
+    intro_entry.grid(column=1, row=10, padx=20, columnspan=2, sticky='w')
+
+    ## rounding or not
+    Label(right_scroll_frame, text='Rounding weights to nearest 0.5?', pady=20, padx=20, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=11, sticky='w')
+    rd_var = IntVar(right_scroll_frame, 2)
+    tk.Radiobutton(right_scroll_frame, text='Yes', variable=rd_var, value=1).grid(column=1, row=11, sticky='w', padx=20, columnspan=2)
+    tk.Radiobutton(right_scroll_frame, text='No', variable=rd_var, value=2).grid(column=1, row=12, sticky='w', padx=20, columnspan=2)
+    tk.Label(right_scroll_frame, text='Save Filename As', anchor="nw", pady=20, padx=20, bg=colour1, fg=colour4, font=textFont).grid(column=0, row=13)
+    entryBox1 = tk.Entry(right_scroll_frame, width=20, bg=colour2, fg=colour1, font=textFont)
+    entryBox1.insert(0, "Reports")
+    entryBox1.grid(column=1, row=13, padx=20)
+    save_button = tk.Button(right_scroll_frame, text='Save File', command=save_output, font=textFont, fg=colour1, bg=colour4)
+    save_button.grid(column=2, row=13, padx=10, pady=10)
+
+    return
+
+

@@ -372,6 +372,12 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
     return common_elements_list
 
 
+# Create Report Fucntions
+
+def f_save_report(selected_report):
+    print("Made it to function call")
+    print(f"Generating report for {selected_report}")
+
 # Create Sidebar %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 sidebar = html.Div(
@@ -395,7 +401,6 @@ sidebar = html.Div(
                     href="/",
                     active="exact",
                 ),
-                html.Hr(),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -456,7 +461,6 @@ sidebar = html.Div(
                     href="/3C-Alternate",
                     active="exact",
                 ),
-                html.Hr(),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -482,7 +486,6 @@ sidebar = html.Div(
                     href="/6-Component",
                     active="exact",
                 ),
-                html.Hr(),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -500,7 +503,6 @@ sidebar = html.Div(
                     href="/11-Fees",
                     active="exact",
                 ),
-                html.Hr(),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -518,7 +520,6 @@ sidebar = html.Div(
                     href="/21-Reports",
                     active="exact",
                 ),
-                html.Hr(),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -545,9 +546,8 @@ content = html.Div(id="page-content", children=[])
 app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar,
-    content
-])
-
+    content,
+])  #A4 Paper Size
 @app.callback(
     Output("page-content", "children"),
     [Input("url", "pathname")]
@@ -624,7 +624,8 @@ def render_page_content(pathname):
                                   dbc.Col(daq.BooleanSwitch(id='switch-003', on=True, color="#93F205",
                                                             label="More Settings #3 tbc",
                                                             labelPosition="bottom",
-                                                            style={"text-align": "center"}), align="start"),
+                                                            style={"text-align": "center"})
+                                          , align="start"),
                                   dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205",
                                                             label="More Settings #4 tbc",
                                                             labelPosition="bottom"),
@@ -3491,7 +3492,65 @@ def render_page_content(pathname):
             ], align="center", className="mb-3")
 
         ]
+
     elif pathname == "/21-Reports":
+
+        return [
+            html.Div(style={'height': '2rem'}),
+            html.H2('Report Generator',
+                    style={'textAlign': 'center', 'color': "#3D555E"}),
+            html.Hr(),
+            html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
+            html.Hr(),
+
+            dbc.Row([
+                # Left Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+                # Centre Work Area
+                dbc.Col([
+
+                    dbc.Row([
+                        dbc.Col(
+                        dbc.Card([dbc.CardHeader("Select Which Sections To Output To Report:", className="card-header-bold"),
+                                  dbc.CardBody([
+                                      dbc.Row([
+                                          dbc.Col([
+                                              dcc.RadioItems(
+                                                  options=[
+                                                      {'label': ' 1 - Portfolio Summary Analysis', 'value': 'R1'},
+                                                      {'label': ' 2 - Product Factor Analysis', 'value': 'R2'},
+                                                      {'label': ' 3 - 3rd Type Report', 'value': 'R3'},
+                                                      {'label': ' 4 - 4th Type Report', 'value': 'R4'},
+                                                      {'label': ' 5 - 5th Type Report', 'value': 'R5'},
+                                                  ],
+                                                  id="group_radio_2101",
+                                                  value='R1',
+                                              ),
+                                              html.Hr(),
+                                              dbc.Button("Generate Report", id="btn_generate_report", color="primary"),
+                                              html.Div(id='display-report-name', children="",
+                                                       style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                                       className="sidebar-subheader")],
+                                              align="start"
+                                          ),
+
+                                      ], justify="evenly", align="start", className="mb-2"),
+                                  ])
+                            ], color="primary", outline=True, style={"height": "100%"}),
+                        width=8, align="stretch", className="mb-3"),
+                    ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
+
+                    # End of Centre Work Area
+                ], width=8, align="center", className="mb-3"),
+
+                # Right Gutter
+                dbc.Col("", width=2, align="center", className="mb-3"),
+
+            ], align="center", className="mb-3"),
+        ]
+
+
+    elif pathname == "/22-Download":   # Not linked now - but keep - as the logica automatically saves to users machine
 
         rp_filtered_df_1_4 = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
@@ -3724,10 +3783,10 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
 
     if pathname == "/":
         if selected_value in availablePortfolios:
-            if selected_value == stored_value.get('key'):
-                print("No change needed")
-            else:
-                print("Change triggered")
+            #if stored_value and selected_value == stored_value.get('key'):
+            #    print("No change needed")
+           # else:
+             #   print("Change triggered")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioCode  # Update Selected_Code
             Selected_Name = Selected_Portfolio.portfolioName
@@ -3751,10 +3810,31 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
     else:
         return None, None, None, None
 
+
+
+@app.callback(
+    Output('btn_generate_report', 'n_clicks'),
+    [Input('btn_generate_report', 'n_clicks')],
+    [State('group_radio_2101', 'value')],
+    prevent_initial_call=True
+)
+def save_report_to_terminal(n_clicks, selected_report):
+    if n_clicks is not None:
+        f_save_report(selected_report)
+        print(f'Report generated for {selected_report}.')
+    return None
+
+
 #text_Start_Date = load_start_date
 #text_End_Date = load_end_date
+
+# Update the CSS styles for printing to ensure A4 size
+# app.css.append_css({'external_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'})
+
+
 
 # Run the app
 if __name__ == '__main__':
     #app.run_server(debug=True)
     app.run_server(host = '0.0.0.0', port = port_number, debug=True)
+    #app.run_server(host='0.0.0.0', port=port_number)

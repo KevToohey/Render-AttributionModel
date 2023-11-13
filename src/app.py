@@ -3892,7 +3892,7 @@ def save_report_to_terminal(n_clicks, selected_report):
         doc.add_page_break()
         ############################################### 1 Executive Summary ########################################
         doc.add_heading("Executive Summary", 1)
-
+#
 
         # Save Document to Local System
 

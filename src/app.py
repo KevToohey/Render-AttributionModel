@@ -113,12 +113,15 @@ availablePortfolios = f_get_subfolder_names('./ServerData/')
 
 # Create Portfolio class objects (import all data)
 All_Portfolios = []
+All_PortfolioNames = []
+n = 0
 for code in availablePortfolios:
     print(code)
     All_Portfolios.append(Portfolio(code))
+    All_PortfolioNames.append(All_Portfolios[n].portfolioName)
+    n += 1
 
 # Initialise charts with 1st dataset
-
 Selected_Portfolio = All_Portfolios[3]
 Selected_Code = Selected_Portfolio.portfolioCode
 Selected_Name = Selected_Portfolio.portfolioName
@@ -554,7 +557,7 @@ app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar,
     content,
-])  #A4 Paper Size
+])
 @app.callback(
     Output("page-content", "children"),
     [Input("url", "pathname")]
@@ -574,75 +577,82 @@ def render_page_content(pathname):
 
                                       html.H6('Primary Portfolio:'),
                                       dcc.Dropdown(id='portfolio-dropdown',
-                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
+                                                   options=[{'label': portfolio+" : "+All_Portfolios[availablePortfolios.index(portfolio)].portfolioName,
+                                                             'value': portfolio} for portfolio in
                                                             availablePortfolios],
                                                    value=Selected_Code),
-                                      html.Div(id='display-portfolio-name',
-                                               style={"color": "#1DC8F2", "margin-left": "5rem"},
-                                               className="sidebar-subheader"),
-                                      html.Div(id='display-portfolio-type',
-                                               style={"color": "#1DC8F2", "margin-left": "5rem"},
-                                               className="sidebar-subheader"),
                                       html.Hr(),
                                       html.H6('Alternative 1:'),
-                                      dcc.Dropdown(id='portfolio-dropdown-alt1',
-                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
-                                                            availablePortfolios],
-                                                   value=Alt1_Code),
+                                      dbc.Row([
+                                          dbc.Col(daq.BooleanSwitch(id='portfolio-dropdown-alt1-switch', on=False),
+                                                  className="mb-3", width = 1, style={'minWidth': 120}),
+                                          dbc.Col(dcc.Dropdown(id='portfolio-dropdown-alt1',
+                                                               options=[{'label': portfolio + " : " + All_Portfolios[
+                                                                   availablePortfolios.index(portfolio)].portfolioName,
+                                                                         'value': portfolio} for portfolio in
+                                                                        availablePortfolios],
+                                                               value=Alt1_Code), className="mb-3"),
+                                      ]),
+
                                       html.Hr(),
                                       html.H6('Alternative 2:'),
-                                      dcc.Dropdown(id='portfolio-dropdown-alt2',
-                                                   options=[{'label': portfolio, 'value': portfolio} for portfolio in
-                                                            availablePortfolios],
-                                                   value=Alt2_Code)
-                                  ]
-                                  )], color="primary", outline=True, style={"height": "100%"}), width=4, align="stretch", className="mb-3"),
-                dbc.Col(dbc.Card([dbc.CardHeader("Select Attribution Grouping:", className="card-header-bold"),
-                                  dbc.CardBody([
                                       dbc.Row([
-                                          dbc.Col(
-                                              dcc.RadioItems(
-                                                  options=[
-                                                      {'label': ' G1 - Atchison Sleeve Categories', 'value': 'G1'},
-                                                      {'label': ' G2 - CFS Edge Policy', 'value': 'G2'},
-                                                      {'label': ' G3 - HUB24 Policy', 'value': 'G3'},
-                                                      {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
-                                                      {'label': ' G5 - Geography', 'value': 'G5'},
-                                                  ],
-                                                  id="group_radio",
-                                                  value='G1',
-                                              ), align="start"),
-                                      ], justify="evenly", align="start", className="mb-2"),
-                                  ])], color="primary", outline=True, style={"height": "100%"}), width=2,
-                        align="stretch", className="mb-3"),
+                                          dbc.Col(daq.BooleanSwitch(id='portfolio-dropdown-alt2-switch', on=False),
+                                                  className="mb-3", width = 1, style={'minWidth': 120}),
+                                          dbc.Col(dcc.Dropdown(id='portfolio-dropdown-alt2',
+                                                               options=[{'label': portfolio + " : " + All_Portfolios[
+                                                                   availablePortfolios.index(portfolio)].portfolioName,
+                                                                         'value': portfolio} for portfolio in
+                                                                        availablePortfolios],
+                                                               value=Alt2_Code), className="mb-3"),
+                                      ]),
+                                  ]
+                            )], color="primary", outline=True, style={"height": "100%"}), width=5, align="stretch", className="mb-3"),
+
                 dbc.Col(dbc.Card(
-                    [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
-                        dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date, day_size=35,
-                                            end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
-                    ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="start", className="mb-2"),
+                    [
+                        html.Hr(),
+                        html.Div(id='display-portfolio-name',
+                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                 className="sidebar-subheader"),
+                        html.Div(id='display-portfolio-type',
+                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                 className="sidebar-subheader"),
+                        html.Hr(),
+                    ], color="primary", outline=True, style={"height": "100%"}), width=3, align="centre", className="mb-2"),
 
                 ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
 
             html.Hr(),
-            dbc.Row([dbc.Col(
-                dbc.Card([dbc.CardHeader("Some Other Stuff To Be Added....:", className="card-header-bold"),
-                          dbc.CardBody([
-                              dbc.Row([
-                                  dbc.Col(daq.BooleanSwitch(id='switch-003', on=True, color="#93F205",
-                                                            label="More Settings #3 tbc",
-                                                            labelPosition="bottom",
-                                                            style={"text-align": "center"})
-                                          , align="start"),
-                                  dbc.Col(daq.BooleanSwitch(id='switch-004', on=False, color="#93F205",
-                                                            label="More Settings #4 tbc",
-                                                            labelPosition="bottom"),
-                                          style={"text-align": "center"}, align="start"),
-                              ], justify="evenly", align="start", className="mb-2"),
-                          ])], color="primary", outline=True, style={"height": "100%"}),
-                width=8, align = "stretch", className = "mb-3"),
+            dbc.Row([
+                dbc.Col(
+                    dbc.Card([dbc.CardHeader("Select Attribution Grouping:", className="card-header-bold"),
+                              dbc.CardBody([
+                                  dbc.Row([
+                                      dbc.Col(
+                                          dcc.RadioItems(
+                                              options=[
+                                                  {'label': ' G1 - Atchison Sleeve Categories', 'value': 'G1'},
+                                                  {'label': ' G2 - CFS Edge Policy', 'value': 'G2'},
+                                                  {'label': ' G3 - HUB24 Policy', 'value': 'G3'},
+                                                  {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
+                                                  {'label': ' G5 - Geography', 'value': 'G5'},
+                                              ],
+                                              id="group_radio",
+                                              value='G1',
+                                          ), align="start"),
+                                  ], justify="evenly", align="start", className="mb-2"),
+                              ])], color="primary", outline=True, style={"height": "100%"}),
+                width=5, align="stretch", className="mb-3"),
+
+                dbc.Col(dbc.Card(
+                    [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
+                        dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date, day_size=35,
+                                            end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
+                    ])], color="primary", outline=True, style={"height": "100%"}), width=3, align="start",
+                    className="mb-2"),
+
             ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
-
-
         ]
     elif pathname == "/0-Summary":
         return [
@@ -2302,7 +2312,7 @@ def render_page_content(pathname):
                                          mode='markers+text',
                                          marker=dict(size=12, color='black', symbol="cross",
                                                      line=dict(color='black', width=1)),
-                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
+                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
                                          textposition='bottom right',
                                          showlegend=False)
         BM_trace_3A_2G = go.Scatter(x=[averages['BM_avg_GrowthofNetIncome']], y=[averages['BM_avg_MarketCap']],
@@ -2310,7 +2320,7 @@ def render_page_content(pathname):
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
                                    text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='top right',
+                                   textposition='bottom right',
                                    showlegend=False)
         figure_3A_2G.add_trace(selected_trace_3A_2G)
         figure_3A_2G.add_trace(BM_trace_3A_2G)
@@ -2351,7 +2361,7 @@ def render_page_content(pathname):
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
                                    text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='top right',
+                                   textposition='bottom right',
                                    showlegend=False)
         figure_3A_3G.add_trace(selected_trace_3A_3G)
         figure_3A_3G.add_trace(BM_trace_3A_3G)
@@ -2391,7 +2401,7 @@ def render_page_content(pathname):
                                    marker=dict(size=12, color='black', symbol="star",
                                                line=dict(color='black', width=1)),
                                    text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='top right',
+                                   textposition='bottom right',
                                    showlegend=False)
         figure_3A_4G.add_trace(selected_trace_3A_4G)
         figure_3A_4G.add_trace(BM_trace_3A_4G)
@@ -2426,14 +2436,14 @@ def render_page_content(pathname):
                                           marker=dict(size=12, color='black', symbol="cross",
                                                       line=dict(color='black', width=1)),
                                           text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
-                                          textposition='bottom left',
+                                          textposition='bottom right',
                                           showlegend=False)
         BM_trace_3A_5G = go.Scatter(x=[averages['BM_avg_EarningsYield']], y=[averages['BM_avg_GrowthofNetIncome']],
                                     mode='markers+text',
                                     marker=dict(size=12, color='black', symbol="star",
                                                 line=dict(color='black', width=1)),
                                     text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                    textposition='top right',
+                                    textposition='bottom right',
                                     showlegend=False)
         figure_3A_5G.add_trace(selected_trace_3A_5G)
         figure_3A_5G.add_trace(BM_trace_3A_5G)

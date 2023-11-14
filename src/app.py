@@ -121,7 +121,7 @@ for code in availablePortfolios:
     All_PortfolioNames.append(All_Portfolios[n].portfolioName)
     n += 1
 
-# Initialise charts with 1st dataset
+# Initialise Globals changed by reach app calls (at bottom)
 Selected_Portfolio = All_Portfolios[3]
 Selected_Code = Selected_Portfolio.portfolioCode
 Selected_Name = Selected_Portfolio.portfolioName
@@ -139,6 +139,9 @@ Alt2_Type = Alt2_Portfolio.portfolioType
 
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
+
+Alt1_Switch_On = False
+Alt2_Switch_On = False
 
 Product_List = Selected_Portfolio.df_productList.index.tolist()
 
@@ -584,15 +587,26 @@ def render_page_content(pathname):
                                       html.Hr(),
                                       html.H6('Alternative 1:'),
                                       dbc.Row([
-                                          dbc.Col(daq.BooleanSwitch(id='portfolio-dropdown-alt1-switch', on=False),
+                                          dbc.Col(daq.BooleanSwitch(id='portfolio-dropdown-alt1-switch', on=Alt1_Switch_On),
                                                   className="mb-3", width = 1, style={'minWidth': 120}),
-                                          dbc.Col(dcc.Dropdown(id='portfolio-dropdown-alt1',
-                                                               options=[{'label': portfolio + " : " + All_Portfolios[
-                                                                   availablePortfolios.index(portfolio)].portfolioName,
-                                                                         'value': portfolio} for portfolio in
-                                                                        availablePortfolios],
-                                                               value=Alt1_Code), className="mb-3"),
+                                          dbc.Col(
+                                              dcc.Loading(
+                                                  dcc.Dropdown(
+                                                      id='portfolio-dropdown-alt1',
+                                                      options=[
+                                                          {'label': portfolio + " : " + All_Portfolios[
+                                                              availablePortfolios.index(portfolio)].portfolioName,
+                                                           'value': portfolio} for portfolio in availablePortfolios
+                                                      ],
+                                                      value=Alt1_Code,
+                                                  ),
+                                                  style={'display': 'block' if Alt1_Switch_On else 'none'}
+                                                  # Conditionally set display style
+                                              ),
+                                          ),
                                       ]),
+                                      print("Kev here "),
+                                      print(Alt1_Switch_On),
 
                                       html.Hr(),
                                       html.H6('Alternative 2:'),
@@ -608,18 +622,6 @@ def render_page_content(pathname):
                                       ]),
                                   ]
                             )], color="primary", outline=True, style={"height": "100%"}), width=5, align="stretch", className="mb-3"),
-
-                dbc.Col(dbc.Card(
-                    [
-                        html.Hr(),
-                        html.Div(id='display-portfolio-name',
-                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
-                                 className="sidebar-subheader"),
-                        html.Div(id='display-portfolio-type',
-                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
-                                 className="sidebar-subheader"),
-                        html.Hr(),
-                    ], color="primary", outline=True, style={"height": "100%"}), width=3, align="centre", className="mb-2"),
 
                 ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
 
@@ -638,21 +640,38 @@ def render_page_content(pathname):
                                                   {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
                                                   {'label': ' G5 - Geography', 'value': 'G5'},
                                               ],
-                                              id="group_radio",
-                                              value='G1',
+                                              id="group_radio", value='G1', inline=False, labelStyle={'display': 'block'}
                                           ), align="start"),
                                   ], justify="evenly", align="start", className="mb-2"),
                               ])], color="primary", outline=True, style={"height": "100%"}),
-                width=5, align="stretch", className="mb-3"),
+                width=3, align="stretch", className="mb-3"),
 
                 dbc.Col(dbc.Card(
                     [dbc.CardHeader("Select Analysis Timeframe:", className="card-header-bold"), dbc.CardBody([
                         dcc.DatePickerRange(display_format='DD-MMM-YYYY', start_date=load_start_date, day_size=35,
                                             end_date=load_end_date, id='date-picker', style={"font-size": "11px"})
-                    ])], color="primary", outline=True, style={"height": "100%"}), width=3, align="start",
+                    ])], color="primary", outline=True, style={"height": "100%"}), width=2, align="start",
                     className="mb-2"),
 
             ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
+
+            html.Hr(),
+            dbc.Row([
+                dbc.Col(dbc.Card(
+                    [
+                        html.Hr(),
+                        html.Div(id='display-portfolio-name',
+                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                 className="sidebar-subheader"),
+                        html.Div(id='display-portfolio-type',
+                                 style={"color": "#1DC8F2", "margin-left": "5rem"},
+                                 className="sidebar-subheader"),
+                        html.Hr(),
+                    ], color="primary", outline=True, style={"height": "100%"}), width=5, align="centre",
+                    className="mb-2"),
+            ], justify="center", style={"display": "flex", "flex-wrap": "wrap"}, className="mb-3"),
+
+
         ]
     elif pathname == "/0-Summary":
         return [
@@ -3540,7 +3559,7 @@ def render_page_content(pathname):
                                                       {'label': ' 4 - 4th Type Report', 'value': 'R4'},
                                                       {'label': ' 5 - 5th Type Report', 'value': 'R5'},
                                                   ],
-                                                  id="group_radio_2101",
+                                                  id="group_radio_2101", inline=False, labelStyle={'display': 'block'},
                                                   value='R1',
                                               ),
                                               html.Hr(),
@@ -3793,17 +3812,15 @@ def render_page_content(pathname):
     Input('group_radio', 'value'),
     Input('date-picker', 'start_date'),  # Add start_date input
     Input('date-picker', 'end_date'),    # Add end_date input
+    Input('portfolio-dropdown-alt1-switch', 'on'),
+    Input('portfolio-dropdown-alt2-switch', 'on'),
 )
-def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, text_Start_Date, text_End_Date):
+def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, text_Start_Date, text_End_Date, alt1_on, alt2_on):
     global Selected_Portfolio, Selected_Code, Selected_Name, Selected_Type, Alt1_Portfolio, Alt1_Code, Alt1_Name, Alt1_Name, Alt1_Type
-    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Alt2_Type, Group_value, dt_start_date, dt_end_date  # Declare global variables
+    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Alt2_Type, Group_value, dt_start_date, dt_end_date, Alt1_Switch_On, Alt2_Switch_On # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
-            #if stored_value and selected_value == stored_value.get('key'):
-            #    print("No change needed")
-           # else:
-             #   print("Change triggered")
             Selected_Portfolio = All_Portfolios[availablePortfolios.index(selected_value)]
             Selected_Code = Selected_Portfolio.portfolioCode  # Update Selected_Code
             Selected_Name = Selected_Portfolio.portfolioName
@@ -3819,7 +3836,11 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             Group_value = group_value
             dt_start_date = pd.to_datetime(text_Start_Date)
             dt_end_date = pd.to_datetime(text_End_Date)
-            print(dt_start_date)
+            Alt1_Switch_On = alt1_on
+            Alt2_Switch_On = alt2_on
+            print("Client Side Callback Run")
+            print(f'Alt1_Switch_On: {Alt1_Switch_On}')
+            print(f'Alt2_Switch_On: {Alt2_Switch_On}')
 
             return Selected_Code, Selected_Name, Selected_Type, {'key': Selected_Code}
         else:

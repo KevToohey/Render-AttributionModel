@@ -46,7 +46,7 @@ colors = {
 }
 
 load_start_date = "2021-09-30"
-load_end_date = "2023-10-24"
+load_end_date = "2023-11-13"
 
 class Portfolio:
     def __init__(self, portfolioCode):
@@ -86,6 +86,7 @@ class Portfolio:
         self.df_BM_G2 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G2.parquet')
         self.df_BM_G3 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G3.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
+        self.df_Eco_InterestRates = pd.read_parquet('./ServerData/'+portfolioCode+'/df_Eco_InterestRates.parquet')
         # Recreate Category Group Labels for Charts
         self.portfolioCode = self.summaryVariables['portfolioCode'].iloc[0]
         self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
@@ -3504,6 +3505,26 @@ def render_page_content(pathname):
         ]
     elif pathname == "/20-Markets":
 
+        filtered_df_20_1 = Selected_Portfolio.df_Eco_InterestRates
+
+        figure_20_1 = go.Figure(data=[go.Surface(z=filtered_df_20_1.values)])
+
+        figure_20_1.update_layout(
+            title='US Yield Curve', autosize=False,
+            width=500, height=500,
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+
         ## Populate Charts for Page 20 Markets
         return [
             html.Div(style={'height': '2rem'}),
@@ -3518,6 +3539,14 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
+                            dbc.CardBody(dcc.Graph(figure=figure_20_1)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
 
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
@@ -3815,9 +3844,10 @@ def render_page_content(pathname):
     Input('portfolio-dropdown-alt1-switch', 'on'),
     Input('portfolio-dropdown-alt2-switch', 'on'),
 )
-def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, text_Start_Date, text_End_Date, alt1_on, alt2_on):
+def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value, alt2_value, group_value, tx_Start_Date, tx_End_Date, alt1_on, alt2_on):
     global Selected_Portfolio, Selected_Code, Selected_Name, Selected_Type, Alt1_Portfolio, Alt1_Code, Alt1_Name, Alt1_Name, Alt1_Type
-    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Alt2_Type, Group_value, dt_start_date, dt_end_date, Alt1_Switch_On, Alt2_Switch_On # Declare global variables
+    global Alt2_Portfolio, Alt2_Code, Alt2_Name, Alt2_Type, Group_value, dt_start_date, dt_end_date, Alt1_Switch_On, Alt2_Switch_On
+    global text_Start_Date, text_End_Date # Declare global variables
 
     if pathname == "/":
         if selected_value in availablePortfolios:
@@ -3834,8 +3864,10 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             Alt2_Name = Alt2_Portfolio.portfolioName
             Alt2_Type = Alt2_Portfolio.portfolioType
             Group_value = group_value
-            dt_start_date = pd.to_datetime(text_Start_Date)
-            dt_end_date = pd.to_datetime(text_End_Date)
+            dt_start_date = pd.to_datetime(tx_Start_Date)
+            dt_end_date = pd.to_datetime(tx_End_Date)
+            text_Start_Date = tx_Start_Date
+            text_End_Date = tx_End_Date
             Alt1_Switch_On = alt1_on
             Alt2_Switch_On = alt2_on
             print("Client Side Callback Run")

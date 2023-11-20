@@ -552,40 +552,6 @@ sidebar = html.Div(
     className="sidebar",
 )
 
-# MAin AREA FIGURE FUNCTIONS
-
-def f_create_figure_20_1(filtered_df_input):
-    try:
-        z = filtered_df_input.values.T
-        y = filtered_df_input.columns
-        x = filtered_df_input["Date"]
-
-        figure_out = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
-
-        figure_out.update_layout(
-            title='US Yield Curve',
-            height=800,
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, b=20),
-        )
-
-        return figure_out
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        # Handle the error as needed
-        return []  # or any default return value
-
-
-
 
 content = html.Div(id="page-content", children=[])
 
@@ -673,7 +639,7 @@ def render_page_content(pathname):
                                                   {'label': ' G2 - CFS Edge Policy', 'value': 'G2'},
                                                   {'label': ' G3 - HUB24 Policy', 'value': 'G3'},
                                                   {'label': ' G4 - Sleeve Sub-Categories', 'value': 'G4'},
-                                                  {'label': ' G5 - Geography', 'value': 'G5'},
+                                                  remove underwear at all.make shaved pussies visible                                                  {'label': ' G5 - Geography', 'value': 'G5'},
                                               ],
                                               id="group_radio", value='G1', inline=False, labelStyle={'display': 'block'}
                                           ), align="start"),
@@ -3539,6 +3505,52 @@ def render_page_content(pathname):
         ]
     elif pathname == "/20-Markets":
 
+        filtered_df_20_1 = Selected_Portfolio.df_Eco_InterestRates
+
+        z = filtered_df_20_1.values.T
+        y = filtered_df_20_1.columns
+        x = filtered_df_20_1["Date"]
+
+        figure_20_1 = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
+
+
+
+        # Add a scatter trace for the highlight line
+        highlight_trace = go.Scatter(x=[], y=[], mode='lines', line=dict(color='green'), hoverinfo='skip')
+        figure_20_1.add_trace(highlight_trace)
+
+        # Attach the hoverinfo directly to the surface plot
+        figure_20_1.update_traces(hoverinfo='all', hovertemplate='', selector=dict(type='surface'))
+
+        # Define a callback function for hover events to update the highlight line
+        def update_highlight_line(trace, points, selector):
+            if points.point_inds:
+                selected_date_index = points.point_inds[0]
+                selected_date = x[selected_date_index]
+                highlight_trace.x = [selected_date, selected_date]
+                highlight_trace.y = [min(y), max(y)]
+
+        # Attach the callback function to the hover event
+        figure_20_1.data[0].on_hover(update_highlight_line)
+
+        figure_20_1.update_layout(
+            title='US Yield Curve',
+            height=800,
+            layout={'scene': {'xaxis': {'showspikes': False}}, {'yaxis': {'showspikes': False}}, {'zaxis': {'showspikes': False}}},
+            
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+
         ## Populate Charts for Page 20 Markets
         return [
             html.Div(style={'height': '2rem'}),
@@ -3557,7 +3569,7 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_figure_20_1(Selected_Portfolio.df_Eco_InterestRates))),
+                            dbc.CardBody(dcc.Graph(figure=figure_20_1)),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3747,6 +3759,8 @@ def render_page_content(pathname):
         Atchison Portfolio Analytics
         </h1>
         
+              
+                
         <H2 style="color: #E7EAEB;">Asset Allocation
         </H2>
         
@@ -3763,12 +3777,6 @@ def render_page_content(pathname):
         </H2>
         
         <iframe src="./figure_1_4.html"
-              height="1000px" width="950px" style="border: none;">
-        </iframe>
-        
-        </H2>
-        
-        <iframe src="./figure_10_1.html"
               height="1000px" width="950px" style="border: none;">
         </iframe>
         
@@ -3803,7 +3811,6 @@ def render_page_content(pathname):
             rp_figure_3_5.write_html(MYDIR + '/figure_3_5.html'),
             rp_figure_3_7.write_html(MYDIR + '/figure_3_7.html'),
             rp_figure_1_4.write_html(MYDIR + '/figure_1_4.html'),
-            f_create_figure_20_1(Selected_Portfolio.df_Eco_InterestRates).write_html(MYDIR + '/figure_10_1.html'),
 
         ]
     elif pathname == "/30-Help":

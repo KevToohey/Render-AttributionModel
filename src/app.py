@@ -534,6 +534,14 @@ sidebar = html.Div(
                     href="/21-Reports",
                     active="exact",
                 ),
+                dbc.NavLink(
+                    [
+                        html.I(className="fa-solid fa-cloud-arrow-down me-2"),
+                        html.Span("HTML Download"),
+                    ],
+                    href="/22-Download",
+                    active="exact",
+                ),
                 html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
                 dbc.NavLink(
                     [
@@ -3726,6 +3734,8 @@ def render_page_content(pathname):
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
         )
 
+        print("Got here 1")
+
 
 
         nowDateTime = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -3734,7 +3744,7 @@ def render_page_content(pathname):
 
         print(MYDIR)
         os.makedirs(MYDIR)
-        print("Got here")
+        print("Got here 2")
 
         # Creating the HTML file
         file_html = open(MYDIR+"/"+Selected_Code+"-Report.html", "w")
@@ -3765,9 +3775,7 @@ def render_page_content(pathname):
         <iframe src="./figure_1_4.html"
               height="1000px" width="950px" style="border: none;">
         </iframe>
-        
-        </H2>
-        
+                       
         <iframe src="./figure_10_1.html"
               height="1000px" width="950px" style="border: none;">
         </iframe>
@@ -3800,9 +3808,7 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
-            rp_figure_3_5.write_html(MYDIR + '/figure_3_5.html'),
-            rp_figure_3_7.write_html(MYDIR + '/figure_3_7.html'),
-            rp_figure_1_4.write_html(MYDIR + '/figure_1_4.html'),
+
             f_create_figure_20_1(Selected_Portfolio.df_Eco_InterestRates).write_html(MYDIR + '/figure_10_1.html'),
 
         ]
@@ -3974,6 +3980,8 @@ def save_report_to_terminal(n_clicks, selected_report):
         doc.add_page_break()
         ############################################### 1 Executive Summary ########################################
         doc.add_heading("Executive Summary", 1)
+
+
 #
 
         # Save Document to Local System

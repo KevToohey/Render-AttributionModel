@@ -562,11 +562,11 @@ sidebar = html.Div(
 
 # MAin AREA FIGURE FUNCTIONS
 
-def f_create_figure_20_1(filtered_df_input):
+def f_create_figure_20_1(df_input):
     try:
-        z = filtered_df_input.values.T
-        y = filtered_df_input.columns
-        x = filtered_df_input["Date"]
+        z = df_input.values.T
+        y = df_input.columns
+        x = df_input["Date"]
 
         figure_out = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
 
@@ -586,7 +586,36 @@ def f_create_figure_20_1(filtered_df_input):
         )
 
         return figure_out
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
 
+def f_create_figure_6_8(df_input):
+    try:
+        figure_out = px.line(
+            df_input,
+            x=df_input.index,
+            y=[c for c in df_input.columns],
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+        )
+        figure_out.update_layout(
+            yaxis_title="Cumulative Return (%)",
+            xaxis_title="",
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            margin=dict(r=0),  # Reduce right margin to maximize visible area
+        )
+
+        return figure_out
     except Exception as e:
         print(f"An error occurred: {e}")
         # Handle the error as needed
@@ -3385,27 +3414,7 @@ def render_page_content(pathname):
         listq_6_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
         filtered_df_6_8 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_8] + 1).cumprod() - 1) * 100)
 
-        figure_6_8 = px.line(
-            filtered_df_6_8,
-            x=filtered_df_6_8.index,
-            y=[c for c in filtered_df_6_8.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_8.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
+
 
         ## Populate Charts for Page 6 Component
         return [
@@ -3475,7 +3484,7 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_8)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_figure_6_8(filtered_df_6_8))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),

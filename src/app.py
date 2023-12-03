@@ -562,7 +562,7 @@ sidebar = html.Div(
 
 # MAin AREA FIGURE FUNCTIONS
 
-def f_create_figure_20_1(df_input):
+def f_create_3DSURFACE_figure(df_input, in_height):
     try:
         z = df_input.values.T
         y = df_input.columns
@@ -572,7 +572,7 @@ def f_create_figure_20_1(df_input):
 
         figure_out.update_layout(
             title='US Yield Curve',
-            height=800,
+            height=in_height,
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -591,18 +591,20 @@ def f_create_figure_20_1(df_input):
         # Handle the error as needed
         return []  # or any default return value
 
-def f_create_figure_6_8(df_input):
+def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
     try:
         figure_out = px.line(
             df_input,
             x=df_input.index,
-            y=[c for c in df_input.columns],
+            y=[c for c in df_input.columns if c is not None],
             labels={"x": "Date", "y": "Values"},
             template="plotly_white",
         )
         figure_out.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
+            title=in_title,
+            yaxis_title=in_y_title,
+            xaxis_title=in_x_title,
+            height=in_height,
             legend=dict(
                 orientation="h",
                 yanchor="top",  # Change this to "top" to move the legend below the chart
@@ -617,7 +619,7 @@ def f_create_figure_6_8(df_input):
 
         return figure_out
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred in f_create_LINE_figure: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -2948,217 +2950,54 @@ def render_page_content(pathname):
             )
         else:
             # Create an empty figure
-            figure_5_1 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_sleeves = pd.DataFrame()
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
         if checkData[0] > 0:
-            listq_5_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-            filtered_df_5_2 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_2] + 1).cumprod() - 1) * 100)
-
-            figure_5_2 = px.line(
-                filtered_df_5_2,
-                x=filtered_df_5_2.index,
-                y=[c for c in filtered_df_5_2.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_2.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+            df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_2 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_auseq = pd.DataFrame()
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
         if checkData[0] > 0:
-            listq_5_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
-            filtered_df_5_3 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_3] + 1).cumprod() - 1) * 100)
-
-            figure_5_3 = px.line(
-                filtered_df_5_3,
-                x=filtered_df_5_3.index,
-                y=[c for c in filtered_df_5_3.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_3.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+            df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_3 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_inteq = pd.DataFrame()
 
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
         if checkData[0] > 0:
-            listq_5_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
-            filtered_df_5_4 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_4] + 1).cumprod() - 1) * 100)
-
-            figure_5_4 = px.line(
-                filtered_df_5_4,
-                x=filtered_df_5_4.index,
-                y=[c for c in filtered_df_5_4.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_4.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
-
+            df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_4 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_real = pd.DataFrame()
 
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
         if checkData[0] > 0:
-            listq_5_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
-            filtered_df_5_5 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_5] + 1).cumprod() - 1) * 100)
-
-            figure_5_5 = px.line(
-                filtered_df_5_5,
-                x=filtered_df_5_5.index,
-                y=[c for c in filtered_df_5_5.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_5.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
-
+            df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_5 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_alts = pd.DataFrame()
 
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
         if checkData[0] > 0:
-            listq_5_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
-            filtered_df_5_6 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_6] + 1).cumprod() - 1) * 100)
-
-            figure_5_6 = px.line(
-                filtered_df_5_6,
-                x=filtered_df_5_6.index,
-                y=[c for c in filtered_df_5_6.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_6.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+            df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_6 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_duration = pd.DataFrame()
 
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
         if checkData[0] > 0:
-            listq_5_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
-            filtered_df_5_7 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_7] + 1).cumprod() - 1) * 100)
-
-            figure_5_7 = px.line(
-                filtered_df_5_7,
-                x=filtered_df_5_7.index,
-                y=[c for c in filtered_df_5_7.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_7.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+            df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_7 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_floating = pd.DataFrame()
 
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
         if checkData[0] > 0:
-            listq_5_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-            filtered_df_5_8 = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, listq_5_8] + 1).cumprod() - 1) * 100)
-
-            figure_5_8 = px.line(
-                filtered_df_5_8,
-                x=filtered_df_5_8.index,
-                y=[c for c in filtered_df_5_8.columns],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_8.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+            df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
         else:
-            figure_5_8 = px.line(labels={"x": "Date", "y": "Values"}, template="plotly_white")
+            df_5cont_cash = pd.DataFrame()
 
 
         ## Populate Charts for Page 5 Contribution
@@ -3179,48 +3018,48 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Weighted Return Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_1)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_2)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: International Shares Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_3)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_4)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_5)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_6)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_7)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=figure_5_8)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3235,186 +3074,16 @@ def render_page_content(pathname):
         ]
     elif pathname == "/6-Component":
 
-        filtered_df_6_1 = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+        filtered_df_6_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
                                      for n in groupList], axis=1)
-        filtered_df_6_1.columns = groupList
-
-        figure_6_1 = px.line(
-            filtered_df_6_1,
-            x=filtered_df_6_1.index,
-            y=[c for c in filtered_df_6_1.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_1.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_2 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")
-        filtered_df_6_2 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_2] + 1).cumprod() - 1) * 100)
-
-        figure_6_2 = px.line(
-            filtered_df_6_2,
-            x=filtered_df_6_2.index,
-            y=[c for c in filtered_df_6_2.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_2.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_3 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")
-        filtered_df_6_3 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_3] + 1).cumprod() - 1) * 100)
-
-        figure_6_3 = px.line(
-            filtered_df_6_3,
-            x=filtered_df_6_3.index,
-            y=[c for c in filtered_df_6_3.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_3.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_4 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")
-        filtered_df_6_4 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_4] + 1).cumprod() - 1) * 100)
-
-        figure_6_4 = px.line(
-            filtered_df_6_4,
-            x=filtered_df_6_4.index,
-            y=[c for c in filtered_df_6_4.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_4.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_5 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")
-        filtered_df_6_5 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_5] + 1).cumprod() - 1) * 100)
-
-        figure_6_5 = px.line(
-            filtered_df_6_5,
-            x=filtered_df_6_5.index,
-            y=[c for c in filtered_df_6_5.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_5.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_6 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")
-        filtered_df_6_6 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_6] + 1).cumprod() - 1) * 100)
-
-        figure_6_6 = px.line(
-            filtered_df_6_6,
-            x=filtered_df_6_6.index,
-            y=[c for c in filtered_df_6_6.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_6.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_7 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")
-        filtered_df_6_7 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_7] + 1).cumprod() - 1) * 100)
-
-        figure_6_7 = px.line(
-            filtered_df_6_7,
-            x=filtered_df_6_7.index,
-            y=[c for c in filtered_df_6_7.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_6_7.update_layout(
-            yaxis_title="Cumulative Return (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
-        )
-
-        listq_6_8 = f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")
-        filtered_df_6_8 = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, listq_6_8] + 1).cumprod() - 1) * 100)
-
-
+        filtered_df_6_sleeves.columns = groupList
+        filtered_df_6_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")] + 1).cumprod() - 1) * 100)
+        filtered_df_6_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
 
         ## Populate Charts for Page 6 Component
         return [
@@ -3434,14 +3103,14 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_1)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_sleeves, None, "Cumulative Return (%)", "Date", 600))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_2)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_auseq, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3449,42 +3118,42 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 3: International Shares Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_3)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_inteq, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_4)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_real, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_5)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_alts, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_6)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_duration, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=figure_6_7)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_floating, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash - Underlying Components"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_figure_6_8(filtered_df_6_8))),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(filtered_df_6_cash, None, "Cumulative Return (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3574,7 +3243,7 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_figure_20_1(Selected_Portfolio.df_Eco_InterestRates))),
+                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3818,7 +3487,7 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
 
-            f_create_figure_20_1(Selected_Portfolio.df_Eco_InterestRates).write_html(MYDIR + '/figure_10_1.html'),
+            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates).write_html(MYDIR + '/figure_10_1.html'),
 
         ]
     elif pathname == "/30-Help":

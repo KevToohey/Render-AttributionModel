@@ -587,7 +587,7 @@ def f_create_3DSURFACE_figure(df_input, in_height):
 
         return figure_out
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred 3DSurface: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -654,9 +654,47 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
 
         return figure_out
     except Exception as e:
-        print(f"An error occurred in f_create_LINE_figure: {e}")
+        print(f"An error occurred in f_create_BAR_figure: {e}")
         # Handle the error as needed
         return []  # or any default return value
+
+
+def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
+    try:
+        figure_out = px.pie(
+            df_input,
+            values=in_values,
+            names=in_names,
+            template="plotly_white"
+        )
+        figure_out.update_layout(
+            title=in_title,
+            height=in_height,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+        )
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_PIE_figure: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
 
 
 
@@ -810,7 +848,6 @@ def render_page_content(pathname):
         df_1perf_daily = pd.concat([Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] * 100 for n in groupList], axis=1)
         df_1perf_daily.columns = groupList
 
-
         df_1perf_total = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
         df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
@@ -822,9 +859,6 @@ def render_page_content(pathname):
             a2 = (((Alt2_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_total = pd.concat([df_1perf_total, a2], axis=1)
-
-        print("got 1")
-
 
         df_1perf_tSet = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
@@ -840,9 +874,6 @@ def render_page_content(pathname):
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tSet = pd.concat([df_1perf_tSet, a2], axis=1)
 
-        print("got 2")
-
-
         df_1perf_tMESet = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.tME_dates) * 100).T
@@ -855,9 +886,6 @@ def render_page_content(pathname):
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tMESet = pd.concat([df_1perf_tMESet, a2], axis=1)
-
-        print("got 3")
-
 
         df_1perf_tQESet = (f_CalcReturnTable(
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
@@ -874,9 +902,6 @@ def render_page_content(pathname):
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tQESet = pd.concat([df_1perf_tQESet, a2], axis=1)
-
-        print("got 4")
-
 
         ## Populate Charts for Page 1-Performance
         return [
@@ -965,11 +990,7 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
             print("got end")
-
         ]
-
-
-
 
     elif pathname == "/2-Risk":
         df_2risk_drawdown = f_CalcDrawdown(
@@ -1020,87 +1041,25 @@ def render_page_content(pathname):
         df_2risk_TE3yr.columns = ['SAA Benchmark', 'Peer Manager']
 
         # Calmar Ratio
-        filtered_df_2_10 = f_CalcRollingMonthlyReturn(
+        df_2risk_calmar3yr = f_CalcRollingMonthlyReturn(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
-        filtered_df_2_10.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_calmar3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
+        print(df_2risk_calmar3yr)
         # Return / <Max Drawdown
-        filtered_df_2_10 = filtered_df_2_10 / -(filtered_df_2_8)
+        df_2risk_calmar3yr = df_2risk_calmar3yr / -(df_2risk_drawdown3yr)
+        df_2risk_calmar3yr = df_2risk_calmar3yr.dropna()
 
-        figure_2_10 = px.line(
-            filtered_df_2_10,
-            x=filtered_df_2_10.index,
-            y=[c for c in filtered_df_2_10.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_2_10.update_layout(
-            yaxis_title="Rolling 3 Year Calmar Ratio",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
+        print(df_2risk_calmar3yr)
 
         # Information Ratio
-        filtered_df_2_11 = f_CalcRollingMonthlyAlpha(
+        df_2risk_IR3yr = f_CalcRollingMonthlyAlpha(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
-
-
-        filtered_df_2_11.columns = ['SAA Benchmark', 'Peer Manager']
+        df_2risk_IR3yr.columns = ['SAA Benchmark', 'Peer Manager']
         # Return / Tracking Error
-
-        filtered_df_2_11 = filtered_df_2_11 / (filtered_df_2_9)
-
-        figure_2_11 = px.line(
-            filtered_df_2_11,
-            x=filtered_df_2_11.index,
-            y=[c for c in filtered_df_2_11.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-        )
-        figure_2_11.update_layout(
-            yaxis_title="Rolling 3 Year Information Ratio",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-
-
+        df_2risk_IR3yr = df_2risk_IR3yr / (df_2risk_TE3yr)
 
         #Create Summary Table of Latest Risk Measures
         last_df_2_2 = df_2risk_vol30.iloc[-1].copy()
@@ -1111,26 +1070,26 @@ def render_page_content(pathname):
         last_df_2_4['Risk Measure'] = '12 Month Volatility'
         last_df_2_5 = df_2risk_vol3yr.iloc[-1].copy()
         last_df_2_5['Risk Measure'] = '3 Year Volatility'
-        last_df_2_8 = filtered_df_2_8.iloc[-1].copy()
+        last_df_2_8 = df_2risk_drawdown3yr.iloc[-1].copy()
         last_df_2_8['Risk Measure'] = '3 Year Max Drawdown'
-        last_df_2_7 = filtered_df_2_7.iloc[-1].copy()
-        last_df_2_7['Risk Measure'] = '3 Year Batting Average'
-        last_df_2_6 = filtered_df_2_6.iloc[-1].copy()
-        last_df_2_6['Risk Measure'] = '3 Year Sharpe Ratio'
-        last_df_2_9 = filtered_df_2_9.iloc[-1].copy()
+        last_df_2_9 = df_2risk_TE3yr.iloc[-1].copy()
         last_df_2_9['Risk Measure'] = '3 Year Tracking Error'
-        last_df_2_10 = filtered_df_2_10.iloc[-1].copy()
+        last_df_2_6 = df_2risk_sharpe3yr.iloc[-1].copy()
+        last_df_2_6['Risk Measure'] = '3 Year Sharpe Ratio'
+        last_df_2_10 = df_2risk_calmar3yr.iloc[-1].copy()
         last_df_2_10['Risk Measure'] = '3 Year Calmar Ratio'
-        last_df_2_11 = filtered_df_2_11.iloc[-1].copy()
+        last_df_2_11 = df_2risk_IR3yr.iloc[-1].copy()
         last_df_2_11['Risk Measure'] = '3 Year Information Ratio'
+        last_df_2_7 = df_2risk_batting3yr.iloc[-1].copy()
+        last_df_2_7['Risk Measure'] = '3 Year Batting Average'
 
-        filtered_df_2_0 = pd.concat([last_df_2_2, last_df_2_3, last_df_2_4, last_df_2_5,
-                                     last_df_2_8, last_df_2_6, last_df_2_7, last_df_2_9,
-                                     last_df_2_10, last_df_2_11], axis=1).T
+        df_2risk_summary = pd.concat([last_df_2_2, last_df_2_3, last_df_2_4, last_df_2_5,
+                                     last_df_2_8, last_df_2_6, last_df_2_10, last_df_2_11,
+                                     last_df_2_9, last_df_2_7], axis=1).T
 
-        filtered_df_2_0 = filtered_df_2_0.set_index('Risk Measure')
-        filtered_df_2_0 = filtered_df_2_0.apply(pd.to_numeric, errors='coerce')
-        filtered_df_2_0 = filtered_df_2_0.round(2)
+        df_2risk_summary = df_2risk_summary.set_index('Risk Measure')
+        df_2risk_summary = df_2risk_summary.apply(pd.to_numeric, errors='coerce')
+        df_2risk_summary = df_2risk_summary.round(2)
 
         ## Populate Charts for Page 2-Risk
         return [
@@ -1152,7 +1111,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Table 1: Portfolio Risk Metrics"),
-                            dbc.CardBody([dbc.Table.from_dataframe(filtered_df_2_0, index=True,
+                            dbc.CardBody([dbc.Table.from_dataframe(df_2risk_summary, index=True,
                                                                    striped=True, bordered=True, hover=True,
                                                                    )
                                           ]),
@@ -1192,47 +1151,41 @@ def render_page_content(pathname):
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Portfolio 3 Year Rolling Max Drawdown"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_8)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_drawdown3yr, None, "Max Rolling Drawdown (%)", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Portfolio 3 Year Rolling Batting Average"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_7)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_batting3yr, None, "Batting Average (%)", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Portfolio 3 Year Rolling Sharpe Ratio"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_6)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_sharpe3yr, None, "Sharpe Ratio", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 9: Portfolio 3 Year Rolling Tracking Error"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_9)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_TE3yr, None, "Tracking Error (%)", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 10: Portfolio 3 Year Rolling Calmar Ratio"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_10)),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_calmar3yr, None, "Calmar Ratio", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 9: Portfolio 3 Year Rolling Information Ratio"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_11)),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
-                        ], color="primary", outline=True), align="center", className="mb-3"),
-                        dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 10: Portfolio 3 Year Rolling #######"),
-                            dbc.CardBody(dcc.Graph(figure=figure_2_11)),
+                            dbc.CardHeader("Chart 11: Portfolio 3 Year Rolling Information Ratio"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_IR3yr, None, "Information Ratio", "Date",450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
-
                         # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
 
@@ -1247,42 +1200,22 @@ def render_page_content(pathname):
 
     elif pathname == "/3-Allocation":
 
-        filtered_df_3_2 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
-        filtered_df_3_2.index = groupList
-        filtered_df_3_2['Current'] = filtered_df_3_2.sum(axis=1)
-        filtered_df_3_2 = filtered_df_3_2[['Current']]
-        filtered_df_3_2.reset_index(inplace=True)
-        filtered_df_3_2.columns = ['GroupValue', 'Current']
+        df_3alloc_sleeves = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
+        df_3alloc_sleeves.index = groupList
+        df_3alloc_sleeves['Current'] = df_3alloc_sleeves.sum(axis=1)
+        df_3alloc_sleeves = df_3alloc_sleeves[['Current']]
+        df_3alloc_sleeves.reset_index(inplace=True)
+        df_3alloc_sleeves.columns = ['GroupValue', 'Current']
 
-        figure_3_2 = px.pie(
-            filtered_df_3_2,
-            values='Current',
-            names='GroupValue',
-            template="plotly_white"
-        )
-        figure_3_2.update_layout(
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            # margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
-        )
+        df_3alloc_BMsleeves = pd.concat([Selected_Portfolio.df_L2_w.loc[dt_end_date:dt_end_date, ['BM_' + groupName + '_' + n]].T for n in groupList], axis=1)
+        df_3alloc_BMsleeves.index = groupList
+        df_3alloc_BMsleeves['Current'] = df_3alloc_BMsleeves.sum(axis=1)
+        df_3alloc_BMsleeves = df_3alloc_BMsleeves[['Current']]
+        df_3alloc_BMsleeves.reset_index(inplace=True)
+        df_3alloc_BMsleeves.columns = ['GroupValue', 'Current']
 
-        # Below is dependent on 3.2
+
+        # Below is dependent on df_3alloc_sleeves
         row_values = []
         allrows_values = []
         group_df = Selected_Portfolio.df_L3_limits[Selected_Portfolio.df_L3_limits['Group'] == groupName]
@@ -1290,7 +1223,7 @@ def render_page_content(pathname):
             # Filter the DataFrame for the current group
             group_df2 = group_df[group_df['GroupValue'] == groupList[n]]
             row_values.append(groupList[n])
-            row_values.append(filtered_df_3_2.loc[n, "Current"])
+            row_values.append(df_3alloc_sleeves.loc[n, "Current"])
             # Check if there are any rows for the current group
             if not group_df2.empty:
                 # Get the minimum value from the 'Min' column of the filtered DataFrame
@@ -1338,40 +1271,13 @@ def render_page_content(pathname):
             )],
         )
 
-        filtered_df_3_3 = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[dt_start_date:dt_end_date,
+        df_3alloc_OWUW = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        filtered_df_3_3.columns = groupList
+        df_3alloc_OWUW.columns = groupList
 
-        figure_3_3 = px.bar(
-            filtered_df_3_3,
-            x=filtered_df_3_3.index,
-            y=[c for c in filtered_df_3_3.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='relative'
-        )
-        figure_3_3.update_layout(
-            yaxis_title="Asset Allocation (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
+        'relative'
+
+
 
         filtered_df_3_4 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
@@ -1578,13 +1484,24 @@ def render_page_content(pathname):
                     # Tab 3- Allocations
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: Current Allocation"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_2)),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
-                        ], color="primary", outline=True), align="center", className="mb-3"),
-                        dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Current "+groupName+" Policy Ranges"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_1)),
+                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 1: Current Allocation"),
+                            dbc.CardBody([
+                                html.Div([
+                                    dcc.Graph(figure=f_create_PIE_figure(df_3alloc_sleeves, 'Current', 'GroupValue', None,450),
+                                        style={'flex': '1'}),
+                                    dcc.Graph(figure=f_create_PIE_figure(df_3alloc_BMsleeves, 'Current', 'GroupValue', None,450),
+                                        style={'flex': '1'}),
+                                ], style={'display': 'flex'}),
+                            ]),
+
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -1625,7 +1542,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 10: Portfolio Sleeve Overweights/Underweights Through Time"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_3)),
+                            dbc.CardBody(),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
@@ -1752,17 +1669,17 @@ def render_page_content(pathname):
         print(filtered_df_3A_1)
 
         # Portfolio and Benchmark Averages
-        def calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
+        def f_calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
             # Calculate the percentile of the selected value in the equal-weighted data distribution
-            EW_perc_selected = percentileofscore(data[metric].dropna(), selected_avg)
-            EW_perc_bm = percentileofscore(data[metric].dropna(), bm_avg)
+            EW_perc_selected = percentileofscore(data[metric].dropna(), selected_avg)-50
+            EW_perc_bm = percentileofscore(data[metric].dropna(), bm_avg)-50
 
             # Calculate the market capitalization-weighted percentile for the selected value
-            MCap_perc_bm = 50
+            MCap_perc_bm = 0
             if EW_perc_selected > EW_perc_bm:
-                MCap_perc_selected = 50 + (((EW_perc_selected - EW_perc_bm) / (100 - EW_perc_bm)) * 50)
+                MCap_perc_selected = (((EW_perc_selected - EW_perc_bm) / (100 - EW_perc_bm)) * 50)
             else:
-                MCap_perc_selected = 50 - (((EW_perc_bm - EW_perc_selected) / EW_perc_bm) * 50)
+                MCap_perc_selected = 0 - (((EW_perc_bm - EW_perc_selected) / EW_perc_bm) * 50)
 
             return EW_perc_selected, EW_perc_bm, MCap_perc_selected, MCap_perc_bm
 
@@ -1823,7 +1740,7 @@ def render_page_content(pathname):
             if bm_avg == 0:
                 bm_avg = 1e-10
 
-            EW_norm_perc_selected, EW_norm_perc_bm, MCap_norm_perc_selected, MCap_norm_perc_bm = calculate_normalized_percentile(selected_avg,
+            EW_norm_perc_selected, EW_norm_perc_bm, MCap_norm_perc_selected, MCap_norm_perc_bm = f_calculate_normalized_percentile(selected_avg,
                                                                                                        bm_avg,
                                                                                                        filtered_df_3A_1,
                                                                                                        measure)
@@ -1883,7 +1800,7 @@ def render_page_content(pathname):
         fig_polar_3A.update_layout(
             polar=dict(
                 radialaxis=dict(
-                    range=[0, 100]  # Set the range to always show 0 to 100
+                    range=[-50, 50]  # Set the range to always show 0 to 100
                 )
             ),
             title={
@@ -1931,7 +1848,7 @@ def render_page_content(pathname):
                 layer="below"
             )],
             yaxis=dict(
-                range=[0, 100],
+                range=[-50, 50],
             )
         )
         fig_bar_3A_EW.add_shape(
@@ -1973,7 +1890,7 @@ def render_page_content(pathname):
                 layer="below"
             )],
             yaxis=dict(
-                range=[0, 100],
+                range=[-50, 50],
             )
         )
         fig_bar_3A_MCapW.add_shape(
@@ -1984,10 +1901,6 @@ def render_page_content(pathname):
                 line=dict(color='grey', width=1, dash='dot')
             )
         )
-
-
-
-
 
         # The Below Groups Holding Weights Where Multiple Products have same Look Through Exposure
         filtered_df_3A_2 = filtered_df_3A_1.copy()
@@ -2781,7 +2694,7 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates))),
+                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates, 850))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -3004,7 +2917,7 @@ def render_page_content(pathname):
         ## Populate Charts for Page 21 Reports
         return [
             html.Div(style={'height': '2rem'}),
-            html.H2('Report Generator',
+            html.H2('Automated HTML Downloader',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
             html.Hr(),
             html.Hr(style={'border-color': "#3D555E", 'width': '70%', 'margin': 'auto auto'}),
@@ -3025,7 +2938,7 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
 
-            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates).write_html(MYDIR + '/figure_10_1.html'),
+            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates, 800).write_html(MYDIR + '/figure_10_1.html'),
 
         ]
     elif pathname == "/30-Help":

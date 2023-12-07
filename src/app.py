@@ -6,6 +6,7 @@ import dash
 import os
 import re
 import docx
+import base64
 from docx import Document
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
@@ -86,7 +87,7 @@ class Portfolio:
         self.df_BM_G2 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G2.parquet')
         self.df_BM_G3 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G3.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
-        self.df_Eco_InterestRates = pd.read_parquet('./ServerData/'+portfolioCode+'/df_Eco_InterestRates.parquet')
+        self.df_Eco_USInterestRates = pd.read_parquet('./ServerData/'+portfolioCode+'/df_Eco_USInterestRates.parquet')
         # Recreate Category Group Labels for Charts
         self.portfolioCode = self.summaryVariables['portfolioCode'].iloc[0]
         self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
@@ -562,17 +563,26 @@ sidebar = html.Div(
 
 # MAin AREA FIGURE FUNCTIONS
 
-def f_create_3DSURFACE_figure(df_input, in_height):
+def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_title, in_height):
     try:
         z = df_input.values.T
-        y = df_input.columns
-        x = df_input["Date"]
+        y = pd.to_numeric(df_input.columns)
+        x = df_input.index
 
         figure_out = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
 
         figure_out.update_layout(
-            title='US Yield Curve',
+            title=in_title,
             height=in_height,
+            margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source=f"data:image/png;base64,{base64.b64encode(open('./assets/atchisonlogo.png', 'rb').read()).decode()}",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -582,10 +592,12 @@ def f_create_3DSURFACE_figure(df_input, in_height):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0, b=20),
         )
 
+        figure_out.update_layout(scene=dict(xaxis=dict(title_text=in_x_title), yaxis=dict(title_text=in_y_title), zaxis=dict(title_text=in_z_title)))
+
         return figure_out
+
     except Exception as e:
         print(f"An error occurred 3DSurface: {e}")
         # Handle the error as needed
@@ -605,6 +617,15 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             yaxis_title=in_y_title,
             xaxis_title=in_x_title,
             height=in_height,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
             legend=dict(
                 orientation="h",
                 yanchor="top",  # Change this to "top" to move the legend below the chart
@@ -614,7 +635,6 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
         return figure_out
@@ -640,6 +660,15 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             yaxis_title=in_y_title,
             xaxis_title=in_x_title,
             height=in_height,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
             legend=dict(
                 orientation="h",
                 yanchor="top",  # Change this to "top" to move the legend below the chart
@@ -649,7 +678,6 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
                 title=None,
                 font=dict(size=11)
             ),
-            margin=dict(r=0),  # Reduce right margin to maximize visible area
         )
 
         return figure_out
@@ -1271,48 +1299,15 @@ def render_page_content(pathname):
             )],
         )
 
-        df_3alloc_OWUW = pd.concat([Selected_Portfolio.df_L2vsL1_relw.loc[dt_start_date:dt_end_date,
+        df_3alloc_OWUW = pd.concat([Selected_Portfolio.df_L3vsL2_relw.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
         df_3alloc_OWUW.columns = groupList
 
-        'relative'
-
-
-
-        filtered_df_3_4 = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
+        df_3alloc_weights = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
                        ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        filtered_df_3_4.columns = groupList
+        df_3alloc_weights.columns = groupList
 
-        figure_3_4 = px.bar(
-            filtered_df_3_4,
-            x=filtered_df_3_4.index,
-            y=[c for c in filtered_df_3_4.columns],
-            labels={"x": "Date", "y": "Values"},
-            template="plotly_white",
-            barmode='stack'
-        )
-        figure_3_4.update_layout(
-            yaxis_title="Asset Allocation (%)",
-            xaxis_title="",
-            legend=dict(
-                orientation="h",
-                yanchor="top",  # Change this to "top" to move the legend below the chart
-                y=-0.3,  # Adjust the y value to position the legend below the chart
-                xanchor="center",  # Center the legend horizontally
-                x=0.5,  # Center the legend horizontally
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
+
 
         BM_AustShares_Portfolio = All_Portfolios[availablePortfolios.index("IOZ-AU")]
         BM_AustShares_df_3_5 = BM_AustShares_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
@@ -1542,13 +1537,11 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 10: Portfolio Sleeve Overweights/Underweights Through Time"),
-                            dbc.CardBody(),
+                            dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_OWUW, 'relative', None, "Overweight / Underweight (%)", "Date", 450))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 11: Portfolio Sleeve Weights Through Time"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_4)),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                            dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_weights, 'stack', "Portfolio Sleeve Weights Through Time", "Weight (%)", "Date", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2693,8 +2686,8 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates, 850))),
+                            dbc.CardHeader("Chart 1: US Interest Rates"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate", "Term", "Date", 800))),
                             dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2938,7 +2931,7 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
 
-            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_InterestRates, 800).write_html(MYDIR + '/figure_10_1.html'),
+            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate", "Term", "Date", 800).write_html(MYDIR + '/figure_10_1.html'),
 
         ]
     elif pathname == "/30-Help":

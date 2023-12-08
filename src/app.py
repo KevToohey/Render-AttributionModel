@@ -599,7 +599,7 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
         return figure_out
 
     except Exception as e:
-        print(f"An error occurred 3DSurface: {e}")
+        print(f"An error occurred 3DSurface {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -617,7 +617,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             yaxis_title=in_y_title,
             xaxis_title=in_x_title,
             height=in_height,
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
@@ -639,7 +639,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
 
         return figure_out
     except Exception as e:
-        print(f"An error occurred in f_create_LINE_figure: {e}")
+        print(f"An error occurred in f_create_LINE_figure {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -682,7 +682,7 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
 
         return figure_out
     except Exception as e:
-        print(f"An error occurred in f_create_BAR_figure: {e}")
+        print(f"An error occurred in f_create_BAR_figure {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -698,7 +698,7 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
         figure_out.update_layout(
             title=in_title,
             height=in_height,
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
@@ -719,10 +719,38 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
         )
         return figure_out
     except Exception as e:
-        print(f"An error occurred in f_create_PIE_figure: {e}")
+        print(f"An error occurred in f_create_PIE_figure {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
+def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, in_height):
+    try:
+        figure_out = px.sunburst(
+            df_input,
+            path=in_path,
+            names=in_names,
+            values=in_values,
+            template="plotly_white"
+        )
+        figure_out.update_layout(
+            title=in_title,
+            height=in_height,
+            margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+        )
+        return figure_out
+
+    except Exception as e:
+        print(f"An error occurred in f_create_SUNBURST_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
 
 
 
@@ -957,7 +985,6 @@ def render_page_content(pathname):
                                                   html.Hr(),
                                                   dbc.Table.from_dataframe(df_1perf_tMESet.T.round(2), index=True, striped=True, bordered=True, hover=True)
                                                   ]),
-                                    dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True)], label="Month End Date",
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
@@ -971,7 +998,6 @@ def render_page_content(pathname):
                                                   dbc.Table.from_dataframe(df_1perf_tQESet.T.round(2), index=True,
                                                                            striped=True, bordered=True, hover=True)
                                                   ]),
-                                    dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True)], label="Quarter End Date",
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
@@ -985,7 +1011,6 @@ def render_page_content(pathname):
                                                   dbc.Table.from_dataframe(df_1perf_tSet.T.round(2), index=True,
                                                                            striped=True, bordered=True, hover=True)
                                                   ]),
-                                    dbc.CardFooter("Enter some dot point automated analysis here....")
                                 ], color="primary", outline=True)], label="To Latest Daily",
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
@@ -997,7 +1022,6 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
                             dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -1005,7 +1029,6 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: Portfolio Total Returns (L3)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_1perf_total, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -1143,7 +1166,6 @@ def render_page_content(pathname):
                                                                    striped=True, bordered=True, hover=True,
                                                                    )
                                           ]),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -1151,67 +1173,56 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Portfolio 30 Day Rolling Volatility (%p.a.)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_vol30, None, "Rolling Vol (%p.a.)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Portfolio 90 Day Rolling Volatility (%p.a.)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_vol90, None, "Rolling Vol (%p.a.)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: Portfolio 12 Month Rolling Volatility (%p.a.)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_vol1yr, None, "Rolling Vol (%p.a.)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Portfolio 36 Month Rolling Volatility (%p.a.)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_vol3yr, None, "Rolling Vol (%p.a.)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Portfolio Drawdown Analysis"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Portfolio 3 Year Rolling Max Drawdown"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_drawdown3yr, None, "Max Rolling Drawdown (%)", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Portfolio 3 Year Rolling Batting Average"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_batting3yr, None, "Batting Average (%)", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Portfolio 3 Year Rolling Sharpe Ratio"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_sharpe3yr, None, "Sharpe Ratio", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 9: Portfolio 3 Year Rolling Tracking Error"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_TE3yr, None, "Tracking Error (%)", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 10: Portfolio 3 Year Rolling Calmar Ratio"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_calmar3yr, None, "Calmar Ratio", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 11: Portfolio 3 Year Rolling Information Ratio"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_2risk_IR3yr, None, "Information Ratio", "Date",450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                         # End of Centre Work Area
@@ -1309,157 +1320,44 @@ def render_page_content(pathname):
 
 
 
-        BM_AustShares_Portfolio = All_Portfolios[availablePortfolios.index("IOZ-AU")]
-        BM_AustShares_df_3_5 = BM_AustShares_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                          BM_AustShares_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-        BM_AustShares_df_3_5 = BM_AustShares_df_3_5.loc[:, (BM_AustShares_df_3_5 != 0).any()].T
-        BM_AustShares_df_3_5 = BM_AustShares_df_3_5.rename_axis('Code')
-        BM_AustShares_df_3_5 = BM_AustShares_df_3_5.merge(BM_AustShares_Portfolio.df_productList[
-                                                    ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice',
-                                                     'MarketCap', 'BasicEPS',
-                                                     'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
-                                                     'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
-                                                     'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio',
-                                                     'TotalDebt/TotalAssets',
-                                                     'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
-                                                     'PE_Ratio', 'EarningsYield', 'PriceBook']],
-                                                on='Code')
-        BM_AustShares_df_3_5 = BM_AustShares_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
-
-        filtered_df_3_5 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-        filtered_df_3_5 = filtered_df_3_5.loc[:, (filtered_df_3_5 != 0).any()].T
-        filtered_df_3_5 = filtered_df_3_5.rename_axis('Code')
-        filtered_df_3_5 = filtered_df_3_5.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
-                                                                                   'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
-                                                                                   'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
-                                                                                   'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                                                                                   'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
-                                                                                   'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
-        filtered_df_3_5 = filtered_df_3_5.rename(columns={dt_end_date: 'Current Weight'})
+        df_3alloc_mgr_level = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+        df_3alloc_mgr_level = df_3alloc_mgr_level.loc[:, (df_3alloc_mgr_level != 0).any()].T
+        df_3alloc_mgr_level = df_3alloc_mgr_level.rename_axis('Code')
+        df_3alloc_mgr_level = df_3alloc_mgr_level.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type']], on='Code')
+        df_3alloc_mgr_level = df_3alloc_mgr_level.rename(columns={dt_end_date: 'Current Weight'})
 
 
-        figure_3_5 = px.sunburst(
-            filtered_df_3_5,
-            path=['G0', 'G1', 'G4', 'Name'],
-            names='Name',
-            values='Current Weight',
-            template="plotly_white"
-        )
-        figure_3_5.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        figure_3_6 = px.sunburst(
-            filtered_df_3_5,
-            path=['G1', 'Name'],
-            names='Name',
-            values='Current Weight',
-            template="plotly_white"
-        )
-        figure_3_6.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        filtered_df_3_7 = filtered_df_3_5
-        underlying_df_3_7 = []
-
+        df_3alloc_holding_level = df_3alloc_mgr_level
+        underlying_df = []
         # Find if any of the held investments - are also available in the dataset as products with look through holdings
-        for index, value in enumerate(filtered_df_3_7.index):
+        for index, value in enumerate(df_3alloc_holding_level.index):
             if value in availablePortfolios:
                 print("Matched value:", value)
                 Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
 
-                underlying_df_3_7 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                underlying_df = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
                                   Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-                underlying_df_3_7 = underlying_df_3_7.loc[:, (underlying_df_3_7 != 0).any()].T
-                underlying_df_3_7 = underlying_df_3_7.rename_axis('Code')
+                underlying_df = underlying_df.loc[:, (underlying_df != 0).any()].T
+                underlying_df = underlying_df.rename_axis('Code')
 
-                underlying_df_3_7 = underlying_df_3_7.merge(
+                underlying_df = underlying_df.merge(
                     Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-                underlying_df_3_7 = underlying_df_3_7.rename(columns={dt_end_date: 'Current Weight'})
+                underlying_df = underlying_df.rename(columns={dt_end_date: 'Current Weight'})
 
-                # Find and print the 'Current Weight' in filtered_df_3_7
-                parent_weight_value = filtered_df_3_7.loc[value, 'Current Weight']
-                print("Current Weight in filtered_df_3_7:", parent_weight_value)
+                # Find and print the 'Current Weight' in df_3alloc_holding_level
+                parent_weight_value = df_3alloc_holding_level.loc[value, 'Current Weight']
+                print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
 
-                # Multiply each value in 'Current Weight' column of underlying_df_3_7
-                underlying_df_3_7['Current Weight'] *= (parent_weight_value/100)
+                # Multiply each value in 'Current Weight' column of underlying_df
+                underlying_df['Current Weight'] *= (parent_weight_value/100)
 
-                # Remove the matched row from filtered_df_3_7
-                filtered_df_3_7 = filtered_df_3_7.drop(index=value)
+                # Remove the matched row from df_3alloc_holding_level
+                df_3alloc_holding_level = df_3alloc_holding_level.drop(index=value)
 
-                # Merge all rows from underlying_df_3_7 into filtered_df_3_7
-                filtered_df_3_7 = pd.concat([filtered_df_3_7, underlying_df_3_7])
+                # Merge all rows from underlying_df into df_3alloc_holding_level
+                df_3alloc_holding_level = pd.concat([df_3alloc_holding_level, underlying_df])
 
-        figure_3_7 = px.sunburst(
-            filtered_df_3_7,
-            path=['G1', 'Name'],
-            names='Name',
-            values='Current Weight',
-            template="plotly_white"
-        )
-        figure_3_7.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
 
-        figure_3_8 = px.sunburst(
-            filtered_df_3_7,  # This needs updating to 3_78
-            path=['G1', 'G4', 'Name'],
-            names='Name',
-            values='Current Weight',
-            template="plotly_white"
-        )
-        figure_3_8.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
 
         ## Populate Charts for Page 3-Allocation
         return [
@@ -1481,13 +1379,12 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Current "+groupName+" Policy Ranges"),
                             dbc.CardBody(dcc.Graph(figure=figure_3_1)),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: Current Allocation"),
+                            dbc.CardHeader("Chart 1: Current Allocation - Manager Level"),
                             dbc.CardBody([
                                 html.Div([
                                     dcc.Graph(figure=f_create_PIE_figure(df_3alloc_sleeves, 'Current', 'GroupValue', None,450),
@@ -1496,40 +1393,44 @@ def render_page_content(pathname):
                                         style={'flex': '1'}),
                                 ], style={'display': 'flex'}),
                             ]),
-
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 3: Current Asset Allocation"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_5, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                            dbc.CardHeader("Chart 3: Current Asset Allocation New"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name', 'Current Weight', 'Current Asset Allocation - Manager Level', 800))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Current Asset Allocation"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_6, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                            dbc.CardBody(dcc.Graph(figure=f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight', 'Current Asset Allocation - Manager Level', 800))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Current Asset Allocation - Drill Through"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_7, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                            dbc.CardBody(dcc.Graph(figure=f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight', 'Current Asset Allocation - Manager Level', 800))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 6: Current Asset Allocation - Drill Through"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_8, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+                            dbc.CardHeader("Chart 6: Current Asset Allocation - Drill Through Sector"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name', 'Current Weight', 'Current Asset Allocation - Manager Level', 800))),
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 7: Current Asset Allocation - Drill Through Country"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G5', 'Name'], 'Name',
+                                                                'Current Weight',
+                                                                'Current Asset Allocation - Manager Level', 800))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -1538,7 +1439,6 @@ def render_page_content(pathname):
                             dbc.CardHeader(
                                 "Chart 10: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_OWUW, 'relative', None, "Overweight / Underweight (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_weights, 'stack', "Portfolio Sleeve Weights Through Time", "Weight (%)", "Date", 450))),
@@ -1552,7 +1452,7 @@ def render_page_content(pathname):
                         dbc.Col("", width=2, align="center", className="mb-3"),
                         # Centre Work Area
                         dbc.Col([
-                            dbc.Table.from_dataframe(filtered_df_3_7, striped=True, bordered=True, hover=True)
+                            dbc.Table.from_dataframe(df_3alloc_holding_level, striped=True, bordered=True, hover=True)
                             # End of Centre Work Area
                         ], width=12, align="center", className="mb-3"),
 
@@ -1637,7 +1537,7 @@ def render_page_content(pathname):
 
                 # Find and print the 'Current Weight' in filtered_df_3_7
                 parent_weight_value = filtered_df_3A_0.loc[value, 'Current Weight']
-                print("Current Weight in filtered_df_3_7:", parent_weight_value)
+                print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
 
                 # Multiply each value in 'Current Weight' column of underlying_df_3_7
                 underlying_df_3A_1['Current Weight'] *= (parent_weight_value / 100)
@@ -2117,7 +2017,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_2G, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2125,7 +2025,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_3G, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2133,7 +2033,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_4G, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2141,7 +2041,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_5G, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2149,7 +2049,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 10 - Portfolio Building Blocks"),
                             dbc.CardBody(dcc.Graph(figure=figure_3A_10G, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2157,7 +2057,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (Equal Weight Normalised)"),
                             dbc.CardBody(dcc.Graph(figure=fig_bar_3A_EW, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2165,7 +2065,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (Market Cap Weight Normalised)"),
                             dbc.CardBody(dcc.Graph(figure=fig_bar_3A_MCapW, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2173,7 +2073,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (EW Weight Normalised)"),
                             dbc.CardBody(dcc.Graph(figure=fig_polar_3A, style={'height': '800px'})),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
+
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2312,12 +2212,10 @@ def render_page_content(pathname):
                             dbc.CardHeader(
                                 "Chart 1: Portfolio Attribution Analysis vs Reference Portfolio"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_4attrib_total, None, "Value-Add Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: L3 SAA to TAA Attribution Analysis (Equities)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_4attrib_equity, None, "Value-Add Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2325,12 +2223,10 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: L3 SAA to TAA Attribution Analysis (Alternatives)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_4attrib_alts, None, "Value-Add Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: L3 SAA to TAA Attribution Analysis (Defensives)"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_4attrib_def, None, "Value-Add Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2341,7 +2237,6 @@ def render_page_content(pathname):
                             dbc.CardBody([dbc.Table.from_dataframe(df_4attrib_summary.T.round(2), index=True,
                                                                    striped=True, bordered=True, hover=True)
                                           ]),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2462,48 +2357,40 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Weighted Return Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: International Shares Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash Sleeve - Contributions"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     # End of Centre Work Area
@@ -2547,14 +2434,12 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 600))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
@@ -2562,42 +2447,36 @@ def render_page_content(pathname):
                             dbc.CardHeader(
                                 "Chart 3: International Shares Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 450))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2688,7 +2567,6 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: US Interest Rates"),
                             dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate", "Term", "Date", 800))),
-                            dbc.CardFooter("Enter some dot point automated analysis here....")
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 

@@ -687,6 +687,50 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
         return []  # or any default return value
 
 
+def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
+    try:
+        figure_out = px.bar(
+            df_input,
+            x='Group Value', y=['Min', 'Max-Min'],
+            template="plotly_white",
+        )
+
+        figure_out.update_traces(marker_color='#3D555E', width=0.3, opacity=0,
+                                 selector=dict(name='Min'), showlegend=False)  # Set color, width, and opacity for 'Min' bars
+
+        figure_out.update_traces(marker_color='#3D555E', width=0.3,
+                                 selector=dict(name='Max-Min'), showlegend=False)  # Set color and width for 'Max-Min' bars
+
+        scatter_fig = px.scatter(df_input, x='Group Value', y='Current',
+                                 title='Current', color_discrete_sequence=['#1DC8F2'])
+        for trace in scatter_fig.data:
+            figure_out.add_trace(trace)
+
+        figure_out.update_layout(
+            title=in_title,
+            yaxis_title=in_y_title,
+            xaxis_title=in_x_title,
+            height=in_height,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.2, sizey=0.2,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+            legend=None,
+        )
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_RANGE_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+
+
 def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
     try:
         figure_out = px.pie(
@@ -752,12 +796,372 @@ def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, i
         # Handle the error as needed
         return []  # or any default return value
 
+def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_height):
+    try:
+        # Now create Polar dataframe sets for summary chart
+        figure_out = go.Figure()
+
+        figure_out.add_trace(go.Scatterpolar(
+            r=df_input['Selected MCap Normalized'],
+            theta=df_input['Measure'],
+            hovertext=df_input['Benchmark Avg'],
+            fill='toself',
+            name='MCap Weighted: ' + in_Portfolioname
+        ))
+
+        figure_out.add_trace(go.Scatterpolar(
+            r=df_input['Benchmark MCap Normalized'],
+            theta=df_input['Measure'],
+            hovertext=df_input['Benchmark Avg'],
+            fill='toself',
+            name='MCap Weighted: ' + in_BMname
+        ))
+
+        figure_out.add_trace(go.Scatterpolar(
+            r=df_input['Selected EW Normalized'],
+            theta=df_input['Measure'],
+            hovertext=df_input['Selected Avg'],
+            fill='toself',
+            name='Equal Weighted: ' + in_Portfolioname,
+            visible='legendonly'
+        ))
+
+        figure_out.add_trace(go.Scatterpolar(
+            r=df_input['Benchmark EW Normalized'],
+            theta=df_input['Measure'],
+            hovertext=df_input['Benchmark Avg'],
+            fill='toself',
+            name='Equal Weighted: ' + in_BMname,
+            visible='legendonly'
+        ))
+
+        figure_out.update_layout(
+            height=in_height,
+            polar=dict(
+                radialaxis=dict(
+                    range=[-50, 50]  # Set the range to always show 0 to 100
+                )
+            ),
+            title={
+                "text": f"As at {dt_end_date:%d-%b-%Y}",
+                "font": {"size": 11}  # Adjust the font size as needed
+            },
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+        )
+
+        return figure_out
+
+    except Exception as e:
+        print(f"An error occurred in f_create_POLAR_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
 
 
 
-content = html.Div(id="page-content", children=[])
+def f_FILL_3alloc(Local_Portfolio):
+
+    df_3alloc_sleeves = pd.concat(
+        [Local_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in groupList],
+        axis=1)
+    df_3alloc_sleeves.index = groupList
+    df_3alloc_sleeves['Current'] = df_3alloc_sleeves.sum(axis=1)
+    df_3alloc_sleeves = df_3alloc_sleeves[['Current']]
+    df_3alloc_sleeves.reset_index(inplace=True)
+    df_3alloc_sleeves.columns = ['GroupValue', 'Current']
+
+    df_3alloc_BMsleeves = pd.concat(
+        [Local_Portfolio.df_L2_w.loc[dt_end_date:dt_end_date, ['BM_' + groupName + '_' + n]].T for n in groupList],
+        axis=1)
+    df_3alloc_BMsleeves.index = groupList
+    df_3alloc_BMsleeves['Current'] = df_3alloc_BMsleeves.sum(axis=1)
+    df_3alloc_BMsleeves = df_3alloc_BMsleeves[['Current']]
+    df_3alloc_BMsleeves.reset_index(inplace=True)
+    df_3alloc_BMsleeves.columns = ['GroupValue', 'Current']
+
+    # Below is dependent on df_3alloc_sleeves
+    row_values = []
+    allrows_values = []
+    group_df = Local_Portfolio.df_L3_limits[Local_Portfolio.df_L3_limits['Group'] == groupName]
+    for n, element in enumerate(groupList):
+        # Filter the DataFrame for the current group
+        group_df2 = group_df[group_df['GroupValue'] == groupList[n]]
+        row_values.append(groupList[n])
+        row_values.append(df_3alloc_sleeves.loc[n, "Current"])
+        # Check if there are any rows for the current group
+        if not group_df2.empty:
+            # Get the minimum value from the 'Min' column of the filtered DataFrame
+            row_values.append(group_df2['Min'].min())
+            row_values.append(group_df2['Max'].max())
+        else:
+            # If no rows are found for the current group, append None to the list
+            row_values.append(0)
+            row_values.append(100)
+
+        allrows_values.append(row_values)
+        row_values = []
+
+    column_names = ['Group Value', 'Current', 'Min', 'Max']
+    df_3alloc_sleeve_ranges = pd.DataFrame(allrows_values, columns=column_names)
+    df_3alloc_sleeve_ranges['Max-Min'] = df_3alloc_sleeve_ranges['Max'] - df_3alloc_sleeve_ranges['Min']
+
+    df_3alloc_OWUW = pd.concat([Local_Portfolio.df_L3vsL2_relw.loc[dt_start_date:dt_end_date,
+                                ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
+    df_3alloc_OWUW.columns = groupList
+
+    df_3alloc_weights = pd.concat([Local_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
+                                   ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
+    df_3alloc_weights.columns = groupList
+
+    df_3alloc_mgr_level = Local_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                          Local_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+    df_3alloc_mgr_level = df_3alloc_mgr_level.loc[:, (df_3alloc_mgr_level != 0).any()].T
+    df_3alloc_mgr_level = df_3alloc_mgr_level.rename_axis('Code')
+    df_3alloc_mgr_level = df_3alloc_mgr_level.merge(
+        Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type']], on='Code')
+    df_3alloc_mgr_level = df_3alloc_mgr_level.rename(columns={dt_end_date: 'Current Weight'})
+
+    df_3alloc_holding_level = df_3alloc_mgr_level
+    underlying_df = []
+    # Find if any of the held investments - are also available in the dataset as products with look through holdings
+    for index, value in enumerate(df_3alloc_holding_level.index):
+        if value in availablePortfolios:
+            print("Matched value:", value)
+            Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
+
+            underlying_df = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                            Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+            underlying_df = underlying_df.loc[:, (underlying_df != 0).any()].T
+            underlying_df = underlying_df.rename_axis('Code')
+
+            underlying_df = underlying_df.merge(
+                Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+            underlying_df = underlying_df.rename(columns={dt_end_date: 'Current Weight'})
+
+            # Find and print the 'Current Weight' in df_3alloc_holding_level
+            parent_weight_value = df_3alloc_holding_level.loc[value, 'Current Weight']
+            print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
+
+            # Multiply each value in 'Current Weight' column of underlying_df
+            underlying_df['Current Weight'] *= (parent_weight_value / 100)
+
+            # Remove the matched row from df_3alloc_holding_level
+            df_3alloc_holding_level = df_3alloc_holding_level.drop(index=value)
+
+            # Merge all rows from underlying_df into df_3alloc_holding_level
+            df_3alloc_holding_level = pd.concat([df_3alloc_holding_level, underlying_df])
+
+
+    return df_3alloc_sleeves, df_3alloc_BMsleeves, df_3alloc_sleeve_ranges, df_3alloc_OWUW, df_3alloc_weights, df_3alloc_mgr_level, df_3alloc_holding_level
+
+
+def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
+
+    BM_SharesUniverse_latest = BM_SharesUniverse.df_L3_w.loc[dt_end_date:dt_end_date,
+                               BM_SharesUniverse.df_L3_w.columns.isin(Product_List)].tail(1)
+    BM_SharesUniverse_latest = BM_SharesUniverse_latest.loc[:, (BM_SharesUniverse_latest != 0).any()].T
+    BM_SharesUniverse_latest = BM_SharesUniverse_latest.rename_axis('Code')
+    BM_SharesUniverse_latest = BM_SharesUniverse_latest.merge(BM_SharesUniverse.df_productList[
+                                                                  ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type',
+                                                                   'LastPrice', 'MarketCap', 'BasicEPS',
+                                                                   'DividendperShare-Net', 'TotalAssets',
+                                                                   'TotalLiabilities', 'GrowthofNetIncome(%)',
+                                                                   'GrowthofNetSales(%)',
+                                                                   'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)',
+                                                                   'PayoutRatio', 'TotalDebt/TotalAssets',
+                                                                   'NetProfitMargin(%)', 'InterestCover(EBIT)',
+                                                                   'ShortSell%', 'PE_Ratio', 'EarningsYield',
+                                                                   'PriceBook']],
+                                                              on='Code')
+    BM_SharesUniverse_latest = BM_SharesUniverse_latest.rename(columns={dt_end_date: 'Current Weight'})
+
+    df_3Aequity_detail_0 = Local_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                           Local_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+    df_3Aequity_detail_0 = df_3Aequity_detail_0.loc[:, (df_3Aequity_detail_0 != 0).any()].T
+    df_3Aequity_detail_0 = df_3Aequity_detail_0.rename_axis('Code')
+    df_3Aequity_detail_0 = df_3Aequity_detail_0.merge(Local_Portfolio.df_productList[
+                                                          ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice',
+                                                           'MarketCap', 'BasicEPS',
+                                                           'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
+                                                           'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
+                                                           'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)',
+                                                           'PayoutRatio',
+                                                           'TotalDebt/TotalAssets',
+                                                           'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
+                                                           'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
+    df_3Aequity_detail_0 = df_3Aequity_detail_0.rename(columns={dt_end_date: 'Current Weight'})
+
+    # Find if any of the held investments - are also available in the dataset as products with look through holdings
+
+    underlying_df_3A_1 = []
+    for index, value in enumerate(df_3Aequity_detail_0.index):
+        if value in availablePortfolios:
+            print("Matched value:", value)
+            Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
+
+            underlying_df_3A_1 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                                 Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+            underlying_df_3A_1 = underlying_df_3A_1.loc[:, (underlying_df_3A_1 != 0).any()].T
+            underlying_df_3A_1 = underlying_df_3A_1.rename_axis('Code')
+
+            underlying_df_3A_1 = underlying_df_3A_1.merge(
+                Local_Portfolio.df_productList[
+                    ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
+                     'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
+                     'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
+                     'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
+                     'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
+                     'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
+            underlying_df_3A_1 = underlying_df_3A_1.rename(columns={dt_end_date: 'Current Weight'})
+
+            # Find and print the 'Current Weight' in filtered_df_3_7
+            parent_weight_value = df_3Aequity_detail_0.loc[value, 'Current Weight']
+            print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
+
+            # Multiply each value in 'Current Weight' column of underlying_df_3_7
+            underlying_df_3A_1['Current Weight'] *= (parent_weight_value / 100)
+
+            # Remove the matched row from filtered_df_3_7
+            df_3Aequity_detail_0 = df_3Aequity_detail_0.drop(index=value)
+
+            # Merge all rows from underlying_df_3_7 into filtered_df_3_7
+            df_3Aequity_detail_0 = pd.concat([df_3Aequity_detail_0, underlying_df_3A_1])
+
+    # filter for only Listed Securities
+    filtered_df_3A_1 = df_3Aequity_detail_0[(df_3Aequity_detail_0['Type'] == 'ASXStock')].copy()
+    assetClassWeight = filtered_df_3A_1['Current Weight'].sum()
+
+    if assetClassWeight != 0:
+        filtered_df_3A_1['Current Weight'] = filtered_df_3A_1['Current Weight'] / (assetClassWeight / 100)
+    else:
+        # Handle the case where assetClassWeight is zero
+        filtered_df_3A_1['Current Weight'] = np.nan
+
+    # Portfolio and Benchmark Averages
+    def f_calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
+        # Calculate the percentile of the selected value in the equal-weighted data distribution
+        EW_perc_selected = percentileofscore(data[metric].dropna(), selected_avg) - 50
+        EW_perc_bm = percentileofscore(data[metric].dropna(), bm_avg) - 50
+
+        # Calculate the market capitalization-weighted percentile for the selected value
+        MCap_perc_bm = 0
+        if EW_perc_selected > EW_perc_bm:
+            MCap_perc_selected = (((EW_perc_selected - EW_perc_bm) / (100 - EW_perc_bm)) * 50)
+        else:
+            MCap_perc_selected = 0 - (((EW_perc_bm - EW_perc_selected) / EW_perc_bm) * 50)
+
+        return EW_perc_selected, EW_perc_bm, MCap_perc_selected, MCap_perc_bm
+
+    def create_valid_variable_name(measure):
+        # Remove special characters and spaces
+        valid_name = re.sub(r'[^a-zA-Z0-9]', '', measure)
+        return f"selected_avg_{valid_name}", f"BM_avg_{valid_name}"
+
+    # Define a list of all the measures
+    measures = [
+        'MarketCap',
+        'PE_Ratio',
+        'EarningsYield',
+        'PriceBook',
+        'ReturnonTotalEquity(%)',
+        'GrowthofNetIncome(%)',
+        'GrowthofNetSales(%)',
+        'GrowthofFreeCashFlow(%)',
+        'NetProfitMargin(%)',
+        'PayoutRatio',
+        'TotalDebt/TotalAssets',
+        'InterestCover(EBIT)',
+        'ShortSell%'
+    ]
+
+    measures_category = [
+        'Size',
+        'Value',
+        'Value',
+        'Value',
+        'Value',
+        'Growth',
+        'Growth',
+        'Growth',
+        'Quality',
+        'Quality',
+        'Quality',
+        'Quality',
+        'Volatility'
+    ]
+
+    # Create an empty DataFrame to store the results
+    columnsfordf1 = ['Measure', 'Category', 'Selected Avg', 'Selected MCap Normalized', 'Selected EW Normalized',
+                     'Benchmark Avg', 'Benchmark MCap Normalized', 'Benchmark EW Normalized']
+    df_portfolioAESummary = pd.DataFrame(columns=columnsfordf1)
+
+    # Calculate averages for each measure
+    averages = {}
+    for measure, category in zip(measures, measures_category):
+        selected_var, bm_var = create_valid_variable_name(measure)
+        selected_avg = (filtered_df_3A_1[measure].astype(float) * filtered_df_3A_1['Current Weight'] / 100).sum()
+        bm_avg = (BM_SharesUniverse_latest[measure].astype(float) * BM_SharesUniverse_latest[
+            'Current Weight'] / 100).sum()
+
+        averages[selected_var] = selected_avg
+        averages[bm_var] = bm_avg
+
+        # Avoid division by zero for measures with zero benchmark average
+        if bm_avg == 0:
+            bm_avg = 1e-10
+
+        EW_norm_perc_selected, EW_norm_perc_bm, MCap_norm_perc_selected, MCap_norm_perc_bm = f_calculate_normalized_percentile(
+            selected_avg,
+            bm_avg,
+            filtered_df_3A_1,
+            measure)
+
+        # Append results to the DataFrame
+        df_portfolioAESummary = pd.concat([df_portfolioAESummary, pd.DataFrame({
+            'Measure': [measure],
+            'Category': [category],
+            'Selected Avg': [selected_avg],
+            'Selected MCap Normalized': [MCap_norm_perc_selected],
+            'Selected EW Normalized': [EW_norm_perc_selected],
+            'Benchmark Avg': [bm_avg],
+            'Benchmark MCap Normalized': [MCap_norm_perc_bm],
+            'Benchmark EW Normalized': [EW_norm_perc_bm]
+        })], ignore_index=True)
+
+
+    # The Below Groups Holding Weights Where Multiple Products have same Look Through Exposure
+    filtered_df_3A_2 = filtered_df_3A_1.copy()
+    filtered_df_3A_2['Code'] = filtered_df_3A_2.index  # this keeps it as a normal column not just index
+    grouped_df_3A_2 = filtered_df_3A_2.groupby('Name').agg({
+        'Code': 'first',  # Include 'Code' in the aggregation
+        'Current Weight': 'sum',
+        'G0': 'first', 'G1': 'first', 'G2': 'first', 'G3': 'first', 'G4': 'first', 'Type': 'first',
+        'LastPrice': 'first', 'MarketCap': 'first', 'BasicEPS': 'first', 'DividendperShare-Net': 'first',
+        'GrowthofNetIncome(%)': 'first', 'GrowthofNetSales(%)': 'first', 'GrowthofFreeCashFlow(%)': 'first',
+        'ReturnonTotalEquity(%)': 'first', 'PayoutRatio': 'first', 'TotalDebt/TotalAssets': 'first',
+        'NetProfitMargin(%)': 'first', 'InterestCover(EBIT)': 'first', 'ShortSell%': 'first',
+        'PE_Ratio': 'first', 'EarningsYield': 'first', 'PriceBook': 'first'
+    }).reset_index()
+
+    # Weight Sorted
+    grouped_df_3A_2_sorted = grouped_df_3A_2.sort_values(by='Current Weight', ascending=False)
+
+    return df_portfolioAESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages
+
+
+
+
 
 ## MAIN LAYOUT --------
+
+content = html.Div(id="page-content", children=[])
 
 app.layout = html.Div([
     dcc.Location(id="url"),
@@ -1239,125 +1643,8 @@ def render_page_content(pathname):
 
     elif pathname == "/3-Allocation":
 
-        df_3alloc_sleeves = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in groupList], axis=1)
-        df_3alloc_sleeves.index = groupList
-        df_3alloc_sleeves['Current'] = df_3alloc_sleeves.sum(axis=1)
-        df_3alloc_sleeves = df_3alloc_sleeves[['Current']]
-        df_3alloc_sleeves.reset_index(inplace=True)
-        df_3alloc_sleeves.columns = ['GroupValue', 'Current']
-
-        df_3alloc_BMsleeves = pd.concat([Selected_Portfolio.df_L2_w.loc[dt_end_date:dt_end_date, ['BM_' + groupName + '_' + n]].T for n in groupList], axis=1)
-        df_3alloc_BMsleeves.index = groupList
-        df_3alloc_BMsleeves['Current'] = df_3alloc_BMsleeves.sum(axis=1)
-        df_3alloc_BMsleeves = df_3alloc_BMsleeves[['Current']]
-        df_3alloc_BMsleeves.reset_index(inplace=True)
-        df_3alloc_BMsleeves.columns = ['GroupValue', 'Current']
-
-
-        # Below is dependent on df_3alloc_sleeves
-        row_values = []
-        allrows_values = []
-        group_df = Selected_Portfolio.df_L3_limits[Selected_Portfolio.df_L3_limits['Group'] == groupName]
-        for n, element in enumerate(groupList):
-            # Filter the DataFrame for the current group
-            group_df2 = group_df[group_df['GroupValue'] == groupList[n]]
-            row_values.append(groupList[n])
-            row_values.append(df_3alloc_sleeves.loc[n, "Current"])
-            # Check if there are any rows for the current group
-            if not group_df2.empty:
-                # Get the minimum value from the 'Min' column of the filtered DataFrame
-                row_values.append(group_df2['Min'].min())
-                row_values.append(group_df2['Max'].max())
-            else:
-                # If no rows are found for the current group, append None to the list
-                row_values.append(0)
-                row_values.append(100)
-
-            allrows_values.append(row_values)
-            row_values = []
-
-        column_names = ['Group Value', 'Current', 'Min', 'Max']
-
-        filtered_df_3_1 = pd.DataFrame(allrows_values, columns=column_names)
-
-        filtered_df_3_1['Max-Min'] = filtered_df_3_1['Max'] - filtered_df_3_1['Min']
-        figure_3_1 = px.bar(filtered_df_3_1, x='Group Value', y=['Min', 'Max-Min'])
-
-        figure_3_1.update_traces(marker_color='#3D555E', width=0.3, opacity=0,
-                          selector=dict(name='Min'))  # Set color, width, and opacity for 'Min' bars
-        # figure_3_1.update_traces(marker_color='#3D555E', width=0.3,
-        #                   selector=dict(name='Max-Min'))  # Set color and width for 'Max-Min' bars
-
-        figure_3_1.update_traces(marker_color='#3D555E', width=0.3,
-                          selector=dict(name='Max-Min'))  # Set color and width for 'Max-Min' bars
-
-        scatter_fig = px.scatter(filtered_df_3_1, x='Group Value', y='Current',
-                                 title='Current', color_discrete_sequence=['#1DC8F2'])
-        for trace in scatter_fig.data:
-            figure_3_1.add_trace(trace)
-
-        figure_3_1.update_layout(
-            showlegend=False,
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            yaxis_title='Allocation Range (%)',
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        df_3alloc_OWUW = pd.concat([Selected_Portfolio.df_L3vsL2_relw.loc[dt_start_date:dt_end_date,
-                       ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        df_3alloc_OWUW.columns = groupList
-
-        df_3alloc_weights = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
-                       ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        df_3alloc_weights.columns = groupList
-
-
-
-        df_3alloc_mgr_level = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-        df_3alloc_mgr_level = df_3alloc_mgr_level.loc[:, (df_3alloc_mgr_level != 0).any()].T
-        df_3alloc_mgr_level = df_3alloc_mgr_level.rename_axis('Code')
-        df_3alloc_mgr_level = df_3alloc_mgr_level.merge(Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type']], on='Code')
-        df_3alloc_mgr_level = df_3alloc_mgr_level.rename(columns={dt_end_date: 'Current Weight'})
-
-
-        df_3alloc_holding_level = df_3alloc_mgr_level
-        underlying_df = []
-        # Find if any of the held investments - are also available in the dataset as products with look through holdings
-        for index, value in enumerate(df_3alloc_holding_level.index):
-            if value in availablePortfolios:
-                print("Matched value:", value)
-                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
-
-                underlying_df = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                                  Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-                underlying_df = underlying_df.loc[:, (underlying_df != 0).any()].T
-                underlying_df = underlying_df.rename_axis('Code')
-
-                underlying_df = underlying_df.merge(
-                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-                underlying_df = underlying_df.rename(columns={dt_end_date: 'Current Weight'})
-
-                # Find and print the 'Current Weight' in df_3alloc_holding_level
-                parent_weight_value = df_3alloc_holding_level.loc[value, 'Current Weight']
-                print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
-
-                # Multiply each value in 'Current Weight' column of underlying_df
-                underlying_df['Current Weight'] *= (parent_weight_value/100)
-
-                # Remove the matched row from df_3alloc_holding_level
-                df_3alloc_holding_level = df_3alloc_holding_level.drop(index=value)
-
-                # Merge all rows from underlying_df into df_3alloc_holding_level
-                df_3alloc_holding_level = pd.concat([df_3alloc_holding_level, underlying_df])
-
-
+        ## Populate dataframes for Page 3-Allocation
+        df_3alloc_sleeves, df_3alloc_BMsleeves, df_3alloc_sleeve_ranges, df_3alloc_OWUW, df_3alloc_weights, df_3alloc_mgr_level, df_3alloc_holding_level = f_FILL_3alloc(Selected_Portfolio)
 
         ## Populate Charts for Page 3-Allocation
         return [
@@ -1377,14 +1664,14 @@ def render_page_content(pathname):
                     # Tab 3- Allocations
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2: Current "+groupName+" Policy Ranges"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3_1)),
+                            dbc.CardHeader("Chart 1: Current "+groupName+" Policy Ranges"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: Current Allocation - Manager Level"),
+                            dbc.CardHeader("Chart 2: Current Allocation - Manager Level"),
                             dbc.CardBody([
                                 html.Div([
                                     dcc.Graph(figure=f_create_PIE_figure(df_3alloc_sleeves, 'Current', 'GroupValue', None,450),
@@ -1437,12 +1724,12 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 10: Portfolio Sleeve Overweights/Underweights Through Time"),
+                                "Chart 8: Portfolio Sleeve Overweights/Underweights Through Time"),
                             dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_OWUW, 'relative', None, "Overweight / Underweight (%)", "Date", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
-                                "Chart 11: Asset Allocation Through Time"),
+                                "Chart 9: Asset Allocation Through Time"),
                             dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_3alloc_weights, 'stack', "Portfolio Sleeve Weights Through Time", "Weight (%)", "Date", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -1478,244 +1765,16 @@ def render_page_content(pathname):
 
         BM_AustShares_Portfolio = All_Portfolios[availablePortfolios.index("IOZ-AU")]
         #BM_IntShares_Portfolio = All_Portfolios[availablePortfolios.index("VGS-AU")]
-        # togle to include Aus and/or Int eq
-
+        # toggle to include Aus and/or Int eq
         BM_SharesUniverse = BM_AustShares_Portfolio
+        ## Populate dataframes for Page 3A-Equity
+        # f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
 
 
-        BM_SharesUniverse_latest = BM_SharesUniverse.df_L3_w.loc[dt_end_date:dt_end_date,
-                               BM_SharesUniverse.df_L3_w.columns.isin(Product_List)].tail(1)
-        BM_SharesUniverse_latest = BM_SharesUniverse_latest.loc[:, (BM_SharesUniverse_latest != 0).any()].T
-        BM_SharesUniverse_latest = BM_SharesUniverse_latest.rename_axis('Code')
-        BM_SharesUniverse_latest = BM_SharesUniverse_latest.merge(BM_SharesUniverse.df_productList[
-                                                              ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type',
-                                                               'LastPrice', 'MarketCap', 'BasicEPS',
-                                                               'DividendperShare-Net', 'TotalAssets',
-                                                               'TotalLiabilities', 'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
-                                                               'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)',
-                                                               'PayoutRatio', 'TotalDebt/TotalAssets',
-                                                               'NetProfitMargin(%)', 'InterestCover(EBIT)',
-                                                               'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook']],
-                                                          on='Code')
-        BM_SharesUniverse_latest = BM_SharesUniverse_latest.rename(columns={dt_end_date: 'Current Weight'})
-
-        df_3Aequity_detail_0 = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                          Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-        df_3Aequity_detail_0 = df_3Aequity_detail_0.loc[:, (df_3Aequity_detail_0 != 0).any()].T
-        df_3Aequity_detail_0 = df_3Aequity_detail_0.rename_axis('Code')
-        df_3Aequity_detail_0 = df_3Aequity_detail_0.merge(Selected_Portfolio.df_productList[
-                                                    ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice',
-                                                     'MarketCap', 'BasicEPS',
-                                                     'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
-                                                     'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
-                                                     'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio',
-                                                     'TotalDebt/TotalAssets',
-                                                     'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
-                                                     'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
-        df_3Aequity_detail_0 = df_3Aequity_detail_0.rename(columns={dt_end_date: 'Current Weight'})
-
-
-        # Find if any of the held investments - are also available in the dataset as products with look through holdings
-
-        underlying_df_3A_1 = []
-        for index, value in enumerate(df_3Aequity_detail_0.index):
-            if value in availablePortfolios:
-                print("Matched value:", value)
-                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
-
-                underlying_df_3A_1 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                                    Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-                underlying_df_3A_1 = underlying_df_3A_1.loc[:, (underlying_df_3A_1 != 0).any()].T
-                underlying_df_3A_1 = underlying_df_3A_1.rename_axis('Code')
-
-                underlying_df_3A_1 = underlying_df_3A_1.merge(
-                    Selected_Portfolio.df_productList[
-                        ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
-                         'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
-                         'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
-                         'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                         'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
-                         'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
-                underlying_df_3A_1 = underlying_df_3A_1.rename(columns={dt_end_date: 'Current Weight'})
-
-                # Find and print the 'Current Weight' in filtered_df_3_7
-                parent_weight_value = df_3Aequity_detail_0.loc[value, 'Current Weight']
-                print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
-
-                # Multiply each value in 'Current Weight' column of underlying_df_3_7
-                underlying_df_3A_1['Current Weight'] *= (parent_weight_value / 100)
-
-                # Remove the matched row from filtered_df_3_7
-                df_3Aequity_detail_0 = df_3Aequity_detail_0.drop(index=value)
-
-                # Merge all rows from underlying_df_3_7 into filtered_df_3_7
-                df_3Aequity_detail_0 = pd.concat([df_3Aequity_detail_0, underlying_df_3A_1])
-
-        # filter for only Listed Securities
-        filtered_df_3A_1 = df_3Aequity_detail_0[(df_3Aequity_detail_0['Type'] == 'ASXStock')].copy()
-        assetClassWeight = filtered_df_3A_1['Current Weight'].sum()
-
-        if assetClassWeight != 0:
-            filtered_df_3A_1['Current Weight'] = filtered_df_3A_1['Current Weight'] / (assetClassWeight / 100)
-        else:
-            # Handle the case where assetClassWeight is zero
-            filtered_df_3A_1['Current Weight'] = np.nan
-
-
-        print(filtered_df_3A_1)
-
-        # Portfolio and Benchmark Averages
-        def f_calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
-            # Calculate the percentile of the selected value in the equal-weighted data distribution
-            EW_perc_selected = percentileofscore(data[metric].dropna(), selected_avg)-50
-            EW_perc_bm = percentileofscore(data[metric].dropna(), bm_avg)-50
-
-            # Calculate the market capitalization-weighted percentile for the selected value
-            MCap_perc_bm = 0
-            if EW_perc_selected > EW_perc_bm:
-                MCap_perc_selected = (((EW_perc_selected - EW_perc_bm) / (100 - EW_perc_bm)) * 50)
-            else:
-                MCap_perc_selected = 0 - (((EW_perc_bm - EW_perc_selected) / EW_perc_bm) * 50)
-
-            return EW_perc_selected, EW_perc_bm, MCap_perc_selected, MCap_perc_bm
-
-        def create_valid_variable_name(measure):
-            # Remove special characters and spaces
-            valid_name = re.sub(r'[^a-zA-Z0-9]', '', measure)
-            return f"selected_avg_{valid_name}", f"BM_avg_{valid_name}"
-
-        # Define a list of all the measures
-        measures = [
-            'MarketCap',
-            'PE_Ratio',
-            'EarningsYield',
-            'PriceBook',
-            'ReturnonTotalEquity(%)',
-            'GrowthofNetIncome(%)',
-            'GrowthofNetSales(%)',
-            'GrowthofFreeCashFlow(%)',
-            'NetProfitMargin(%)',
-            'PayoutRatio',
-            'TotalDebt/TotalAssets',
-            'InterestCover(EBIT)',
-            'ShortSell%'
-        ]
-
-        measures_category = [
-            'Size',
-            'Value',
-            'Value',
-            'Value',
-            'Value',
-            'Growth',
-            'Growth',
-            'Growth',
-            'Quality',
-            'Quality',
-            'Quality',
-            'Quality',
-            'Variability'
-        ]
-
-        # Create an empty DataFrame to store the results
-        columnsfordf1 = ['Measure', 'Category', 'Selected Avg', 'Selected MCap Normalized', 'Selected EW Normalized',
-                         'Benchmark Avg', 'Benchmark MCap Normalized', 'Benchmark EW Normalized']
-        df_portfolioAESummary = pd.DataFrame(columns=columnsfordf1)
-
-        # Calculate averages for each measure
-        averages = {}
-        for measure, category in zip(measures, measures_category):
-            selected_var, bm_var = create_valid_variable_name(measure)
-            selected_avg = (filtered_df_3A_1[measure].astype(float) * filtered_df_3A_1['Current Weight'] / 100).sum()
-            bm_avg = (BM_SharesUniverse_latest[measure].astype(float) * BM_SharesUniverse_latest['Current Weight'] / 100).sum()
-
-            averages[selected_var] = selected_avg
-            averages[bm_var] = bm_avg
-
-            # Avoid division by zero for measures with zero benchmark average
-            if bm_avg == 0:
-                bm_avg = 1e-10
-
-            EW_norm_perc_selected, EW_norm_perc_bm, MCap_norm_perc_selected, MCap_norm_perc_bm = f_calculate_normalized_percentile(selected_avg,
-                                                                                                       bm_avg,
-                                                                                                       filtered_df_3A_1,
-                                                                                                       measure)
-
-
-
-            # Append results to the DataFrame
-            df_portfolioAESummary = pd.concat([df_portfolioAESummary, pd.DataFrame({
-                'Measure': [measure],
-                'Category': [category],
-                'Selected Avg': [selected_avg],
-                'Selected MCap Normalized': [MCap_norm_perc_selected],
-                'Selected EW Normalized': [EW_norm_perc_selected],
-                'Benchmark Avg': [bm_avg],
-                'Benchmark MCap Normalized': [MCap_norm_perc_bm],
-                'Benchmark EW Normalized': [EW_norm_perc_bm]
-            })], ignore_index=True)
-
-
-        # Now create Polar dataframe sets for summary chart
-        fig_polar_3A = go.Figure()
-
-        fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Selected MCap Normalized'],
-            theta=df_portfolioAESummary['Measure'],
-            hovertext=df_portfolioAESummary['Benchmark Avg'],
-            fill='toself',
-            name='MCap Weighted: ' + Selected_Portfolio.portfolioCode
-        ))
-
-        fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Benchmark MCap Normalized'],
-            theta=df_portfolioAESummary['Measure'],
-            hovertext=df_portfolioAESummary['Benchmark Avg'],
-            fill='toself',
-            name='MCap Weighted: ' + BM_AustShares_Portfolio.portfolioCode
-        ))
-
-        fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Selected EW Normalized'],
-            theta=df_portfolioAESummary['Measure'],
-            hovertext=df_portfolioAESummary['Selected Avg'],
-            fill='toself',
-            name='Equal Weighted: '+Selected_Portfolio.portfolioCode,
-            visible='legendonly'
-        ))
-
-        fig_polar_3A.add_trace(go.Scatterpolar(
-            r=df_portfolioAESummary['Benchmark EW Normalized'],
-            theta=df_portfolioAESummary['Measure'],
-            hovertext=df_portfolioAESummary['Benchmark Avg'],
-            fill='toself',
-            name='Equal Weighted: '+BM_AustShares_Portfolio.portfolioCode,
-            visible='legendonly'
-        ))
-
-        fig_polar_3A.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    range=[-50, 50]  # Set the range to always show 0 to 100
-                )
-            ),
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
+        df_3Aequity_AESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages = f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
 
         fig_bar_3A_EW = px.bar(
-            df_portfolioAESummary,
+            df_3Aequity_AESummary,
             x='Measure',
             y=['Selected EW Normalized'],
             labels={"x": "Factor", "y": "Values"},
@@ -1750,14 +1809,14 @@ def render_page_content(pathname):
         fig_bar_3A_EW.add_shape(
             go.layout.Shape(
                 type='line',
-                x0=-0.5, x1=len(df_portfolioAESummary['Measure']) - 0.5,
+                x0=-0.5, x1=len(df_3Aequity_AESummary['Measure']) - 0.5,
                 y0=50, y1=50,
                 line=dict(color='grey', width=1, dash='dot')
             )
         )
 
         fig_bar_3A_MCapW = px.bar(
-            df_portfolioAESummary,
+            df_3Aequity_AESummary,
             x='Measure',
             y=['Selected MCap Normalized'],
             labels={"x": "Factor", "y": "Values"},
@@ -1792,28 +1851,11 @@ def render_page_content(pathname):
         fig_bar_3A_MCapW.add_shape(
             go.layout.Shape(
                 type='line',
-                x0=-0.5, x1=len(df_portfolioAESummary['Measure']) - 0.5,
+                x0=-0.5, x1=len(df_3Aequity_AESummary['Measure']) - 0.5,
                 y0=50, y1=50,
                 line=dict(color='grey', width=1, dash='dot')
             )
         )
-
-        # The Below Groups Holding Weights Where Multiple Products have same Look Through Exposure
-        filtered_df_3A_2 = filtered_df_3A_1.copy()
-        filtered_df_3A_2['Code'] = filtered_df_3A_2.index  # this keeps it as a normal column not just index
-        grouped_df_3A_2 = filtered_df_3A_2.groupby('Name').agg({
-            'Code': 'first',  # Include 'Code' in the aggregation
-            'Current Weight': 'sum',
-            'G0': 'first', 'G1': 'first', 'G2': 'first', 'G3': 'first', 'G4': 'first', 'Type': 'first',
-            'LastPrice': 'first', 'MarketCap': 'first', 'BasicEPS': 'first', 'DividendperShare-Net': 'first',
-            'GrowthofNetIncome(%)': 'first', 'GrowthofNetSales(%)': 'first', 'GrowthofFreeCashFlow(%)': 'first',
-            'ReturnonTotalEquity(%)': 'first', 'PayoutRatio': 'first', 'TotalDebt/TotalAssets': 'first',
-            'NetProfitMargin(%)': 'first', 'InterestCover(EBIT)': 'first', 'ShortSell%': 'first',
-            'PE_Ratio': 'first', 'EarningsYield': 'first', 'PriceBook': 'first'
-        }).reset_index()
-
-        # Weight Sorted
-        grouped_df_3A_2_sorted = grouped_df_3A_2.sort_values(by='Current Weight', ascending=False)
 
         figure_3A_2G = px.scatter(
             grouped_df_3A_2, x="GrowthofNetIncome(%)", y="MarketCap",
@@ -1854,7 +1896,6 @@ def render_page_content(pathname):
                 layer="below"
             )],
         )
-
 
         figure_3A_3G = px.scatter(
             grouped_df_3A_2, x="NetProfitMargin(%)", y="ReturnonTotalEquity(%)",
@@ -2075,14 +2116,13 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (EW Weight Normalised)"),
-                            dbc.CardBody(dcc.Graph(figure=fig_polar_3A, style={'height': '800px'})),
-
+                            dbc.CardBody(dcc.Graph(figure=f_create_POLAR_figure(df_3Aequity_AESummary, Selected_Portfolio.portfolioCode, BM_AustShares_Portfolio.portfolioCode, "", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col([
-                            dbc.Table.from_dataframe(df_portfolioAESummary, striped=True, bordered=True, hover=True)
+                            dbc.Table.from_dataframe(df_3Aequity_AESummary, striped=True, bordered=True, hover=True)
                             # End of Centre Work Area
                         ], width=8, align="center", className="mb-3"),
                     ], align="center", className="mb-3"),

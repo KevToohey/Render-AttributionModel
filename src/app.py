@@ -32,22 +32,48 @@ from dash_iconify import DashIconify
 
 
 # LOAD INPUTS ##################
-colour1 = "#3D555E"  #BG Grey/Green
-colour2 = "#E7EAEB"  #Off White
-colour3 = "#93F205"  #Green
-colour4 = "#1DC8F2"  #Blue
-colour5 = "#F27D11"  #Orange
+color_ACdarkblue = "#3D555E"  #BG Grey/Green
+color_ACwhite = "#E7EAEB"  #Off White
+color_ACgreen = "#93F205"  #Green
+color_ACblue = "#1DC8F2"  #Blue
+color_ACorange = "#F27D11"  #Orange
 
-colors = {
-    'background': colour1,
-    'text': colour2,
-    'green_text': colour3,
-    'blue_text': colour4,
-    'orange_text': colour5
-}
 
 load_start_date = "2021-09-30"
 load_end_date = "2023-11-13"
+
+measures = [
+    'MarketCap',
+    'PE_Ratio',
+    'EarningsYield',
+    'PriceBook',
+    'ReturnonTotalEquity(%)',
+    'GrowthofNetIncome(%)',
+    'GrowthofNetSales(%)',
+    'GrowthofFreeCashFlow(%)',
+    'NetProfitMargin(%)',
+    'PayoutRatio',
+    'TotalDebt/TotalAssets',
+    'InterestCover(EBIT)',
+    'ShortSell%'
+]
+
+measures_category = [
+    'Size',
+    'Value',
+    'Value',
+    'Value',
+    'Value',
+    'Growth',
+    'Growth',
+    'Growth',
+    'Quality',
+    'Quality',
+    'Quality',
+    'Quality',
+    'Volatility'
+]
+
 
 class Portfolio:
     def __init__(self, portfolioCode):
@@ -573,7 +599,7 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
 
         figure_out.update_layout(
             title=in_title,
-            height=in_height,
+            height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
                 source=f"data:image/png;base64,{base64.b64encode(open('./assets/atchisonlogo.png', 'rb').read()).decode()}",
@@ -616,13 +642,13 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             title=in_title,
             yaxis_title=in_y_title,
             xaxis_title=in_x_title,
-            height=in_height,
+            height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
+                sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
             )],
@@ -659,13 +685,13 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             title=in_title,
             yaxis_title=in_y_title,
             xaxis_title=in_x_title,
-            height=in_height,
+            height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
+                sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
             )],
@@ -685,6 +711,89 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
         print(f"An error occurred in f_create_BAR_figure {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
+
+
+def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, in_y_title, in_x_title, in_height):
+    try:
+        figure_out = px.bar(
+            df_input,
+            x=in_x,
+            y=in_y,
+            labels={"x": "Date", "y": "Values"},
+            template="plotly_white",
+            barmode=in_type,
+            color=in_color
+        )
+        figure_out.update_layout(
+            title=in_title,
+            yaxis_title=in_y_title,
+            xaxis_title=in_x_title,
+            height=in_height if in_height is not None else 800,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+            legend=dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+            yaxis=dict(
+                range=[-50, 50],
+            )
+        )
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_COLORBAR_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_title, in_height, y_min, y_max):
+    try:
+        figure_out = go.Figure(go.Waterfall(
+            x=df_input[in_x],
+            y=df_input[in_y],
+            textposition="outside",
+            connector={"line": {"color": color_ACdarkblue}},
+        ))
+        layout_params = {
+            "title": in_title,
+            "xaxis_title": in_x_title,
+            "height": in_height if in_height is not None else 800,
+            "margin": dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            "images": [{
+                "source": "../assets/atchisonlogo.png",
+                "xref": "paper", "yref": "paper",
+                "x": 0.98, "y": 1.05,
+                "sizex": 0.1, "sizey": 0.1,
+                "xanchor": "right", "yanchor": "bottom",
+                "layer": "below"
+            }],
+        }
+        if y_min is not None and y_max is not None:
+            layout_params["yaxis"] = dict(
+                range=[y_min, y_max],
+                title=in_y_title,
+            )
+        figure_out.update_layout(**layout_params)
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_WATERFALL_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+
 
 
 def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
@@ -716,7 +825,7 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
+                sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
             )],
@@ -726,6 +835,64 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
         return figure_out
     except Exception as e:
         print(f"An error occurred in f_create_RANGE_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+
+def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color, in_title, in_y_title, in_x_title, in_height, in_dot_scale):
+    try:
+        figure_out = px.scatter(
+            df_input,
+            x=in_x,
+            y=in_y,
+            size=in_size,
+            size_max=20*in_dot_scale,
+            color=in_color,
+            hover_data=['Name', 'Code', 'LastPrice']+measures,
+            template="plotly_white"
+        )
+
+        valid_x = re.sub(r'[^a-zA-Z0-9]', '', in_x)
+        valid_y = re.sub(r'[^a-zA-Z0-9]', '', in_y)
+        selected_trace = go.Scatter(x=[in_averages[f"selected_avg_{valid_x}"]],
+                                          y=[in_averages[f"selected_avg_{valid_y}"]],
+                                          mode='markers+text',
+                                          marker=dict(size=12, color='black', symbol="cross",
+                                                      line=dict(color='black', width=1)),
+                                          text='Weighted Portfolio',
+                                          textposition='bottom right',
+                                          showlegend=False)
+
+        valid_BMx = re.sub(r'[^a-zA-Z0-9]', '', in_x)
+        valid_BMy = re.sub(r'[^a-zA-Z0-9]', '', in_y)
+        BM_trace = go.Scatter(x=[in_averages[f"BM_avg_{valid_BMx}"]], y=[in_averages[f"BM_avg_{valid_BMy}"]],
+                                    mode='markers+text',
+                                    marker=dict(size=12, color='black', symbol="star",
+                                                line=dict(color='black', width=1)),
+                                    text='Weighted Benchmark',
+                                    textposition='bottom right',
+                                    showlegend=False)
+        figure_out.add_trace(selected_trace)
+        figure_out.add_trace(BM_trace)
+        figure_out.update_layout(
+            title=in_title,
+            yaxis_title=in_y_title if in_y_title is not None else in_y,
+            xaxis_title=in_x_title if in_x_title is not None else in_x,
+            height=in_height if in_height is not None else 800,
+            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images=[dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.05,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="bottom",
+                layer="below"
+            )],
+        )
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_SCATTER_figure {in_title}: {e}")
         # Handle the error as needed
         return []  # or any default return value
 
@@ -747,7 +914,7 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
+                sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
             )],
@@ -1064,39 +1231,6 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
         valid_name = re.sub(r'[^a-zA-Z0-9]', '', measure)
         return f"selected_avg_{valid_name}", f"BM_avg_{valid_name}"
 
-    # Define a list of all the measures
-    measures = [
-        'MarketCap',
-        'PE_Ratio',
-        'EarningsYield',
-        'PriceBook',
-        'ReturnonTotalEquity(%)',
-        'GrowthofNetIncome(%)',
-        'GrowthofNetSales(%)',
-        'GrowthofFreeCashFlow(%)',
-        'NetProfitMargin(%)',
-        'PayoutRatio',
-        'TotalDebt/TotalAssets',
-        'InterestCover(EBIT)',
-        'ShortSell%'
-    ]
-
-    measures_category = [
-        'Size',
-        'Value',
-        'Value',
-        'Value',
-        'Value',
-        'Growth',
-        'Growth',
-        'Growth',
-        'Quality',
-        'Quality',
-        'Quality',
-        'Quality',
-        'Volatility'
-    ]
-
     # Create an empty DataFrame to store the results
     columnsfordf1 = ['Measure', 'Category', 'Selected Avg', 'Selected MCap Normalized', 'Selected EW Normalized',
                      'Benchmark Avg', 'Benchmark MCap Normalized', 'Benchmark EW Normalized']
@@ -1112,6 +1246,8 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
 
         averages[selected_var] = selected_avg
         averages[bm_var] = bm_avg
+
+
 
         # Avoid division by zero for measures with zero benchmark average
         if bm_avg == 0:
@@ -1770,278 +1906,7 @@ def render_page_content(pathname):
         ## Populate dataframes for Page 3A-Equity
         # f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
 
-
         df_3Aequity_AESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages = f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
-
-        fig_bar_3A_EW = px.bar(
-            df_3Aequity_AESummary,
-            x='Measure',
-            y=['Selected EW Normalized'],
-            labels={"x": "Factor", "y": "Values"},
-            template="plotly_white",
-            barmode='group',
-            color='Category'
-        )
-        fig_bar_3A_EW.update_layout(
-            yaxis_title="Equal Weighted Normalized Score",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-            yaxis=dict(
-                range=[-50, 50],
-            )
-        )
-        fig_bar_3A_EW.add_shape(
-            go.layout.Shape(
-                type='line',
-                x0=-0.5, x1=len(df_3Aequity_AESummary['Measure']) - 0.5,
-                y0=50, y1=50,
-                line=dict(color='grey', width=1, dash='dot')
-            )
-        )
-
-        fig_bar_3A_MCapW = px.bar(
-            df_3Aequity_AESummary,
-            x='Measure',
-            y=['Selected MCap Normalized'],
-            labels={"x": "Factor", "y": "Values"},
-            template="plotly_white",
-            barmode='group',
-            color='Category'
-        )
-        fig_bar_3A_MCapW.update_layout(
-            yaxis_title="Market Cap Normalized Score",
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                title=None,
-                font=dict(size=11)
-            ),
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-            yaxis=dict(
-                range=[-50, 50],
-            )
-        )
-        fig_bar_3A_MCapW.add_shape(
-            go.layout.Shape(
-                type='line',
-                x0=-0.5, x1=len(df_3Aequity_AESummary['Measure']) - 0.5,
-                y0=50, y1=50,
-                line=dict(color='grey', width=1, dash='dot')
-            )
-        )
-
-        figure_3A_2G = px.scatter(
-            grouped_df_3A_2, x="GrowthofNetIncome(%)", y="MarketCap",
-            color="G4", size='Current Weight',
-            hover_data=['Name', 'Code', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net', 'GrowthofNetIncome(%)',
-                        'GrowthofNetSales(%)',
-                        'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
-        )
-        selected_trace_3A_2G = go.Scatter(x=[averages['selected_avg_GrowthofNetIncome']], y=[averages['selected_avg_MarketCap']],
-                                         mode='markers+text',
-                                         marker=dict(size=12, color='black', symbol="cross",
-                                                     line=dict(color='black', width=1)),
-                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioName,
-                                         textposition='bottom right',
-                                         showlegend=False)
-        BM_trace_3A_2G = go.Scatter(x=[averages['BM_avg_GrowthofNetIncome']], y=[averages['BM_avg_MarketCap']],
-                                   mode='markers+text',
-                                   marker=dict(size=12, color='black', symbol="star",
-                                               line=dict(color='black', width=1)),
-                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='bottom right',
-                                   showlegend=False)
-        figure_3A_2G.add_trace(selected_trace_3A_2G)
-        figure_3A_2G.add_trace(BM_trace_3A_2G)
-        figure_3A_2G.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        figure_3A_3G = px.scatter(
-            grouped_df_3A_2, x="NetProfitMargin(%)", y="ReturnonTotalEquity(%)",
-            color="G4", size='Current Weight',
-            hover_data=['Name', 'Code', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net', 'GrowthofNetIncome(%)',
-                        'GrowthofNetSales(%)', 'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio',
-                        'TotalDebt/TotalAssets', 'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
-                        'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
-        )
-        selected_trace_3A_3G = go.Scatter(x=[averages['selected_avg_NetProfitMargin']], y=[averages['selected_avg_ReturnonTotalEquity']],
-                                         mode='markers+text',
-                                         marker=dict(size=12, color='black', symbol="cross",
-                                                     line=dict(color='black', width=1)),
-                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
-                                         textposition='bottom right',
-                                         showlegend=False)
-        BM_trace_3A_3G = go.Scatter(x=[averages['BM_avg_NetProfitMargin']], y=[averages['BM_avg_ReturnonTotalEquity']],
-                                   mode='markers+text',
-                                   marker=dict(size=12, color='black', symbol="star",
-                                               line=dict(color='black', width=1)),
-                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='bottom right',
-                                   showlegend=False)
-        figure_3A_3G.add_trace(selected_trace_3A_3G)
-        figure_3A_3G.add_trace(BM_trace_3A_3G)
-        figure_3A_3G.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        figure_3A_4G = px.scatter(
-            grouped_df_3A_2, x="PE_Ratio", y="ReturnonTotalEquity(%)",
-            color="G4", size='Current Weight',
-            hover_data=['Name', 'Code', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net', 'GrowthofNetIncome(%)',
-                        'GrowthofNetSales(%)',
-                        'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'], template="plotly_white"
-        )
-        selected_trace_3A_4G = go.Scatter(x=[averages['selected_avg_PERatio']], y=[averages['selected_avg_ReturnonTotalEquity']],
-                                         mode='markers+text',
-                                         marker=dict(size=12, color='black', symbol="cross",
-                                                     line=dict(color='black', width=1)),
-                                         text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
-                                         textposition='bottom right',
-                                         showlegend=False)
-        BM_trace_3A_4G = go.Scatter(x=[averages['BM_avg_PERatio']], y=[averages['BM_avg_ReturnonTotalEquity']],
-                                   mode='markers+text',
-                                   marker=dict(size=12, color='black', symbol="star",
-                                               line=dict(color='black', width=1)),
-                                   text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                   textposition='bottom right',
-                                   showlegend=False)
-        figure_3A_4G.add_trace(selected_trace_3A_4G)
-        figure_3A_4G.add_trace(BM_trace_3A_4G)
-        figure_3A_4G.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        figure_3A_5G = px.scatter(
-            grouped_df_3A_2, x="EarningsYield", y="GrowthofNetIncome(%)",
-            color="G4", size='Current Weight',
-            hover_data=['Name', 'Code', 'LastPrice', 'MarketCap', 'BasicEPS', 'DividendperShare-Net',
-                        'GrowthofNetIncome(%)',
-                        'GrowthofNetSales(%)',
-                        'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
-                        'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%', 'PE_Ratio', 'EarningsYield', 'PriceBook'],
-            template="plotly_white"
-        )
-        selected_trace_3A_5G = go.Scatter(x=[averages['selected_avg_EarningsYield']], y=[averages['selected_avg_GrowthofNetIncome']],
-                                          mode='markers+text',
-                                          marker=dict(size=12, color='black', symbol="cross",
-                                                      line=dict(color='black', width=1)),
-                                          text='Weighted Portfolio: ' + Selected_Portfolio.portfolioCode,
-                                          textposition='bottom right',
-                                          showlegend=False)
-        BM_trace_3A_5G = go.Scatter(x=[averages['BM_avg_EarningsYield']], y=[averages['BM_avg_GrowthofNetIncome']],
-                                    mode='markers+text',
-                                    marker=dict(size=12, color='black', symbol="star",
-                                                line=dict(color='black', width=1)),
-                                    text='Weighted Benchmark: ' + BM_AustShares_Portfolio.portfolioCode,
-                                    textposition='bottom right',
-                                    showlegend=False)
-        figure_3A_5G.add_trace(selected_trace_3A_5G)
-        figure_3A_5G.add_trace(BM_trace_3A_5G)
-        figure_3A_5G.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-
-        figure_3A_10G = go.Figure(go.Waterfall(
-            x=grouped_df_3A_2_sorted['Name'],
-            y=grouped_df_3A_2_sorted['Current Weight'],
-            textposition="outside",
-            connector={"line": {"color": "rgb(63, 63, 63)"}},
-        ))
-
-        figure_3A_10G.update_layout(
-            title={
-                "text": f"As at {dt_end_date:%d-%b-%Y}",
-                "font": {"size": 11}  # Adjust the font size as needed
-            },
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
 
         return [
             html.Div(style={'height': '2rem'}),
@@ -2060,7 +1925,9 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1 Drill Through Aus Eq Factor Characteristics"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3A_2G, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight', "G4",
+                                                               None, None, None, 800, 1.5))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2068,7 +1935,10 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2 Drill Through Aus Eq Factor Characteristics"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3A_3G, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
+                                                               "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                                               None, None, None, 800, 1.5))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2076,7 +1946,10 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3 Drill Through Aus Eq Factor Characteristics"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3A_4G, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
+                                                               "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                                               None, None, None, 800, 1.5))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2084,7 +1957,10 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4 Drill Through Aus Eq Factor Characteristics"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3A_5G, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
+                                                               "GrowthofNetIncome(%)", 'Current Weight', "G4",
+                                                               None, None, None, 800, 1.5))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2092,7 +1968,9 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 10 - Portfolio Building Blocks"),
-                            dbc.CardBody(dcc.Graph(figure=figure_3A_10G, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
+                                                      None, 800, None, None))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2100,7 +1978,10 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (Equal Weight Normalised)"),
-                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A_EW, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure', 'Selected EW Normalized', 'Category',
+                                                           None, "Equal Weighted Normalized Score", "Factor Measure",
+                                                           800))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2108,7 +1989,12 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Portfolio Summary Factor Characteristics (Market Cap Weight Normalised)"),
-                            dbc.CardBody(dcc.Graph(figure=fig_bar_3A_MCapW, style={'height': '800px'})),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
+                                                                'Selected MCap Normalized', 'Category',
+                                                                None, "Equal Weighted Normalized Score",
+                                                                "Factor Measure",
+                                                                800))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2682,133 +2568,21 @@ def render_page_content(pathname):
 
     elif pathname == "/22-Download":   # Not linked now - but keep - as the logica automatically saves to users machine
 
-        df_3alloc_sleeves = pd.concat(
-            [Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date, ['P_' + groupName + '_' + n]].T for n in
-             groupList], axis=1)
-        df_3alloc_sleeves.index = groupList
-        df_3alloc_sleeves['Current'] = df_3alloc_sleeves.sum(axis=1)
-        df_3alloc_sleeves = df_3alloc_sleeves[['Current']]
-        df_3alloc_sleeves.reset_index(inplace=True)
-        df_3alloc_sleeves.columns = ['GroupValue', 'Current']
-
-        df_3alloc_BMsleeves = pd.concat(
-            [Selected_Portfolio.df_L2_w.loc[dt_end_date:dt_end_date, ['BM_' + groupName + '_' + n]].T for n in
-             groupList], axis=1)
-        df_3alloc_BMsleeves.index = groupList
-        df_3alloc_BMsleeves['Current'] = df_3alloc_BMsleeves.sum(axis=1)
-        df_3alloc_BMsleeves = df_3alloc_BMsleeves[['Current']]
-        df_3alloc_BMsleeves.reset_index(inplace=True)
-        df_3alloc_BMsleeves.columns = ['GroupValue', 'Current']
-
-        # Below is dependent on df_3alloc_sleeves
-        row_values = []
-        allrows_values = []
-        group_df = Selected_Portfolio.df_L3_limits[Selected_Portfolio.df_L3_limits['Group'] == groupName]
-        for n, element in enumerate(groupList):
-            # Filter the DataFrame for the current group
-            group_df2 = group_df[group_df['GroupValue'] == groupList[n]]
-            row_values.append(groupList[n])
-            row_values.append(df_3alloc_sleeves.loc[n, "Current"])
-            # Check if there are any rows for the current group
-            if not group_df2.empty:
-                # Get the minimum value from the 'Min' column of the filtered DataFrame
-                row_values.append(group_df2['Min'].min())
-                row_values.append(group_df2['Max'].max())
-            else:
-                # If no rows are found for the current group, append None to the list
-                row_values.append(0)
-                row_values.append(100)
-
-            allrows_values.append(row_values)
-            row_values = []
-
-        column_names = ['Group Value', 'Current', 'Min', 'Max']
-
-        filtered_df_3_1 = pd.DataFrame(allrows_values, columns=column_names)
-
-        filtered_df_3_1['Max-Min'] = filtered_df_3_1['Max'] - filtered_df_3_1['Min']
-        figure_3_1 = px.bar(filtered_df_3_1, x='Group Value', y=['Min', 'Max-Min'])
-
-        figure_3_1.update_traces(marker_color='#3D555E', width=0.3, opacity=0,
-                                 selector=dict(name='Min'))  # Set color, width, and opacity for 'Min' bars
-        # figure_3_1.update_traces(marker_color='#3D555E', width=0.3,
-        #                   selector=dict(name='Max-Min'))  # Set color and width for 'Max-Min' bars
-
-        figure_3_1.update_traces(marker_color='#3D555E', width=0.3,
-                                 selector=dict(name='Max-Min'))  # Set color and width for 'Max-Min' bars
-
-        scatter_fig = px.scatter(filtered_df_3_1, x='Group Value', y='Current',
-                                 title='Current', color_discrete_sequence=['#1DC8F2'])
-        for trace in scatter_fig.data:
-            figure_3_1.add_trace(trace)
-
-        figure_3_1.update_layout(
-            showlegend=False,
-            margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
-            yaxis_title='Allocation Range (%)',
-            images=[dict(
-                source="../assets/atchisonlogo.png",
-                xref="paper", yref="paper",
-                x=0.98, y=1.05,
-                sizex=0.2, sizey=0.2,
-                xanchor="right", yanchor="bottom",
-                layer="below"
-            )],
-        )
-
-        df_3alloc_OWUW = pd.concat([Selected_Portfolio.df_L3vsL2_relw.loc[dt_start_date:dt_end_date,
-                                    ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        df_3alloc_OWUW.columns = groupList
-
-        df_3alloc_weights = pd.concat([Selected_Portfolio.df_L3_w.loc[dt_start_date:dt_end_date,
-                                       ['P_' + groupName + '_' + n]] for n in groupList], axis=1)
-        df_3alloc_weights.columns = groupList
-
-        df_3alloc_mgr_level = Selected_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                              Selected_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-        df_3alloc_mgr_level = df_3alloc_mgr_level.loc[:, (df_3alloc_mgr_level != 0).any()].T
-        df_3alloc_mgr_level = df_3alloc_mgr_level.rename_axis('Code')
-        df_3alloc_mgr_level = df_3alloc_mgr_level.merge(
-            Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type']], on='Code')
-        df_3alloc_mgr_level = df_3alloc_mgr_level.rename(columns={dt_end_date: 'Current Weight'})
-
-        df_3alloc_holding_level = df_3alloc_mgr_level
-        underlying_df = []
-        # Find if any of the held investments - are also available in the dataset as products with look through holdings
-        for index, value in enumerate(df_3alloc_holding_level.index):
-            if value in availablePortfolios:
-                print("Matched value:", value)
-                Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
-
-                underlying_df = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
-                                Underlying_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
-                underlying_df = underlying_df.loc[:, (underlying_df != 0).any()].T
-                underlying_df = underlying_df.rename_axis('Code')
-
-                underlying_df = underlying_df.merge(
-                    Selected_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
-                underlying_df = underlying_df.rename(columns={dt_end_date: 'Current Weight'})
-
-                # Find and print the 'Current Weight' in df_3alloc_holding_level
-                parent_weight_value = df_3alloc_holding_level.loc[value, 'Current Weight']
-                print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
-
-                # Multiply each value in 'Current Weight' column of underlying_df
-                underlying_df['Current Weight'] *= (parent_weight_value / 100)
-
-                # Remove the matched row from df_3alloc_holding_level
-                df_3alloc_holding_level = df_3alloc_holding_level.drop(index=value)
-
-                # Merge all rows from underlying_df into df_3alloc_holding_level
-                df_3alloc_holding_level = pd.concat([df_3alloc_holding_level, underlying_df])
-
-
-
         SAVEDIR = "./Outputs/" + Selected_Code
         CHECK_FOLDER = os.path.isdir(SAVEDIR)
         if not CHECK_FOLDER: os.makedirs(SAVEDIR)
-
         print(SAVEDIR)
+
+
+        # 3 FILL
+        df_3alloc_sleeves, df_3alloc_BMsleeves, df_3alloc_sleeve_ranges, df_3alloc_OWUW, df_3alloc_weights, df_3alloc_mgr_level, df_3alloc_holding_level = f_FILL_3alloc(
+            Selected_Portfolio)
+
+        #3A FILL
+        BM_AustShares_Portfolio = All_Portfolios[availablePortfolios.index("IOZ-AU")]
+        BM_SharesUniverse = BM_AustShares_Portfolio
+        df_3Aequity_AESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages = f_FILL_3Aequity(
+            Selected_Portfolio, BM_SharesUniverse)
 
         ## Populate Charts for Page 21 Reports
         return [
@@ -2836,17 +2610,39 @@ def render_page_content(pathname):
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', 'Current Asset Allocation - Manager Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Mgr_Level_1.html'),
+                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Manager Level', 800).write_html(SAVEDIR + "/" + Selected_Name + '_Mgr_Level_2.html'),
+                                                    'Current Asset Allocation - Manager Level',
+                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Holding Level', 800).write_html(SAVEDIR + "/" + Selected_Name + '_Holding_Level_1.html'),
+                                                    'Current Asset Allocation - Holding Level',
+                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', 'Current Asset Allocation - Holding Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Holding_Level_2.html'),
+                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_2.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
+                                    "G4",None, None, None, 800,
+                                    1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_1.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
+                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_2.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
+                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_3.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
+                                    "GrowthofNetIncome(%)", 'Current Weight', "G4",
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_4.html'),
+
+            f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
+                                      None, 800, None, None).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Alloc_Waterfall.html'),
+
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
                                       "Term", "Date", 800).write_html(SAVEDIR + "/" + Selected_Name + '_Eco_USInterestRates.html'),

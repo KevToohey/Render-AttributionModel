@@ -39,8 +39,8 @@ color_ACblue = "#1DC8F2"  #Blue
 color_ACorange = "#F27D11"  #Orange
 
 
-load_start_date = "2021-09-30"
-load_end_date = "2023-11-13"
+load_start_date = "2022-12-31"
+load_end_date = "2023-12-15"
 
 measures = [
     'MarketCap',

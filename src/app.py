@@ -2717,7 +2717,6 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             text_End_Date = tx_End_Date
             Alt1_Switch_On = alt1_on
             Alt2_Switch_On = alt2_on
-            print("Client Side Callback Run")
             print(f'Alt1_Switch_On: {Alt1_Switch_On}')
             print(f'Alt2_Switch_On: {Alt2_Switch_On}')
 

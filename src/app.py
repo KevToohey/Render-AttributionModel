@@ -403,7 +403,6 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
     set2 = set(indices_with_G1)
     common_elements = set1.intersection(set2)
     common_elements_list = list(common_elements)
-    print(common_elements_list)
 
     # Ensure that indices_with_G1 are valid indices in df_Input
     if len(common_elements_list) == 0:
@@ -416,7 +415,6 @@ def f_AssetClassContrib(df_Input, Input_G1_Name):
 # Create Report Fucntions
 
 def f_save_report(selected_report):
-    print("Made it to function call")
     print(f"Generating report for {selected_report}")
 
 # Create Sidebar %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1092,7 +1090,7 @@ def f_FILL_3alloc(Local_Portfolio):
     df_3alloc_mgr_level = df_3alloc_mgr_level.loc[:, (df_3alloc_mgr_level != 0).any()].T
     df_3alloc_mgr_level = df_3alloc_mgr_level.rename_axis('Code')
     df_3alloc_mgr_level = df_3alloc_mgr_level.merge(
-        Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type']], on='Code')
+        Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Type']], on='Code')
     df_3alloc_mgr_level = df_3alloc_mgr_level.rename(columns={dt_end_date: 'Current Weight'})
 
     df_3alloc_holding_level = df_3alloc_mgr_level
@@ -1100,7 +1098,6 @@ def f_FILL_3alloc(Local_Portfolio):
     # Find if any of the held investments - are also available in the dataset as products with look through holdings
     for index, value in enumerate(df_3alloc_holding_level.index):
         if value in availablePortfolios:
-            print("Matched value:", value)
             Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
 
             underlying_df = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
@@ -1109,12 +1106,11 @@ def f_FILL_3alloc(Local_Portfolio):
             underlying_df = underlying_df.rename_axis('Code')
 
             underlying_df = underlying_df.merge(
-                Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4']], on='Code')
+                Local_Portfolio.df_productList[['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Type']], on='Code')
             underlying_df = underlying_df.rename(columns={dt_end_date: 'Current Weight'})
 
             # Find and print the 'Current Weight' in df_3alloc_holding_level
             parent_weight_value = df_3alloc_holding_level.loc[value, 'Current Weight']
-            print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
 
             # Multiply each value in 'Current Weight' column of underlying_df
             underlying_df['Current Weight'] *= (parent_weight_value / 100)
@@ -1136,7 +1132,7 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
     BM_SharesUniverse_latest = BM_SharesUniverse_latest.loc[:, (BM_SharesUniverse_latest != 0).any()].T
     BM_SharesUniverse_latest = BM_SharesUniverse_latest.rename_axis('Code')
     BM_SharesUniverse_latest = BM_SharesUniverse_latest.merge(BM_SharesUniverse.df_productList[
-                                                                  ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'Type',
+                                                                  ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Type',
                                                                    'LastPrice', 'MarketCap', 'BasicEPS',
                                                                    'DividendperShare-Net', 'TotalAssets',
                                                                    'TotalLiabilities', 'GrowthofNetIncome(%)',
@@ -1154,13 +1150,12 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
     df_3Aequity_detail_0 = df_3Aequity_detail_0.loc[:, (df_3Aequity_detail_0 != 0).any()].T
     df_3Aequity_detail_0 = df_3Aequity_detail_0.rename_axis('Code')
     df_3Aequity_detail_0 = df_3Aequity_detail_0.merge(Local_Portfolio.df_productList[
-                                                          ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice',
-                                                           'MarketCap', 'BasicEPS',
+                                                          ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Type',
+                                                           'LastPrice', 'MarketCap', 'BasicEPS',
                                                            'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
                                                            'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
                                                            'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)',
-                                                           'PayoutRatio',
-                                                           'TotalDebt/TotalAssets',
+                                                           'PayoutRatio', 'TotalDebt/TotalAssets',
                                                            'NetProfitMargin(%)', 'InterestCover(EBIT)', 'ShortSell%',
                                                            'PE_Ratio', 'EarningsYield', 'PriceBook']], on='Code')
     df_3Aequity_detail_0 = df_3Aequity_detail_0.rename(columns={dt_end_date: 'Current Weight'})
@@ -1170,7 +1165,6 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
     underlying_df_3A_1 = []
     for index, value in enumerate(df_3Aequity_detail_0.index):
         if value in availablePortfolios:
-            print("Matched value:", value)
             Underlying_Portfolio = All_Portfolios[availablePortfolios.index(value)]
 
             underlying_df_3A_1 = Underlying_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
@@ -1180,7 +1174,7 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
 
             underlying_df_3A_1 = underlying_df_3A_1.merge(
                 Local_Portfolio.df_productList[
-                    ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
+                    ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'Type', 'LastPrice', 'MarketCap', 'BasicEPS',
                      'DividendperShare-Net', 'TotalAssets', 'TotalLiabilities',
                      'GrowthofNetIncome(%)', 'GrowthofNetSales(%)',
                      'GrowthofFreeCashFlow(%)', 'ReturnonTotalEquity(%)', 'PayoutRatio', 'TotalDebt/TotalAssets',
@@ -1190,7 +1184,6 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
 
             # Find and print the 'Current Weight' in filtered_df_3_7
             parent_weight_value = df_3Aequity_detail_0.loc[value, 'Current Weight']
-            print("Current Weight in df_3alloc_holding_level:", parent_weight_value)
 
             # Multiply each value in 'Current Weight' column of underlying_df_3_7
             underlying_df_3A_1['Current Weight'] *= (parent_weight_value / 100)
@@ -1278,8 +1271,8 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
     grouped_df_3A_2 = filtered_df_3A_2.groupby('Name').agg({
         'Code': 'first',  # Include 'Code' in the aggregation
         'Current Weight': 'sum',
-        'G0': 'first', 'G1': 'first', 'G2': 'first', 'G3': 'first', 'G4': 'first', 'Type': 'first',
-        'LastPrice': 'first', 'MarketCap': 'first', 'BasicEPS': 'first', 'DividendperShare-Net': 'first',
+        'G0': 'first', 'G1': 'first', 'G2': 'first', 'G3': 'first', 'G4': 'first', 'G5': 'first', 'G6': 'first',
+        'Type': 'first', 'LastPrice': 'first', 'MarketCap': 'first', 'BasicEPS': 'first', 'DividendperShare-Net': 'first',
         'GrowthofNetIncome(%)': 'first', 'GrowthofNetSales(%)': 'first', 'GrowthofFreeCashFlow(%)': 'first',
         'ReturnonTotalEquity(%)': 'first', 'PayoutRatio': 'first', 'TotalDebt/TotalAssets': 'first',
         'NetProfitMargin(%)': 'first', 'InterestCover(EBIT)': 'first', 'ShortSell%': 'first',
@@ -1348,9 +1341,6 @@ def render_page_content(pathname):
                                               ),
                                           ),
                                       ]),
-                                      print("Kev here "),
-                                      print(Alt1_Switch_On),
-
                                       html.Hr(),
                                       html.H6('Alternative 2:'),
                                       dbc.Row([
@@ -1580,7 +1570,6 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
-            print("got end")
         ]
 
     elif pathname == "/2-Risk":
@@ -1637,12 +1626,9 @@ def render_page_content(pathname):
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
         df_2risk_calmar3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
 
-        print(df_2risk_calmar3yr)
         # Return / <Max Drawdown
         df_2risk_calmar3yr = df_2risk_calmar3yr / -(df_2risk_drawdown3yr)
         df_2risk_calmar3yr = df_2risk_calmar3yr.dropna()
-
-        print(df_2risk_calmar3yr)
 
         # Information Ratio
         df_2risk_IR3yr = f_CalcRollingMonthlyAlpha(

@@ -2593,6 +2593,10 @@ def render_page_content(pathname):
         df_3Aequity_AESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages = f_FILL_3Aequity(
             Selected_Portfolio, BM_SharesUniverse)
 
+        df_2risk_drawdown = f_CalcDrawdown(
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+
         ## Populate Charts for Page 21 Reports
         return [
             html.Div(style={'height': '2rem'}),
@@ -2662,6 +2666,22 @@ def render_page_content(pathname):
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
                                       "Term", "Date", 800).write_html(SAVEDIR + "/" + Selected_Name + '_Eco_USInterestRates.html'),
+
+            f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
+                                     'Selected MCap Normalized', 'Category',
+                                     None, "Equal Weighted Normalized Score",
+                                     "Factor Measure",
+                                     800).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.html'),
+
+            f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
+                                     'Selected MCap Normalized', 'Category',
+                                     None, "Equal Weighted Normalized Score",
+                                     "Factor Measure",
+                                     800).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.svg'),
+
+
+
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Drawdown.svg'),
 
         ]
     elif pathname == "/30-Help":

@@ -7,6 +7,7 @@ import os
 import re
 import docx
 import base64
+import subprocess
 from docx import Document
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
@@ -2649,7 +2650,7 @@ def render_page_content(pathname):
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
                                     None, None, None, 800, 1.5).write_image(SAVEDIR + "/"
-                                                                            + Selected_Name + '_Aus_Equity_Financial_Ratios_3.eps'),
+                                                                            + Selected_Name + '_Aus_Equity_Financial_Ratios_3.svg'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",

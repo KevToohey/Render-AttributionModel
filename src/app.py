@@ -2616,6 +2616,8 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
 
+
+
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', 'Current Asset Allocation - Manager Level',
                                                     800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_1.html'),
@@ -2643,6 +2645,11 @@ def render_page_content(pathname):
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
                                     None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_3.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
+                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                    None, None, None, 800, 1.5).write_image(SAVEDIR + "/"
+                                                                            + Selected_Name + '_Aus_Equity_Financial_Ratios_3.eps'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",

@@ -200,7 +200,7 @@ body {
 }
 
 /* fix the width of the icons */
-.right_sidebar .nav-link i {
+.right_sidebar i {
   width: 1rem;
 }
 
@@ -216,7 +216,7 @@ body {
   visibility: visible;
   opacity: 1;
   color: #E7EAEB;
-  padding-left: 2rem; /* Add left padding to shift the text to the right */
+  padding-right: 2rem; /* Add left padding to shift the text to the right */
 }
 
 /* container for the sidebar header. make sure the contents don't wrap when
@@ -224,7 +224,7 @@ body {
  */
 .right_sidebar-header {
   display: flex;
-  justify-content: left;
+  justify-content: right;
   align-items: center;
   overflow: hidden;
   white-space: nowrap;
@@ -232,7 +232,7 @@ body {
 
 .right_sidebar-subheader {
   display: flex;
-  justify-content: left;
+  justify-content: right;
   align-items: center;
   overflow: hidden;
   white-space: nowrap;
@@ -241,16 +241,16 @@ body {
 /* position the header relative to the logo and hide by default */
 .right_sidebar-header h2 {
   opacity: 0;
-  margin-left: 1rem;
+  margin-right: 1rem;
   margin-bottom: 0;
   transition: opacity 0.2s ease-in-out;
 }
 
 .right_sidebar-subheader Div {
   opacity: 0;
-  margin-left: 1rem;
+  margin-right: 1rem;
   margin-bottom: 0;
-  margin-left: 7rem;
+  margin-right: 7rem;
   transition: opacity 0.2s ease-in-out;
 }
 
@@ -262,15 +262,15 @@ body {
 
 /* position the content relative to the collapsed sidebar */
 .content {
-  margin-left: 5rem;
-  margin-right: 2rem;
+  margin-left: 2rem;
+  margin-right: 5rem;
   padding: 2rem 1rem;
 }
 
 .right_sidebar .nav-link i {
   font-size: 1.5rem; /* Adjust the font-size as needed */
   vertical-align: top; /* Align the icons vertically in the middle */
-  text-align: left;
+  text-align: right;
   color: #1DC8F2;
 }
 

@@ -602,6 +602,7 @@ right_sidebar = html.Div(
             ],
             className="right_sidebar-header",
         ),
+        html.I(className="fa-solid fa-gear me-2"),
         html.Hr(),
         html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
         html.Hr(),

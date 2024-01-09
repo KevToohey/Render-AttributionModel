@@ -172,6 +172,118 @@ body {
   color: #3D555E; /* Change the color to green (replace with your desired color) */
 }
 
+/* RIGHT SIDEBAR SECTION */
+
+/* This creates a skinny side bar fixed to the left of the page */
+.right_sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3.5rem;
+  padding: 1rem 0rem;
+  background-color: #3D555E;
+  z-index: 1050;
+  transition: width 0.2s ease-in-out;
+}
+
+/* when the user hovers on the sidebar, expand it */
+.right_sidebar:hover {
+  width: 20rem;
+}
+
+/* make sure the contents of the navlink don't wrap when navbar collapses */
+.right_sidebar .nav-link {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* fix the width of the icons */
+.right_sidebar i {
+  width: 1rem;
+}
+
+/* hide the navlink labels by default */
+.right_sidebar .nav-link span {
+  visibility: hidden;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* when the sidebar is hovered, reveal the labels */
+.right_sidebar:hover .nav-link span {
+  visibility: visible;
+  opacity: 1;
+  color: #E7EAEB;
+  padding-right: 2rem; /* Add left padding to shift the text to the right */
+}
+
+/* container for the sidebar header. make sure the contents don't wrap when
+ * the sidebar is collapsed.
+ */
+.right_sidebar-header {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.right_sidebar-subheader {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* position the header relative to the logo and hide by default */
+.right_sidebar-header h2 {
+  opacity: 0;
+  margin-right: 1rem;
+  margin-bottom: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.right_sidebar-subheader Div {
+  opacity: 0;
+  margin-right: 1rem;
+  margin-bottom: 0;
+  margin-right: 7rem;
+  transition: opacity 0.2s ease-in-out;
+}
+
+
+/* reveal the header when the sidebar is toggled */
+.right_sidebar:hover .sidebar-header h2 {
+  opacity: 1;
+}
+
+/* position the content relative to the collapsed sidebar */
+.content {
+  margin-left: 2rem;
+  margin-right: 5rem;
+  padding: 2rem 1rem;
+}
+
+.right_sidebar .nav-link i {
+  font-size: 1.5rem; /* Adjust the font-size as needed */
+  vertical-align: top; /* Align the icons vertically in the middle */
+  text-align: right;
+  color: #1DC8F2;
+}
+
+.right_sidebar .nav-link.active i {
+  color: #3D555E; /* Change the color to green (replace with your desired color) */
+}
+
+.right_sidebar .nav-link.active span {
+  font-weight: bold;
+  color: #3D555E; /* Change the color to green (replace with your desired color) */
+}
+
+
 
 /* **** Kev Additions for Main Body */
 

@@ -420,13 +420,11 @@ def f_save_report(selected_report):
 
 # Create Sidebar %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-sidebar = html.Div(
+left_sidebar = html.Div(
     [
 
-        html.Span(html.I(className="fa-solid fa-thumbtack", style={"color": "#1DC8F2", "background-color": "#3D555E", "margin-right": "10rem"}),
-                    id="pin-toggle-button",
-                ),
-
+        html.Span(html.I(className="fa-solid fa-thumbtack", style={"color": "#1DC8F2", "background-color": "#3D555E", "margin-left": "1rem"}),
+                    id="pin-toggle-button", className="sidebar-header", n_clicks=0, style={'cursor': 'pointer'}),
         html.Div(
             [
                 html.H2("Atchison Analytics", style={"color": "#1DC8F2"}),
@@ -593,6 +591,25 @@ sidebar = html.Div(
     ],
     className="sidebar",
     id="sidebar-left-id",
+)
+
+
+right_sidebar = html.Div(
+    [
+        html.Div(
+            [
+                html.H2("Settings", style={"color": "#1DC8F2"}),
+            ],
+            className="right_sidebar-header",
+        ),
+        html.Hr(),
+        html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
+        html.Hr(),
+        html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
+
+    ],
+    className="right_sidebar",
+    id="sidebar-right-id",
 )
 
 # MAin AREA FIGURE FUNCTIONS
@@ -1326,8 +1343,9 @@ content = html.Div(id="page-content", children=[])
 
 app.layout = html.Div([
     dcc.Location(id="url"),
-    sidebar,
+    left_sidebar,
     content,
+    right_sidebar
 ])
 @app.callback(
     Output("page-content", "children"),
@@ -2784,6 +2802,16 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             return None, None, None, None, None, None
     else:
         return None, None, None, None, None, None
+
+
+@app.callback(
+    Output("sidebar-left-id", "style"),
+    Input("pin-toggle-button", "n_clicks"),
+    prevent_initial_call=True,
+)
+def toggle_sidebar(n_clicks):
+    width = "20rem" if n_clicks % 2 == 1 else "3.5rem"
+    return {"width": width}
 
 
 

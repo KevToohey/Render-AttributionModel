@@ -40,8 +40,8 @@ color_ACblue = "#1DC8F2"  #Blue
 color_ACorange = "#F27D11"  #Orange
 
 
-load_start_date = "2022-12-31"
-load_end_date = "2023-12-15"
+load_start_date = "2023-09-30"
+load_end_date = "2023-12-31"
 
 measures = [
     'MarketCap',
@@ -422,6 +422,11 @@ def f_save_report(selected_report):
 
 sidebar = html.Div(
     [
+
+        html.Span(html.I(className="fa-solid fa-thumbtack", style={"color": "#1DC8F2", "background-color": "#3D555E", "margin-right": "10rem"}),
+                    id="pin-toggle-button",
+                ),
+
         html.Div(
             [
                 html.H2("Atchison Analytics", style={"color": "#1DC8F2"}),
@@ -429,9 +434,12 @@ sidebar = html.Div(
             className="sidebar-header",
         ),
         dcc.Store(id='stored-portfolio-code', data={'key': Selected_Code}),
+        dcc.Store(id='stored-alt1-switch', data={'key': Alt1_Switch_On}),
+        dcc.Store(id='stored-alt2-switch', data={'key': Alt2_Switch_On}),
         html.Div(id='display-portfolio-code', style={"color": "#1DC8F2", "margin-left": "5rem"}, className="sidebar-subheader"),
         html.Hr(),
         html.Hr(style={'border-color': "#1DC8F2", 'width': '80%', 'margin': '0 auto'}),
+
         dbc.Nav(
             [
                 dbc.NavLink(
@@ -584,6 +592,7 @@ sidebar = html.Div(
         ),
     ],
     className="sidebar",
+    id="sidebar-left-id",
 )
 
 # MAin AREA FIGURE FUNCTIONS
@@ -1460,11 +1469,11 @@ def render_page_content(pathname):
         df_1perf_total = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
         df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Code != 'Off':
+        if Alt1_Switch_On != False:
             a1 = (((Alt1_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a1.columns = ['Alt 1 ('+Alt1_Code+')']
             df_1perf_total = pd.concat([df_1perf_total, a1], axis=1)
-        if Alt2_Code != 'Off':
+        if Alt2_Switch_On != False:
             a2 = (((Alt2_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_total = pd.concat([df_1perf_total, a2], axis=1)
@@ -1474,11 +1483,11 @@ def render_page_content(pathname):
             Selected_Portfolio.t_dates) * 100).T
 
         df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Code != 'Off':
+        if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
             a1.columns = ['Alt 1 ('+Alt1_Code+')']
             df_1perf_tSet = pd.concat([df_1perf_tSet, a1], axis=1)
-        if Alt2_Code != 'Off':
+        if Alt2_Switch_On != False:
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tSet = pd.concat([df_1perf_tSet, a2], axis=1)
@@ -1487,11 +1496,11 @@ def render_page_content(pathname):
             Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Selected_Portfolio.tME_dates) * 100).T
         df_1perf_tMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Code != 'Off':
+        if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
             a1.columns = ['Alt 1 ('+Alt1_Code+')']
             df_1perf_tMESet = pd.concat([df_1perf_tMESet, a1], axis=1)
-        if Alt2_Code != 'Off':
+        if Alt2_Switch_On != False:
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tMESet = pd.concat([df_1perf_tMESet, a2], axis=1)
@@ -1502,12 +1511,12 @@ def render_page_content(pathname):
 
         df_1perf_tQESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
 
-        if Alt1_Code != 'Off':
+        if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
             a1.columns = ['Alt 1 ('+Alt1_Code+')']
             df_1perf_tQESet = pd.concat([df_1perf_tQESet, a1], axis=1)
 
-        if Alt2_Code != 'Off':
+        if Alt2_Switch_On != False:
             a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
             a2.columns = ['Alt 2 ('+Alt2_Code+')']
             df_1perf_tQESet = pd.concat([df_1perf_tQESet, a2], axis=1)
@@ -2730,6 +2739,8 @@ def render_page_content(pathname):
     Output('display-portfolio-name', 'children'),
     Output('display-portfolio-type', 'children'),
     Output('stored-portfolio-code', 'data'),
+    Output('stored-alt1-switch', 'data'),
+    Output('stored-alt2-switch', 'data'),
     State('stored-portfolio-code', 'data'),
     State('url', 'pathname'),
     Input('portfolio-dropdown', 'value'),
@@ -2767,14 +2778,12 @@ def update_selected_portfolio(stored_value, pathname, selected_value, alt1_value
             text_End_Date = tx_End_Date
             Alt1_Switch_On = alt1_on
             Alt2_Switch_On = alt2_on
-            print(f'Alt1_Switch_On: {Alt1_Switch_On}')
-            print(f'Alt2_Switch_On: {Alt2_Switch_On}')
 
-            return Selected_Code, Selected_Name, Selected_Type, {'key': Selected_Code}
+            return Selected_Code, Selected_Name, Selected_Type, {'key': Selected_Code}, {'key': Alt1_Switch_On}, {'key': Alt2_Switch_On}
         else:
-            return None, None, None, None
+            return None, None, None, None, None, None
     else:
-        return None, None, None, None
+        return None, None, None, None, None, None
 
 
 

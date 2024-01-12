@@ -24,41 +24,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\src\ServerData\BON032\df_L1_w.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\src\ServerData\BON032\df_L2_w.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\src\ServerData\BON032\df_L3_contrib.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\src\ServerData\BON032\df_L3_r.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\src\ServerData\BON032\df_L3_w.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="\src\ServerData\IOZ-AU\df_L1_w.csv">
           <value>
             <Attribute>

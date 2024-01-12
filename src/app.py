@@ -1251,6 +1251,15 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
             # Handle the case where assetClassWeight is zero
             filtered_df_3A_1['Current Weight'] = np.nan
 
+        filtered_df_3A_2 = filtered_df_3A_1[(filtered_df_3A_1['Type'] == 'IEQStock')].copy()
+        assetClassWeight = filtered_df_3A_1['Current Weight'].sum()
+
+        if assetClassWeight != 0:
+            filtered_df_3A_2['Current Weight'] = filtered_df_3A_2['Current Weight'] / (assetClassWeight / 100)
+        else:
+            # Handle the case where assetClassWeight is zero
+            filtered_df_3A_2['Current Weight'] = np.nan
+
         # Portfolio and Benchmark Averages
         def f_calculate_normalized_percentile(selected_avg, bm_avg, data, metric):
             # Calculate the percentile of the selected value in the equal-weighted data distribution
@@ -1313,9 +1322,9 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
 
 
         # The Below Groups Holding Weights Where Multiple Products have same Look Through Exposure
-        filtered_df_3A_2 = filtered_df_3A_1.copy()
-        filtered_df_3A_2['Code'] = filtered_df_3A_2.index  # this keeps it as a normal column not just index
-        grouped_df_3A_2 = filtered_df_3A_2.groupby('Name').agg({
+        filtered_df_3A_3 = filtered_df_3A_1.copy()
+        filtered_df_3A_3['Code'] = filtered_df_3A_3.index  # this keeps it as a normal column not just index
+        grouped_df_3A_3 = filtered_df_3A_3.groupby('Name').agg({
             'Code': 'first',  # Include 'Code' in the aggregation
             'Current Weight': 'sum',
             'G0': 'first', 'G1': 'first', 'G2': 'first', 'G3': 'first', 'G4': 'first', 'G5': 'first', 'G6': 'first',
@@ -1327,9 +1336,9 @@ def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
         }).reset_index()
 
         # Weight Sorted
-        grouped_df_3A_2_sorted = grouped_df_3A_2.sort_values(by='Current Weight', ascending=False)
+        grouped_df_3A_3_sorted = grouped_df_3A_3.sort_values(by='Current Weight', ascending=False)
 
-        return df_portfolioAESummary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_2_sorted, averages
+        return df_portfolioAESummary, filtered_df_3A_1, grouped_df_3A_3, grouped_df_3A_3_sorted, averages
 
     except Exception as e:
         print(f"An error occurred in f_create_FILL_3a {e}")

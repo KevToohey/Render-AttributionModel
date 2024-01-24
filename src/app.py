@@ -108,6 +108,9 @@ class Portfolio:
         self.t_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/t_dates.parquet')
         self.tME_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/tME_dates.parquet')
         self.tQE_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/tQE_dates.parquet')
+        self.r_dates = pd.read_parquet('./ServerData/' + portfolioCode + '/r_dates.parquet')
+        self.rME_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/rME_dates.parquet')
+        self.rQE_dates = pd.read_parquet('./ServerData/'+portfolioCode+'/rQE_dates.parquet')
         self.df_productList = pd.read_parquet('./ServerData/'+portfolioCode+'/df_productList.parquet')
         self.df_accountList = pd.read_parquet('./ServerData/' + portfolioCode + '/df_accountList.parquet')
         self.df_BM_G1 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G1.parquet')
@@ -121,6 +124,8 @@ class Portfolio:
         self.portfolioType = self.summaryVariables['portfolioType'].iloc[0]
         self.t_StartDate = self.summaryVariables['t_StartDate'].iloc[0]
         self.t_EndDate = self.summaryVariables['t_EndDate'].iloc[0]
+        self.r_StartDate = self.summaryVariables['r_StartDate'].iloc[0]
+        self.bt_StartDate = self.summaryVariables['bt_StartDate'].iloc[0]
         self.groupName = self.df_BM_G1.columns[0]
         self.groupList = self.df_BM_G1[self.df_BM_G1.columns[0]].unique()
 
@@ -1059,10 +1064,85 @@ def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_he
 
 
 def f_FILL_1perf(Local_Portfolio):
-
     try:
+        df_1perf_daily = pd.concat(
+            [Local_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] * 100 for n in
+             groupList], axis=1)
+        df_1perf_daily.columns = groupList
 
-        return None
+        df_1perf_total = (((Local_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
+        df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        if Alt1_Switch_On != False:
+            a1 = (((Alt1_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            df_1perf_total = pd.concat([df_1perf_total, a1], axis=1)
+        if Alt2_Switch_On != False:
+            a2 = (((Alt2_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            df_1perf_total = pd.concat([df_1perf_total, a2], axis=1)
+
+        df_1perf_tSet = (f_CalcReturnTable(
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Local_Portfolio.t_dates) * 100).T
+
+        print(Local_Portfolio.tME_dates)
+        print(Local_Portfolio.df_accountList)
+
+        df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        if Alt1_Switch_On != False:
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.t_dates) * 100).T
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            df_1perf_tSet = pd.concat([df_1perf_tSet, a1], axis=1)
+        if Alt2_Switch_On != False:
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.t_dates) * 100).T
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            df_1perf_tSet = pd.concat([df_1perf_tSet, a2], axis=1)
+
+        df_1perf_tMESet = (f_CalcReturnTable(
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Local_Portfolio.tME_dates) * 100).T
+        df_1perf_tMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        if Alt1_Switch_On != False:
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tME_dates) * 100).T
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            df_1perf_tMESet = pd.concat([df_1perf_tMESet, a1], axis=1)
+        if Alt2_Switch_On != False:
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tME_dates) * 100).T
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            df_1perf_tMESet = pd.concat([df_1perf_tMESet, a2], axis=1)
+
+        df_1perf_rMESet = (f_CalcReturnTable(
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Local_Portfolio.tME_dates) * 100).T
+        df_1perf_rMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        if Alt1_Switch_On != False:
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.rME_dates) * 100).T
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            df_1perf_rMESet = pd.concat([df_1perf_rMESet, a1], axis=1)
+        if Alt2_Switch_On != False:
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.rME_dates) * 100).T
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            df_1perf_rMESet = pd.concat([df_1perf_rMESet, a2], axis=1)
+
+
+        df_1perf_tQESet = (f_CalcReturnTable(
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Local_Portfolio.tQE_dates) * 100).T
+
+        df_1perf_tQESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+
+        if Alt1_Switch_On != False:
+            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tQE_dates) * 100).T
+            a1.columns = ['Alt 1 (' + Alt1_Code + ')']
+            df_1perf_tQESet = pd.concat([df_1perf_tQESet, a1], axis=1)
+
+        if Alt2_Switch_On != False:
+            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tQE_dates) * 100).T
+            a2.columns = ['Alt 2 (' + Alt2_Code + ')']
+            df_1perf_tQESet = pd.concat([df_1perf_tQESet, a2], axis=1)
+
+        return df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet,
 
     except Exception as e:
         print(f"An error occurred in f_create_FILL_1: {e}")
@@ -1491,63 +1571,8 @@ def render_page_content(pathname):
         ]
     elif pathname == "/1-Performance":
 
-        df_1perf_daily = pd.concat([Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] * 100 for n in groupList], axis=1)
-        df_1perf_daily.columns = groupList
-
-        df_1perf_total = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                           ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
-        df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Switch_On != False:
-            a1 = (((Alt1_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
-            a1.columns = ['Alt 1 ('+Alt1_Code+')']
-            df_1perf_total = pd.concat([df_1perf_total, a1], axis=1)
-        if Alt2_Switch_On != False:
-            a2 = (((Alt2_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
-            a2.columns = ['Alt 2 ('+Alt2_Code+')']
-            df_1perf_total = pd.concat([df_1perf_total, a2], axis=1)
-
-        df_1perf_tSet = (f_CalcReturnTable(
-            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-            Selected_Portfolio.t_dates) * 100).T
-
-        df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Switch_On != False:
-            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
-            a1.columns = ['Alt 1 ('+Alt1_Code+')']
-            df_1perf_tSet = pd.concat([df_1perf_tSet, a1], axis=1)
-        if Alt2_Switch_On != False:
-            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.t_dates) * 100).T
-            a2.columns = ['Alt 2 ('+Alt2_Code+')']
-            df_1perf_tSet = pd.concat([df_1perf_tSet, a2], axis=1)
-
-        df_1perf_tMESet = (f_CalcReturnTable(
-            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-            Selected_Portfolio.tME_dates) * 100).T
-        df_1perf_tMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-        if Alt1_Switch_On != False:
-            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
-            a1.columns = ['Alt 1 ('+Alt1_Code+')']
-            df_1perf_tMESet = pd.concat([df_1perf_tMESet, a1], axis=1)
-        if Alt2_Switch_On != False:
-            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tME_dates) * 100).T
-            a2.columns = ['Alt 2 ('+Alt2_Code+')']
-            df_1perf_tMESet = pd.concat([df_1perf_tMESet, a2], axis=1)
-
-        df_1perf_tQESet = (f_CalcReturnTable(
-            Selected_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-            Selected_Portfolio.tQE_dates) * 100).T
-
-        df_1perf_tQESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
-
-        if Alt1_Switch_On != False:
-            a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
-            a1.columns = ['Alt 1 ('+Alt1_Code+')']
-            df_1perf_tQESet = pd.concat([df_1perf_tQESet, a1], axis=1)
-
-        if Alt2_Switch_On != False:
-            a2 = (f_CalcReturnTable(Alt2_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Selected_Portfolio.tQE_dates) * 100).T
-            a2.columns = ['Alt 2 ('+Alt2_Code+')']
-            df_1perf_tQESet = pd.concat([df_1perf_tQESet, a2], axis=1)
+        ## Populate dataframes for Page 1-Performance
+        df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet = f_FILL_1perf(Selected_Portfolio)
 
         ## Populate Charts for Page 1-Performance
         return [
@@ -2579,9 +2604,9 @@ def render_page_content(pathname):
                                           dbc.Col([
                                               dcc.RadioItems(
                                                   options=[
-                                                      {'label': ' 1 - Portfolio Summary Analysis', 'value': 'R1'},
-                                                      {'label': ' 2 - Product Factor Analysis', 'value': 'R2'},
-                                                      {'label': ' 3 - 3rd Type Report', 'value': 'R3'},
+                                                      {'label': ' 1 - 2-Page Summary Portfolio Analysis', 'value': 'R1'},
+                                                      {'label': ' 2 - Detailed Portfolio Analysis', 'value': 'R2'},
+                                                      {'label': ' 3 - Financial Markets Analysis', 'value': 'R3'},
                                                       {'label': ' 4 - 4th Type Report', 'value': 'R4'},
                                                       {'label': ' 5 - 5th Type Report', 'value': 'R5'},
                                                   ],
@@ -2834,83 +2859,120 @@ def toggle_sidebar(n_clicks):
 def save_report_to_terminal(n_clicks, selected_report):
     if n_clicks is not None:
 
+        ########################################## Create & Populate Word document #######################
+        print("Current Working Directory:", os.getcwd())
+
         # Define Content for Word Report
         if selected_report == 'R1':
-            print('Report is Portfolio Summary')
+            print('Report is 2-Page Summary Portfolio Analysis')
+            ########################################## Create & Populate Word document #######################
+            doc = Document('./assets/Template-Short.docx')
+            table_number = 1
+            figure_number = 1
+            # Header section
+            # header_section = doc.sections[0]
+            # header = header_section.header
+            # header_text = header.paragraphs[0]
+            # header_text.text = "ATCHISON"
+            ## Heading page
+            title_para = doc.add_paragraph()
+            title = title_para.add_run(Selected_Name)
+            title.alignment = 2
+            title.font.name = 'Arial'
+            title.font.size = docx.shared.Pt(18)
+            title.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+            sub = doc.add_paragraph()
+            subsub = sub.add_run('Period to ' + dt_end_date.strftime('%d %B %Y'))
+            subsub.alignment = 1
+            subsub.font.name = 'Arial'
+            subsub.font.size = docx.shared.Pt(14)
+            subsub.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+
+            ############################################### 1 Executive Summary ########################################
+            doc.add_paragraph('Performance Summary', style='BodyStyle')
+
+
+
+            #
+
+            # Save Document to Local System
+            SAVEDIR = "./Outputs/" + Selected_Code
+            CHECK_FOLDER = os.path.isdir(SAVEDIR)
+            if not CHECK_FOLDER: os.makedirs(SAVEDIR)
+            docsavename = SAVEDIR + "/" + Selected_Name + " Performance Summary - " + text_End_Date + ".docx"
+            doc.save(docsavename)
 
         elif selected_report == 'R2':
-            print('Report is Product Quant Analysis')
+            print('Detailed Portfolio Analysis')
+
+            ########################################## Create & Populate Word document #######################
+            doc = Document('./assets/Template.docx')
+            table_number = 1
+            figure_number = 1
+            # Header section
+            # header_section = doc.sections[0]
+            # header = header_section.header
+            # header_text = header.paragraphs[0]
+            # header_text.text = "ATCHISON"
+            ## Heading page
+            title_para = doc.add_paragraph()
+            title = title_para.add_run(Selected_Name)
+            title.alignment = 2
+            title.font.name = 'Arial'
+            title.font.size = docx.shared.Pt(26)
+            title.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+            sub = doc.add_paragraph()
+            subsub = sub.add_run('Review of Investment Portfolio ' + str(dt_end_date))
+            subsub.alignment = 1
+            subsub.font.name = 'Arial'
+            subsub.font.size = docx.shared.Pt(16)
+            subsub.font.color.rgb = docx.shared.RGBColor(255, 255, 255)
+            doc.add_page_break()
+            ## Table of content
+            ToC = doc.add_paragraph()
+            toc_run = ToC.add_run('Table of Contents')
+            toc_run.font.name = 'Arial'
+            toc_run.font.size = docx.shared.Pt(16)
+            toc_run.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
+            paragraph = doc.add_paragraph()
+            run = paragraph.add_run()
+            fldChar = OxmlElement('w:fldChar')  # creates a new element
+            fldChar.set(qn('w:fldCharType'), 'begin')  # sets attribute on element
+            instrText = OxmlElement('w:instrText')
+            instrText.set(qn('xml:space'), 'preserve')  # sets attribute on element
+            instrText.text = 'TOC \\o "1-5" \\h \\z \\u'  # change 1-3 depending on heading levels you need
+            fldChar2 = OxmlElement('w:fldChar')
+            fldChar2.set(qn('w:fldCharType'), 'separate')
+            fldChar3 = OxmlElement('w:t')
+            fldChar3.text = "Right-click to update field."
+            fldChar2.append(fldChar3)
+            fldChar4 = OxmlElement('w:fldChar')
+            fldChar4.set(qn('w:fldCharType'), 'end')
+            r_element = run._r
+            r_element.append(fldChar)
+            r_element.append(instrText)
+            r_element.append(fldChar2)
+            r_element.append(fldChar4)
+            p_element = paragraph._p
+            doc.add_page_break()
+            ############################################### 1 Executive Summary ########################################
+            doc.add_heading("Executive Summary", 1)
+
+            #
+
+            # Save Document to Local System
+            SAVEDIR = "./Outputs/" + Selected_Code
+            CHECK_FOLDER = os.path.isdir(SAVEDIR)
+            if not CHECK_FOLDER: os.makedirs(SAVEDIR)
+            docsavename = SAVEDIR + "/" + Selected_Name + " Quant Analysis - " + text_End_Date + ".docx"
+            doc.save(docsavename)
+
+        elif selected_report == 'R3':
+            print('Financial Markets Analysis')
 
         else:
             return None
 
-        ########################################## Create & Populate Word document #######################
-        print("Current Working Directory:", os.getcwd())
-
-        doc = Document('./assets/Template.docx')
-        table_number = 1
-        figure_number = 1
-        # Header section
-        # header_section = doc.sections[0]
-        # header = header_section.header
-        # header_text = header.paragraphs[0]
-        # header_text.text = "ATCHISON"
-        ## Heading page
-        title_para = doc.add_paragraph()
-        title = title_para.add_run(Selected_Name)
-        title.alignment = 2
-        title.font.name = 'Arial'
-        title.font.size = docx.shared.Pt(26)
-        title.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
-        sub = doc.add_paragraph()
-        subsub = sub.add_run('Review of Investment Portfolio ' + str(dt_end_date))
-        subsub.alignment = 1
-        subsub.font.name = 'Arial'
-        subsub.font.size = docx.shared.Pt(16)
-        subsub.font.color.rgb = docx.shared.RGBColor(255, 255, 255)
-        doc.add_page_break()
-        ## Table of content
-        ToC = doc.add_paragraph()
-        toc_run = ToC.add_run('Table of Contents')
-        toc_run.font.name = 'Arial'
-        toc_run.font.size = docx.shared.Pt(16)
-        toc_run.font.color.rgb = docx.shared.RGBColor(117, 193, 4)
-        paragraph = doc.add_paragraph()
-        run = paragraph.add_run()
-        fldChar = OxmlElement('w:fldChar')  # creates a new element
-        fldChar.set(qn('w:fldCharType'), 'begin')  # sets attribute on element
-        instrText = OxmlElement('w:instrText')
-        instrText.set(qn('xml:space'), 'preserve')  # sets attribute on element
-        instrText.text = 'TOC \\o "1-5" \\h \\z \\u'  # change 1-3 depending on heading levels you need
-        fldChar2 = OxmlElement('w:fldChar')
-        fldChar2.set(qn('w:fldCharType'), 'separate')
-        fldChar3 = OxmlElement('w:t')
-        fldChar3.text = "Right-click to update field."
-        fldChar2.append(fldChar3)
-        fldChar4 = OxmlElement('w:fldChar')
-        fldChar4.set(qn('w:fldCharType'), 'end')
-        r_element = run._r
-        r_element.append(fldChar)
-        r_element.append(instrText)
-        r_element.append(fldChar2)
-        r_element.append(fldChar4)
-        p_element = paragraph._p
-        doc.add_page_break()
-        ############################################### 1 Executive Summary ########################################
-        doc.add_heading("Executive Summary", 1)
-
-
-#
-
-        # Save Document to Local System
-
-
-        SAVEDIR = "./Outputs/"+Selected_Code
-        CHECK_FOLDER = os.path.isdir(SAVEDIR)
-        if not CHECK_FOLDER: os.makedirs(SAVEDIR)
-
-        docsavename = SAVEDIR+"/"+Selected_Name+" Quant Analysis - "+text_End_Date+".docx"
-        doc.save(docsavename)
 
 
         f_save_report(selected_report)

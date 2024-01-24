@@ -1086,8 +1086,6 @@ def f_FILL_1perf(Local_Portfolio):
             Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Local_Portfolio.t_dates) * 100).T
 
-        print(Local_Portfolio.tME_dates)
-        print(Local_Portfolio.df_accountList)
 
         df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
         if Alt1_Switch_On != False:
@@ -1112,9 +1110,11 @@ def f_FILL_1perf(Local_Portfolio):
             a2.columns = ['Alt 2 (' + Alt2_Code + ')']
             df_1perf_tMESet = pd.concat([df_1perf_tMESet, a2], axis=1)
 
+        print(Local_Portfolio.rME_dates)
+
         df_1perf_rMESet = (f_CalcReturnTable(
             Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
-            Local_Portfolio.tME_dates) * 100).T
+            Local_Portfolio.rME_dates) * 100).T
         df_1perf_rMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
         if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.rME_dates) * 100).T
@@ -1572,7 +1572,7 @@ def render_page_content(pathname):
     elif pathname == "/1-Performance":
 
         ## Populate dataframes for Page 1-Performance
-        df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet = f_FILL_1perf(Selected_Portfolio)
+        df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet = f_FILL_1perf(Selected_Portfolio)
 
         ## Populate Charts for Page 1-Performance
         return [
@@ -1594,7 +1594,7 @@ def render_page_content(pathname):
                             dbc.Tab([
                                 dbc.Card([
                                     dbc.CardHeader(
-                                        "Chart 1: Total Portfolio Performance - as at Last Price " +
+                                        "Chart 1: Total Portfolio Performance - as at Month End" +
                                         Selected_Portfolio.tME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
                                     dbc.CardBody([dcc.Graph(figure=f_create_BAR_figure(df_1perf_tMESet, 'group', None, "Return (%, %p.a.)", "Date", 450)),
                                                   html.Hr(),
@@ -1606,7 +1606,7 @@ def render_page_content(pathname):
                             dbc.Tab([
                                 dbc.Card([
                                     dbc.CardHeader(
-                                        "Chart 1: Total Portfolio Performance - as at Last Price " +
+                                        "Chart 1: Total Portfolio Performance - as at Quarter End" +
                                         Selected_Portfolio.tQE_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
                                     dbc.CardBody([dcc.Graph(figure=f_create_BAR_figure(df_1perf_tQESet, 'group', None, "Return (%, %p.a.)", "Date", 450)),
                                                   html.Hr(),
@@ -1627,6 +1627,22 @@ def render_page_content(pathname):
                                                                            striped=True, bordered=True, hover=True)
                                                   ]),
                                 ], color="primary", outline=True)], label="To Latest Daily",
+                                active_label_style={"background-color": "#1DC8F2"},
+                                label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+
+                            dbc.Tab([
+                                dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 1: Total Portfolio Performance - as at Month End (Reporting Start)" +
+                                        Selected_Portfolio.rME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+                                    dbc.CardBody([dcc.Graph(
+                                        figure=f_create_BAR_figure(df_1perf_rMESet, 'group', None, "Return (%, %p.a.)",
+                                                                   "Date", 450)),
+                                                  html.Hr(),
+                                                  dbc.Table.from_dataframe(df_1perf_rMESet.T.round(2), index=True,
+                                                                           striped=True, bordered=True, hover=True)
+                                                  ]),
+                                ], color="primary", outline=True)], label="Reporting (Month End)",
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
 

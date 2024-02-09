@@ -653,7 +653,7 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
             images=[dict(
                 source=f"data:image/png;base64,{base64.b64encode(open('./assets/atchisonlogo.png', 'rb').read()).decode()}",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.2, sizey=0.2,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -705,7 +705,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -757,9 +757,9 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=dict(
@@ -807,9 +807,9 @@ def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, 
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=dict(
@@ -855,7 +855,7 @@ def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_t
             "images": [{
                 "source": "../assets/atchisonlogo.png",
                 "xref": "paper", "yref": "paper",
-                "x": 0.98, "y": 1.05,
+                "x": 0.98, "y": 0.02,
                 "sizex": 0.1, "sizey": 0.1,
                 "xanchor": "right", "yanchor": "bottom",
                 "layer": "below"
@@ -912,9 +912,9 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=None,
@@ -978,7 +978,7 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -1018,7 +1018,7 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -1066,7 +1066,7 @@ def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, i
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -1140,7 +1140,7 @@ def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_he
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -2779,7 +2779,8 @@ def render_page_content(pathname):
         SAVEDIR = "./Outputs/" + Selected_Code
         CHECK_FOLDER = os.path.isdir(SAVEDIR)
         if not CHECK_FOLDER: os.makedirs(SAVEDIR)
-        print(SAVEDIR)
+
+        print("**** Atchison Analytics Dash App Has Downloaded A Report to: " +SAVEDIR)
 
         #1 FILL
         df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet = f_FILL_1perf(Selected_Portfolio)
@@ -2829,73 +2830,79 @@ def render_page_content(pathname):
             f_create_BAR_figure(
                 df_1perf_backtestSet,
                 'group', None, "Return (%, %p.a.)",
-                "Date", 450).write_html(SAVEDIR + "/" + Selected_Name + '_PerformanceTable-Backtest.html'),
+                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
 
             f_create_BAR_figure(
                 df_1perf_rMESet,
                 'group', None, "Return (%, %p.a.)",
-                "Date", 450).write_html(SAVEDIR + "/" + Selected_Name + '_PerformanceTable.html'),
+                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
+
+            f_create_LINE_figure(10000 * (1 + (df_1perf_total / 100)), None,
+                                                    "Value of $10,000 Investment ($)", "Date",
+                                                    450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
+
+            f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
 
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', 'Current Asset Allocation - Manager Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_1.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     'Current Asset Allocation - Manager Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_2.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     'Current Asset Allocation - Holding Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_1.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', 'Current Asset Allocation - Holding Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_2.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
                                     "G4",None, None, None, 800,
-                                    1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_1.html'),
+                                    1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_1.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_3.html'),
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_3.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_image(SAVEDIR + "/"
-                                                                            + Selected_Name + '_Aus_Equity_Financial_Ratios_3.svg'),
+                                    None, None, None, 800, 1.5).write_image(SAVEDIR + "/Charts/"
+                                                                            + '_Aus_Equity_Financial_Ratios_3.svg'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_4.html'),
+                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_4.html'),
 
             f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
-                                      None, 800, None, None).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Alloc_Waterfall.html'),
+                                      None, 800, None, None).write_html(SAVEDIR + "/Charts/" + 'Aus_Equity_Alloc_Waterfall.html'),
 
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
-                                      "Term", "Date", 800).write_html(SAVEDIR + "/" + Selected_Name + '_Eco_USInterestRates.html'),
+                                      "Term", "Date", 800).write_html(SAVEDIR + "/Charts/" + 'Eco_USInterestRates.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.html'),
+                                     800).write_html(SAVEDIR + "/Charts/" + 'Aus_Equity_Factor_Ratios.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.svg'),
+                                     800).write_image(SAVEDIR + "/Charts/" + 'Aus_Equity_Factor_Ratios.svg'),
 
 
 
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Drawdown.svg'),
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_image(SAVEDIR + "/Charts/" + 'Aus_Equity_Drawdown.svg'),
 
         ]
     elif pathname == "/30-Help":

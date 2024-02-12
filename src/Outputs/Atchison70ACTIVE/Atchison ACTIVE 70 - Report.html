@@ -1,39 +1,62 @@
+<!DOCTYPE html>
 <html>
-        <html>
-        <body style="background-color:#3D555E; color: #E7EAEB;">
-        
-        <h1 style="color: #1DC8F2;">
-        Atchison ACTIVE 70 - Portfolio Analytics
-        </h1>
-        
+<head>
+    <style>
+        body {
+            background-color: #3D555E;
+            color: #E7EAEB;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
 
-        <H2 style="color: #E7EAEB;">Performance
-        </H2>
-        
-        <iframe src="./Atchison Active 70 SMA_Performance.html"
-              height="500px" width="950px" style="border: none;">
-        </iframe>
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-left: 10%;
+            margin-right: 10%;
+        }
 
-        <H2 style="color: #E7EAEB;">Asset Allocation
-        </H2>
- 
-        <iframe src="./Atchison Active 70 SMA_Alloc_Mgr_Level_2.html"
-              height="850px" width="950px" style="border: none;">
-        </iframe>
+        .content {
+            max-width: 950px;
+        }
 
-        <H2 style="color: #E7EAEB;">Manager Structure
-        </H2>
+        h1 {
+            color: #1DC8F2;
+            text-align: center;
+        }
 
-        <iframe src="./Atchison Active 70 SMA_Alloc_Mgr_Level_2.html"
-              height="850px" width="950px" style="border: none;">
-        </iframe>
-        
-        <H2 style="color: #E7EAEB;">Look Through Holdings
-        </H2>
-        
-        <iframe src="./Atchison Active 70 SMA_Alloc_Holding_Level_2.html"
-              height="850px" width="950px" style="border: none;">
-        </iframe>
+        h2 {
+            color: #E7EAEB;
+            margin-top: 20px;
+        }
 
-        </body>
-        </html>
+        iframe {
+            display: block;
+            margin: 20px auto;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Atchison ACTIVE 70 - Portfolio Analytics</h1>
+
+            <h2>Performance</h2>
+            <iframe src="./Charts/1_Performance-Daily.html" height="500px" width="950px"></iframe>
+            <iframe src="./Charts/1_Performance-Cum.html" height="500px" width="950px"></iframe>
+
+            <h2>Portfolio Construction</h2>
+            <iframe src="./Charts/_Alloc_Mgr_Level_1.html" height="850px" width="950px"></iframe>
+            <iframe src="./Charts/_Alloc_Holding_Level_2.html" height="850px" width="950px"></iframe>
+
+            <h2>Look Through of Australian Equity Portfolio</h2>
+            <iframe src="./Charts/3a_Aus_Equity_Financial_Ratios_1.html" height="850px" width="950px"></iframe>
+            <iframe src="./Charts/_Aus_Equity_Financial_Ratios_2.html" height="850px" width="950px"></iframe>
+            <iframe src="./Charts/_Aus_Equity_Financial_Ratios_3.html" height="850px" width="950px"></iframe>
+            <iframe src="./Charts/_Aus_Equity_Financial_Ratios_4.html" height="850px" width="950px"></iframe>
+        </div>
+    </div>
+</body>
+</html>

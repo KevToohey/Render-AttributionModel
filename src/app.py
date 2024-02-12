@@ -927,7 +927,7 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
         return []  # or any default return value
 
 
-def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color, in_title, in_y_title, in_x_title, in_height, in_dot_scale):
+def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color, in_title, in_y_title, in_x_title, in_height, in_dot_scale, x_range=None, y_range=None):
     custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
                      'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
                      'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
@@ -946,6 +946,12 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
             hover_data=['Name', 'Code', 'LastPrice']+measures,
             template="plotly_white"
         )
+
+        # Update x-axis and y-axis ranges if specified
+        if x_range is not None:
+            figure_out.update_xaxes(range=x_range)
+        if y_range is not None:
+            figure_out.update_yaxes(range=y_range)
 
         valid_x = re.sub(r'[^a-zA-Z0-9]', '', in_x)
         valid_y = re.sub(r'[^a-zA-Z0-9]', '', in_y)
@@ -2135,7 +2141,7 @@ def render_page_content(pathname):
                             dbc.CardHeader("Chart 1 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5, x_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2146,7 +2152,8 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                                                "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5,
+                                                               x_range=(-250, 250), y_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2157,7 +2164,7 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                                                "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5, y_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2168,7 +2175,8 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                                                "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5,
+                                                               x_range=(-0.5, 0.5), y_range=(-1000, 1000)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2779,6 +2787,8 @@ def render_page_content(pathname):
         SAVEDIR = "./Outputs/" + Selected_Code
         CHECK_FOLDER = os.path.isdir(SAVEDIR)
         if not CHECK_FOLDER: os.makedirs(SAVEDIR)
+        CHECK_FOLDER = os.path.isdir(SAVEDIR+"/Charts")
+        if not CHECK_FOLDER: os.makedirs(SAVEDIR+"/Charts")
 
         print("**** Atchison Analytics Dash App Has Downloaded A Report to: " +SAVEDIR)
 
@@ -2806,6 +2816,7 @@ def render_page_content(pathname):
 
         ## Populate Charts for Page 21 Reports
         return [
+
             html.Div(style={'height': '2rem'}),
             html.H2('Automated HTML Downloader',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
@@ -2827,17 +2838,22 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
+
+            f_create_BAR_figure(
+                df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']],
+                'group', None, "Return (%, %p.a.)",
+                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main.html'),
+
             f_create_BAR_figure(
                 df_1perf_backtestSet,
                 'group', None, "Return (%, %p.a.)",
                 "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
 
-            f_create_BAR_figure(
-                df_1perf_rMESet,
-                'group', None, "Return (%, %p.a.)",
-                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
+            f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None,
+                                "Return (%, %p.a.)",
+                                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Daily.html'),
 
-            f_create_LINE_figure(10000 * (1 + (df_1perf_total / 100)), None,
+            f_create_LINE_figure(10000 * (1 + (df_1perf_total[[Selected_Code, 'Peer Group', 'Objective']] / 100)), None,
                                                     "Value of $10,000 Investment ($)", "Date",
                                                     450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
 
@@ -2845,41 +2861,41 @@ def render_page_content(pathname):
 
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
-                                                    'Current Weight', 'Current Asset Allocation - Manager Level',
+                                                    'Current Weight', '',
                                                     800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Manager Level',
+                                                    '',
                                                     800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Holding Level',
+                                                    '',
                                                     800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
-                                                    'Current Weight', 'Current Asset Allocation - Holding Level',
+                                                    'Current Weight', '',
                                                     800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
                                     "G4",None, None, None, 800,
-                                    1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_1.html'),
+                                    1.5, x_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_1.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 800, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_3.html'),
+                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_3.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_image(SAVEDIR + "/Charts/"
+                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_image(SAVEDIR + "/Charts/"
                                                                             + '_Aus_Equity_Financial_Ratios_3.svg'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_4.html'),
+                                    None, None, None, 800, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_4.html'),
 
             f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
                                       None, 800, None, None).write_html(SAVEDIR + "/Charts/" + 'Aus_Equity_Alloc_Waterfall.html'),

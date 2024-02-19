@@ -125,6 +125,7 @@ class Portfolio:
         self.groupList = self.df_BM_G1[self.df_BM_G1.columns[0]].unique()
 
 
+
 def f_get_subfolder_names(path):
     subfolder_names = []
 
@@ -139,6 +140,8 @@ def f_get_subfolder_names(path):
 # IMPORT Datafiles stored on Kev's GitHUB Registry
 # Must be linked to "./ServerData/"
 availablePortfolios = f_get_subfolder_names('./ServerData/')
+
+df_marketCommentary = pd.read_csv('./ServerData/MarketCommentary.csv', encoding='latin1') #utf-8-sig
 
 # Create Portfolio class objects (import all data)
 All_Portfolios = []
@@ -629,6 +632,9 @@ right_sidebar = html.Div(
 )
 
 # MAin AREA FIGURE FUNCTIONS
+
+def f_create_SUMMARY_REPORT_HTML(in_df_marketCommentary):
+    print("Create report")
 
 def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_title, in_height):
 
@@ -2811,8 +2817,99 @@ def render_page_content(pathname):
             Selected_Portfolio, BM_SharesUniverse)
 
         df_2risk_drawdown = f_CalcDrawdown(
-            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
-        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'Peer_TOTAL']])
+        df_2risk_drawdown.columns = [Selected_Code, 'Peer Group']
+
+        #5 CONTRIBUTION
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date]
+        if checkData[0] > 0:
+            df_5cont_sleeves = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                             ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                          for n in groupList], axis=1)
+            df_5cont_sleeves.columns = groupList
+
+        else:
+            df_5cont_sleeves = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] > 0:
+            df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "Australian Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_auseq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+        if checkData[0] > 0:
+            df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "International Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_inteq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] > 0:
+            df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Real Assets")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_real = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] > 0:
+            df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Alternatives")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_alts = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] > 0:
+            df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Long Duration")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_duration = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] > 0:
+            df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Floating Rate")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_floating = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] > 0:
+            df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_cash = pd.DataFrame()
+
+        df_6comp_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                         ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                      for n in groupList], axis=1)
+        df_6comp_sleeves.columns = groupList
+        df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                "Australian Shares")] + 1).cumprod() - 1) * 100)
+        df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                "International Shares")] + 1).cumprod() - 1) * 100)
+        df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                               "Real Assets")] + 1).cumprod() - 1) * 100)
+        df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                               "Alternatives")] + 1).cumprod() - 1) * 100)
+        df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Long Duration")] + 1).cumprod() - 1) * 100)
+        df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Floating Rate")] + 1).cumprod() - 1) * 100)
+        df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
 
         ## Populate Charts for Page 21 Reports
         return [
@@ -2862,19 +2959,19 @@ def render_page_content(pathname):
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_1.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Mgr_Level_2.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_1.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '_Alloc_Holding_Level_2.html'),
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
                                     "G4",None, None, None, 800,
@@ -2882,43 +2979,72 @@ def render_page_content(pathname):
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 800, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_3.html'),
-
-            f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
-                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_image(SAVEDIR + "/Charts/"
-                                                                            + '_Aus_Equity_Financial_Ratios_3.svg'),
+                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_3.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '_Aus_Equity_Financial_Ratios_4.html'),
+                                    None, None, None, 800, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_4.html'),
 
             f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
-                                      None, 800, None, None).write_html(SAVEDIR + "/Charts/" + 'Aus_Equity_Alloc_Waterfall.html'),
+                                      None, 800, None, None).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Alloc_Waterfall.html'),
 
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
-                                      "Term", "Date", 800).write_html(SAVEDIR + "/Charts/" + 'Eco_USInterestRates.html'),
+                                      "Term", "Date", 800).write_html(SAVEDIR + "/Charts/" + '20_Eco_USInterestRates.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_html(SAVEDIR + "/Charts/" + 'Aus_Equity_Factor_Ratios.html'),
+                                     800).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_image(SAVEDIR + "/Charts/" + 'Aus_Equity_Factor_Ratios.svg'),
+                                     800).write_image(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.svg'),
 
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '2_Drawdown.html'),
 
+            f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_AusEq_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_IntEq_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Real_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Alts_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Duration_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Floating_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Cash_Sleeve_Contribs.html'),
 
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_image(SAVEDIR + "/Charts/" + 'Aus_Equity_Drawdown.svg'),
+            f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_IntEq_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Real_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Alts_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Duration_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Floating_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html'),
+
+            f_create_SUMMARY_REPORT_HTML(df_marketCommentary),
 
         ]
     elif pathname == "/30-Help":

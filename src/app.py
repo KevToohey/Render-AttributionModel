@@ -2964,6 +2964,11 @@ def render_page_content(pathname):
 
             f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
 
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '2_Drawdown.html'),
+
+            f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 450).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Ranges.html'),
+
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
@@ -2980,6 +2985,11 @@ def render_page_content(pathname):
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
                                                     800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
+
+            f_create_BAR_figure(df_3alloc_OWUW, 'relative', None, "Overweight / Underweight (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '3_Allocation_OW_UW.html'),
+
+            f_create_BAR_figure(df_3alloc_weights, 'stack', "Portfolio Sleeve Weights Through Time",
+                                       "Weight (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '3_Allocation_History.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
                                     "G4",None, None, None, 800,
@@ -3015,8 +3025,6 @@ def render_page_content(pathname):
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
                                      800).write_image(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.svg'),
-
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '2_Drawdown.html'),
 
             f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
                 SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html'),

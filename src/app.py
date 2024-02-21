@@ -31,17 +31,12 @@ from pandas.tseries.offsets import MonthEnd
 from dateutil.relativedelta import relativedelta
 from dash_iconify import DashIconify
 
+pd.set_option('display.max_columns', None)
+
 
 # LOAD INPUTS ##################
-color_ACdarkblue = "#3D555E"  #BG Grey/Green
-color_ACwhite = "#E7EAEB"  #Off White
-color_ACgreen = "#93F205"  #Green
-color_ACblue = "#1DC8F2"  #Blue
-color_ACorange = "#F27D11"  #Orange
-
-
 load_start_date = "2023-09-30"
-load_end_date = "2023-12-31"
+load_end_date = "2024-1-31"
 
 measures = [
     'MarketCap',
@@ -130,6 +125,7 @@ class Portfolio:
         self.groupList = self.df_BM_G1[self.df_BM_G1.columns[0]].unique()
 
 
+
 def f_get_subfolder_names(path):
     subfolder_names = []
 
@@ -145,6 +141,8 @@ def f_get_subfolder_names(path):
 # Must be linked to "./ServerData/"
 availablePortfolios = f_get_subfolder_names('./ServerData/')
 
+df_marketCommentary = pd.read_csv('./ServerData/MarketCommentary.csv', encoding='latin1') #utf-8-sig
+
 # Create Portfolio class objects (import all data)
 All_Portfolios = []
 All_PortfolioNames = []
@@ -156,7 +154,7 @@ for code in availablePortfolios:
     n += 1
 
 # Initialise Globals changed by reach app calls (at bottom)
-Selected_Portfolio = All_Portfolios[3]
+Selected_Portfolio = All_Portfolios[2]
 Selected_Code = Selected_Portfolio.portfolioCode
 Selected_Name = Selected_Portfolio.portfolioName
 Selected_Type = Selected_Portfolio.portfolioType
@@ -166,7 +164,7 @@ Alt1_Code = Alt1_Portfolio.portfolioCode
 Alt1_Name = Alt1_Portfolio.portfolioName
 Alt1_Type = Alt1_Portfolio.portfolioType
 
-Alt2_Portfolio = All_Portfolios[2]
+Alt2_Portfolio = All_Portfolios[4]
 Alt2_Code = Alt2_Portfolio.portfolioCode
 Alt2_Name = Alt2_Portfolio.portfolioName
 Alt2_Type = Alt2_Portfolio.portfolioType
@@ -183,6 +181,21 @@ dt_start_date = pd.to_datetime(text_Start_Date)
 dt_end_date = pd.to_datetime(text_End_Date)
 groupName = Selected_Portfolio.groupName
 groupList = Selected_Portfolio.groupList
+
+color_ACdarkblue = "#3D555E"  #BG Grey/Green
+color_ACdarkblue60 = "#86959B"  #BG Grey/Green
+color_ACdarkblue130 = "#223137"  #BG Grey/Green
+color_ACdarkblue30 = "#C1C9CC"  #BG Grey/Green
+color_ACwhite = "#E7EAEB"  #Off White
+color_ACgreen = "#93F205"  #Green
+color_ACgreen60 = "#C0F992"  #Green
+color_ACgreen130 = "#599602"  #Green
+color_ACblue = "#1DC8F2"  #Blue
+color_ACblue60 = "#93DFF8"  #Blue
+color_ACblue130 = "#0E7B96"  #Blue
+color_ACorange = "#F27D11"  #Orange
+color_ACorange60 = "#FCB384"  #Orange
+color_ACorange130 = "#964B06"  #Orange
 
 # START APP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -329,9 +342,9 @@ def f_CalcRollingMonthlyAlpha(df_Input, window):
 
     monthly_returns.replace(0.0000, np.nan, inplace=True)
     monthly_returns[' vs SAA Benchmark'] = monthly_returns['P_TOTAL'] - monthly_returns['BM_G1_TOTAL']
-    monthly_returns[' vs Peer Manager'] = monthly_returns['P_TOTAL'] - monthly_returns['Peer_TOTAL']
+    monthly_returns[' vs Peer Group'] = monthly_returns['P_TOTAL'] - monthly_returns['Peer_TOTAL']
 
-    alphaOutput = monthly_returns[[' vs SAA Benchmark', ' vs Peer Manager']].loc[dt_start_date:dt_end_date]
+    alphaOutput = monthly_returns[[' vs SAA Benchmark', ' vs Peer Group']].loc[dt_start_date:dt_end_date]
 
 
     return alphaOutput
@@ -620,7 +633,18 @@ right_sidebar = html.Div(
 
 # MAin AREA FIGURE FUNCTIONS
 
+def f_create_SUMMARY_REPORT_HTML(in_df_marketCommentary):
+    print("Create report")
+
 def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_title, in_height):
+
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         z = df_input.values.T
         y = pd.to_numeric(df_input.columns)
@@ -635,7 +659,7 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
             images=[dict(
                 source=f"data:image/png;base64,{base64.b64encode(open('./assets/atchisonlogo.png', 'rb').read()).decode()}",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.2, sizey=0.2,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -661,6 +685,14 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
         return []  # or any default return value
 
 def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
+
     try:
         figure_out = px.line(
             df_input,
@@ -668,6 +700,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             y=[c for c in df_input.columns if c is not None],
             labels={"x": "Date", "y": "Values"},
             template="plotly_white",
+            color_discrete_map=custom_colors
         )
         figure_out.update_layout(
             title=in_title,
@@ -678,7 +711,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -703,6 +736,14 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
 
 
 def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
+
     try:
         figure_out = px.bar(
             df_input,
@@ -710,7 +751,8 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             y=[c for c in df_input.columns if c is not None],
             labels={"x": "Date", "y": "Values"},
             template="plotly_white",
-            barmode=in_type
+            barmode=in_type,
+            color_discrete_map = custom_colors
         )
         figure_out.update_layout(
             title=in_title,
@@ -721,9 +763,9 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=dict(
@@ -745,6 +787,13 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
 
 
 def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, in_y_title, in_x_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         figure_out = px.bar(
             df_input,
@@ -764,9 +813,9 @@ def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, 
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=dict(
@@ -790,6 +839,13 @@ def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, 
         return []  # or any default return value
 
 def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_title, in_height, y_min, y_max):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         figure_out = go.Figure(go.Waterfall(
             x=df_input[in_x],
@@ -805,7 +861,7 @@ def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_t
             "images": [{
                 "source": "../assets/atchisonlogo.png",
                 "xref": "paper", "yref": "paper",
-                "x": 0.98, "y": 1.05,
+                "x": 0.98, "y": 0.02,
                 "sizex": 0.1, "sizey": 0.1,
                 "xanchor": "right", "yanchor": "bottom",
                 "layer": "below"
@@ -828,6 +884,13 @@ def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_t
 
 
 def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         figure_out = px.bar(
             df_input,
@@ -855,9 +918,9 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
-                xanchor="right", yanchor="bottom",
+                xanchor="right", yanchor="top",
                 layer="below"
             )],
             legend=None,
@@ -870,7 +933,14 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
         return []  # or any default return value
 
 
-def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color, in_title, in_y_title, in_x_title, in_height, in_dot_scale):
+def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color, in_title, in_y_title, in_x_title, in_height, in_dot_scale, x_range=None, y_range=None):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         figure_out = px.scatter(
             df_input,
@@ -882,6 +952,12 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
             hover_data=['Name', 'Code', 'LastPrice']+measures,
             template="plotly_white"
         )
+
+        # Update x-axis and y-axis ranges if specified
+        if x_range is not None:
+            figure_out.update_xaxes(range=x_range)
+        if y_range is not None:
+            figure_out.update_yaxes(range=y_range)
 
         valid_x = re.sub(r'[^a-zA-Z0-9]', '', in_x)
         valid_y = re.sub(r'[^a-zA-Z0-9]', '', in_y)
@@ -914,7 +990,7 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -930,12 +1006,22 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
 
 
 def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
+
     try:
         figure_out = px.pie(
             df_input,
             values=in_values,
             names=in_names,
-            template="plotly_white"
+            template="plotly_white",
+            color=in_names,  # Use G1 column values for color assignment
+            color_discrete_map=custom_colors
         )
         figure_out.update_layout(
             title=in_title,
@@ -944,7 +1030,7 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -966,13 +1052,24 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
         return []  # or any default return value
 
 def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
+
     try:
+
         figure_out = px.sunburst(
             df_input,
             path=in_path,
             names=in_names,
             values=in_values,
-            template="plotly_white"
+            template="plotly_white",
+            color=in_path[0],  # Use G1 column values for color assignment
+            color_discrete_map=custom_colors
         )
         figure_out.update_layout(
             title=in_title,
@@ -981,7 +1078,7 @@ def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, i
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -995,6 +1092,13 @@ def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, i
         return []  # or any default return value
 
 def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_height):
+    custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
+                     'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
+                     'Growth': color_ACdarkblue, 'Defensive': color_ACdarkblue130,
+                     'Australian Shares': color_ACgreen, 'International Shares': color_ACgreen130,
+                     'Real Assets': color_ACorange, 'Alternatives': color_ACorange130,
+                     'Long Duration': color_ACblue, 'Floating Rate': color_ACblue130,
+                     'Cash': color_ACblue60}
     try:
         # Now create Polar dataframe sets for summary chart
         figure_out = go.Figure()
@@ -1048,7 +1152,7 @@ def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_he
             images=[dict(
                 source="../assets/atchisonlogo.png",
                 xref="paper", yref="paper",
-                x=0.98, y=1.05,
+                x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
                 xanchor="right", yanchor="bottom",
                 layer="below"
@@ -1072,7 +1176,10 @@ def f_FILL_1perf(Local_Portfolio):
 
         df_1perf_total = (((Local_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']] + 1).cumprod() - 1) * 100)
-        df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        df_1perf_total.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Objective']
+
+        print("Here,,,")
+        print(df_1perf_total)
         if Alt1_Switch_On != False:
             a1 = (((Alt1_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL']] + 1).cumprod() - 1) * 100)
             a1.columns = ['Alt 1 (' + Alt1_Code + ')']
@@ -1087,7 +1194,8 @@ def f_FILL_1perf(Local_Portfolio):
             Local_Portfolio.t_dates) * 100).T
 
 
-        df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        df_1perf_tSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Objective']
+
         if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.t_dates) * 100).T
             a1.columns = ['Alt 1 (' + Alt1_Code + ')']
@@ -1100,7 +1208,8 @@ def f_FILL_1perf(Local_Portfolio):
         df_1perf_tMESet = (f_CalcReturnTable(
             Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Local_Portfolio.tME_dates) * 100).T
-        df_1perf_tMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        df_1perf_tMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Objective']
+
         if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tME_dates) * 100).T
             a1.columns = ['Alt 1 (' + Alt1_Code + ')']
@@ -1113,9 +1222,14 @@ def f_FILL_1perf(Local_Portfolio):
         print(Local_Portfolio.rME_dates)
 
         df_1perf_rMESet = (f_CalcReturnTable(
-            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Local_Portfolio.rME_dates) * 100).T
-        df_1perf_rMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        df_1perf_rMESet.columns = [Selected_Code, 'Peer Group', 'Inflation']
+
+        df_1perf_rMESet["Outperformance vs Peers"] = df_1perf_rMESet[Selected_Code] - df_1perf_rMESet['Peer Group']
+        df_1perf_rMESet["Outperformance vs Inflation"] = df_1perf_rMESet[Selected_Code] - df_1perf_rMESet['Inflation']
+
         if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.rME_dates) * 100).T
             a1.columns = ['Alt 1 (' + Alt1_Code + ')']
@@ -1130,7 +1244,7 @@ def f_FILL_1perf(Local_Portfolio):
             Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Local_Portfolio.tQE_dates) * 100).T
 
-        df_1perf_tQESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager', 'Objective']
+        df_1perf_tQESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Objective']
 
         if Alt1_Switch_On != False:
             a1 = (f_CalcReturnTable(Alt1_Portfolio.df_L3_r.loc[:, ['P_TOTAL']], Local_Portfolio.tQE_dates) * 100).T
@@ -1142,7 +1256,7 @@ def f_FILL_1perf(Local_Portfolio):
             a2.columns = ['Alt 2 (' + Alt2_Code + ')']
             df_1perf_tQESet = pd.concat([df_1perf_tQESet, a2], axis=1)
 
-        return df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet,
+        return df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet
 
     except Exception as e:
         print(f"An error occurred in f_create_FILL_1: {e}")
@@ -1574,6 +1688,10 @@ def render_page_content(pathname):
         ## Populate dataframes for Page 1-Performance
         df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet = f_FILL_1perf(Selected_Portfolio)
 
+        df_1perf_backtestSet = df_1perf_tMESet
+        df_1perf_backtestSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']
+        df_1perf_backtestSet = df_1perf_backtestSet[[Selected_Code, 'Peer Group', 'Inflation']]
+
         ## Populate Charts for Page 1-Performance
         return [
             html.Div(style={'height': '2rem'}),
@@ -1633,16 +1751,38 @@ def render_page_content(pathname):
                             dbc.Tab([
                                 dbc.Card([
                                     dbc.CardHeader(
-                                        "Chart 1: Total Portfolio Performance - as at Month End (Reporting Start)" +
-                                        Selected_Portfolio.rME_dates.loc[0, 'Date'].strftime("(%d %b %Y)")),
+
+                                        "Chart 1: Total Portfolio Performance - as at " +
+                                        Selected_Portfolio.rME_dates.loc[0, 'Date'].strftime("%d %b %Y")),
                                     dbc.CardBody([dcc.Graph(
-                                        figure=f_create_BAR_figure(df_1perf_rMESet, 'group', None, "Return (%, %p.a.)",
+                                        figure=f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None, "Return (%, %p.a.)",
+
                                                                    "Date", 450)),
                                                   html.Hr(),
                                                   dbc.Table.from_dataframe(df_1perf_rMESet.T.round(2), index=True,
                                                                            striped=True, bordered=True, hover=True)
                                                   ]),
-                                ], color="primary", outline=True)], label="Reporting (Month End)",
+
+                                ], color="primary", outline=True)], label="Month End Date (Reporting)",
+                                active_label_style={"background-color": "#1DC8F2"},
+                                label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
+
+                            dbc.Tab([
+                                dbc.Card([
+                                    dbc.CardHeader(
+                                        "Chart 1: Total Portfolio Performance - as at " +
+                                        Selected_Portfolio.rME_dates.loc[0, 'Date'].strftime("%d %b %Y")),
+                                    dbc.CardBody([dcc.Graph(
+                                        figure=f_create_BAR_figure(
+                                            df_1perf_backtestSet,
+                                            'group', None, "Return (%, %p.a.)",
+                                            "Date", 450)),
+                                        html.Hr(),
+                                        dbc.Table.from_dataframe(df_1perf_backtestSet.T.round(2), index=True,
+                                                                 striped=True, bordered=True, hover=True)
+                                    ]),
+                                ], color="primary", outline=True)], label="Backtest (Reporting)",
+
                                 active_label_style={"background-color": "#1DC8F2"},
                                 label_style={"background-color": "#E7EAEB", "color": "#3D555E"}),
 
@@ -1651,15 +1791,17 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 2: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450))),
+                            dbc.CardHeader("Chart 2: Portfolio Cumulative Total Returns"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(10000*(1+(df_1perf_total/100)), None, "Value of $10,000 Investment ($)", "Date",
+                                                            450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 3: Portfolio Total Returns (L3)"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_1perf_total, None, "Cumulative Return (%)", "Date", 450))),
+                            dbc.CardHeader("Chart 3: Example Portfolio Return Chart - Daily Asset Sleeve Returns"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -1670,62 +1812,61 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
 
             ], align="center", className="mb-3"),
-
         ]
 
     elif pathname == "/2-Risk":
         df_2risk_drawdown = f_CalcDrawdown(
             Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
-        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         # Based on 30 day Window - Daily Data annualised (252 trading days)
         df_2risk_vol30 = f_CalcRollingDailyVol(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date-timedelta(days=30)):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 30, 252) *100
-        df_2risk_vol30.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_vol30.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         # Based on 90 day Window - Daily Data annualised (252 trading days)
         df_2risk_vol90 = f_CalcRollingDailyVol(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date-timedelta(days=90)):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 90, 252) * 100
-        df_2risk_vol90.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_vol90.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         # Based on 1 Year Monthly data Windows - Monthly Data annualised (12 months)
         df_2risk_vol1yr = f_CalcRollingMonthlyVol(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=364)):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 12, 12) * 100
-        df_2risk_vol1yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_vol1yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         df_2risk_vol3yr = f_CalcRollingMonthlyVol(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3*365-1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12) * 100
-        df_2risk_vol3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_vol3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         df_2risk_sharpe3yr = f_CalcRollingMonthlySharpe(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3*365-1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12, 0)
-        df_2risk_sharpe3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_sharpe3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         df_2risk_batting3yr = f_CalcRollingMonthlyBattingAverage(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) * 100
-        df_2risk_batting3yr.columns = ['SAA Benchmark', 'Peer Manager']
+        df_2risk_batting3yr.columns = ['SAA Benchmark', 'Peer Group']
 
         df_2risk_drawdown3yr = f_CalcRollingDrawdown(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) -1
-        df_2risk_drawdown3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_drawdown3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         df_2risk_TE3yr = f_CalcRollingMonthlyTrackingError(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12) * 100
-        df_2risk_TE3yr.columns = ['SAA Benchmark', 'Peer Manager']
+        df_2risk_TE3yr.columns = ['SAA Benchmark', 'Peer Group']
 
         # Calmar Ratio
         df_2risk_calmar3yr = f_CalcRollingMonthlyReturn(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
-        df_2risk_calmar3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+        df_2risk_calmar3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         # Return / <Max Drawdown
         df_2risk_calmar3yr = df_2risk_calmar3yr / -(df_2risk_drawdown3yr)
@@ -1735,7 +1876,7 @@ def render_page_content(pathname):
         df_2risk_IR3yr = f_CalcRollingMonthlyAlpha(
             Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
             ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) *100
-        df_2risk_IR3yr.columns = ['SAA Benchmark', 'Peer Manager']
+        df_2risk_IR3yr.columns = ['SAA Benchmark', 'Peer Group']
         # Return / Tracking Error
         df_2risk_IR3yr = df_2risk_IR3yr / (df_2risk_TE3yr)
 
@@ -2014,7 +2155,7 @@ def render_page_content(pathname):
                             dbc.CardHeader("Chart 1 Drill Through Aus Eq Factor Characteristics"),
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5, x_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2025,7 +2166,8 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                                                "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5,
+                                                               x_range=(-250, 250), y_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2036,7 +2178,7 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                                                "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5, y_range=(-150, 150)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2047,7 +2189,8 @@ def render_page_content(pathname):
                             dbc.CardBody(dcc.Graph(
                                 figure=f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                                                "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                                               None, None, None, 800, 1.5))),
+                                                               None, None, None, 800, 1.5,
+                                                               x_range=(-0.5, 0.5), y_range=(-1000, 1000)))),
 
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2658,7 +2801,17 @@ def render_page_content(pathname):
         SAVEDIR = "./Outputs/" + Selected_Code
         CHECK_FOLDER = os.path.isdir(SAVEDIR)
         if not CHECK_FOLDER: os.makedirs(SAVEDIR)
-        print(SAVEDIR)
+        CHECK_FOLDER = os.path.isdir(SAVEDIR+"/Charts")
+        if not CHECK_FOLDER: os.makedirs(SAVEDIR+"/Charts")
+
+        print("**** Atchison Analytics Dash App Has Downloaded A Report to: " +SAVEDIR)
+
+        #1 FILL
+        df_1perf_daily, df_1perf_total, df_1perf_tSet, df_1perf_tMESet, df_1perf_tQESet, df_1perf_rMESet = f_FILL_1perf(Selected_Portfolio)
+
+        df_1perf_backtestSet = df_1perf_tMESet
+        df_1perf_backtestSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']
+        df_1perf_backtestSet = df_1perf_backtestSet[[Selected_Code, 'Peer Group', 'Inflation']]
 
 
         # 3 FILL
@@ -2672,11 +2825,103 @@ def render_page_content(pathname):
             Selected_Portfolio, BM_SharesUniverse)
 
         df_2risk_drawdown = f_CalcDrawdown(
-            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
-        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Manager']
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'Peer_TOTAL']])
+        df_2risk_drawdown.columns = [Selected_Code, 'Peer Group']
+
+        #5 CONTRIBUTION
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date]
+        if checkData[0] > 0:
+            df_5cont_sleeves = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                             ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                          for n in groupList], axis=1)
+            df_5cont_sleeves.columns = groupList
+
+        else:
+            df_5cont_sleeves = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] > 0:
+            df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "Australian Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_auseq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+        if checkData[0] > 0:
+            df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "International Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_inteq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] > 0:
+            df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Real Assets")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_real = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] > 0:
+            df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Alternatives")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_alts = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] > 0:
+            df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Long Duration")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_duration = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] > 0:
+            df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Floating Rate")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_floating = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] > 0:
+            df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+        else:
+            df_5cont_cash = pd.DataFrame()
+
+        df_6comp_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                         ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                      for n in groupList], axis=1)
+        df_6comp_sleeves.columns = groupList
+        df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                "Australian Shares")] + 1).cumprod() - 1) * 100)
+        df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                "International Shares")] + 1).cumprod() - 1) * 100)
+        df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                               "Real Assets")] + 1).cumprod() - 1) * 100)
+        df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                               "Alternatives")] + 1).cumprod() - 1) * 100)
+        df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Long Duration")] + 1).cumprod() - 1) * 100)
+        df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Floating Rate")] + 1).cumprod() - 1) * 100)
+        df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
 
         ## Populate Charts for Page 21 Reports
         return [
+
             html.Div(style={'height': '2rem'}),
             html.H2('Automated HTML Downloader',
                     style={'textAlign': 'center', 'color': "#3D555E"}),
@@ -2699,67 +2944,115 @@ def render_page_content(pathname):
             ], align="center", className="mb-3"),
 
 
+            f_create_BAR_figure(
+                df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']],
+                'group', None, "Return (%, %p.a.)",
+                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main.html'),
+
+            f_create_BAR_figure(
+                df_1perf_backtestSet,
+                'group', None, "Return (%, %p.a.)",
+                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
+
+            f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None,
+                                "Return (%, %p.a.)",
+                                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Daily.html'),
+
+            f_create_LINE_figure(10000 * (1 + (df_1perf_total[[Selected_Code, 'Peer Group', 'Objective']] / 100)), None,
+                                                    "Value of $10,000 Investment ($)", "Date",
+                                                    450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
+
+            f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
 
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
-                                                    'Current Weight', 'Current Asset Allocation - Manager Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_1.html'),
+                                                    'Current Weight', '',
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Manager Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Mgr_Level_2.html'),
+                                                    '',
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
-                                                    'Current Asset Allocation - Holding Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_1.html'),
+                                                    '',
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
-                                                    'Current Weight', 'Current Asset Allocation - Holding Level',
-                                                    800).write_html(SAVEDIR + "/" + Selected_Name + '_Alloc_Holding_Level_2.html'),
+                                                    'Current Weight', '',
+                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
                                     "G4",None, None, None, 800,
-                                    1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_1.html'),
+                                    1.5, x_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_1.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 800, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_3.html'),
-
-            f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
-                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_image(SAVEDIR + "/"
-                                                                            + Selected_Name + '_Aus_Equity_Financial_Ratios_3.svg'),
+                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_3.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Financial_Ratios_4.html'),
+                                    None, None, None, 800, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_4.html'),
 
             f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
-                                      None, 800, None, None).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Alloc_Waterfall.html'),
+                                      None, 800, None, None).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Alloc_Waterfall.html'),
 
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
-                                      "Term", "Date", 800).write_html(SAVEDIR + "/" + Selected_Name + '_Eco_USInterestRates.html'),
+                                      "Term", "Date", 800).write_html(SAVEDIR + "/Charts/" + '20_Eco_USInterestRates.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_html(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.html'),
+                                     800).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Factor_Ratios.svg'),
+                                     800).write_image(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.svg'),
 
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '2_Drawdown.html'),
 
+            f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_AusEq_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_IntEq_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Real_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Alts_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Duration_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Floating_Sleeve_Contribs.html'),
+            f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '5_Cash_Sleeve_Contribs.html'),
 
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_image(SAVEDIR + "/" + Selected_Name + '_Aus_Equity_Drawdown.svg'),
+            f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_IntEq_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Real_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Alts_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Duration_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Floating_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
+                SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html'),
+
+            f_create_SUMMARY_REPORT_HTML(df_marketCommentary),
 
         ]
     elif pathname == "/30-Help":

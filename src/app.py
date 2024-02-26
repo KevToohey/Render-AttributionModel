@@ -35,7 +35,7 @@ pd.set_option('display.max_columns', None)
 
 
 # LOAD INPUTS ##################
-load_start_date = "2023-09-30"
+load_start_date = "2022-12-31"
 load_end_date = "2024-1-31"
 
 measures = [
@@ -2450,9 +2450,12 @@ def render_page_content(pathname):
             df_5cont_sleeves = pd.DataFrame()'''
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+
         if checkData[0] > 0:
+            print("Australian Shares > 0")
             df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
         else:
+            print("Australian Shares = nil")
             df_5cont_auseq = pd.DataFrame()
 
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
@@ -2813,6 +2816,103 @@ def render_page_content(pathname):
         df_1perf_backtestSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']
         df_1perf_backtestSet = df_1perf_backtestSet[[Selected_Code, 'Peer Group', 'Inflation']]
 
+        # RISK FILL
+        df_2risk_drawdown = f_CalcDrawdown(
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        # Based on 30 day Window - Daily Data annualised (252 trading days)
+        df_2risk_vol30 = f_CalcRollingDailyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=30)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 30, 252) * 100
+        df_2risk_vol30.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        # Based on 90 day Window - Daily Data annualised (252 trading days)
+        df_2risk_vol90 = f_CalcRollingDailyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=90)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 90, 252) * 100
+        df_2risk_vol90.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        # Based on 1 Year Monthly data Windows - Monthly Data annualised (12 months)
+        df_2risk_vol1yr = f_CalcRollingMonthlyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=364)):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 12, 12) * 100
+        df_2risk_vol1yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        df_2risk_vol3yr = f_CalcRollingMonthlyVol(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12) * 100
+        df_2risk_vol3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        df_2risk_sharpe3yr = f_CalcRollingMonthlySharpe(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12, 0)
+        df_2risk_sharpe3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        df_2risk_batting3yr = f_CalcRollingMonthlyBattingAverage(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) * 100
+        df_2risk_batting3yr.columns = ['SAA Benchmark', 'Peer Group']
+
+        df_2risk_drawdown3yr = f_CalcRollingDrawdown(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) - 1
+        df_2risk_drawdown3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        df_2risk_TE3yr = f_CalcRollingMonthlyTrackingError(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36, 12) * 100
+        df_2risk_TE3yr.columns = ['SAA Benchmark', 'Peer Group']
+
+        # Calmar Ratio
+        df_2risk_calmar3yr = f_CalcRollingMonthlyReturn(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) * 100
+        df_2risk_calmar3yr.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
+
+        # Return / <Max Drawdown
+        df_2risk_calmar3yr = df_2risk_calmar3yr / -(df_2risk_drawdown3yr)
+        df_2risk_calmar3yr = df_2risk_calmar3yr.dropna()
+
+        # Information Ratio
+        df_2risk_IR3yr = f_CalcRollingMonthlyAlpha(
+            Selected_Portfolio.df_L3_r.loc[(dt_start_date - timedelta(days=(3 * 365 - 1))):dt_end_date,
+            ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']], 36) * 100
+        df_2risk_IR3yr.columns = ['SAA Benchmark', 'Peer Group']
+        # Return / Tracking Error
+        df_2risk_IR3yr = df_2risk_IR3yr / (df_2risk_TE3yr)
+
+        # Create Summary Table of Latest Risk Measures
+        last_df_2_2 = df_2risk_vol30.iloc[-1].copy()
+        last_df_2_2['Risk Measure'] = '30 Day Volatility'
+        last_df_2_3 = df_2risk_vol90.iloc[-1].copy()
+        last_df_2_3['Risk Measure'] = '90 Day Volatility'
+        last_df_2_4 = df_2risk_vol1yr.iloc[-1].copy()
+        last_df_2_4['Risk Measure'] = '12 Month Volatility'
+        last_df_2_5 = df_2risk_vol3yr.iloc[-1].copy()
+        last_df_2_5['Risk Measure'] = '3 Year Volatility'
+        last_df_2_8 = df_2risk_drawdown3yr.iloc[-1].copy()
+        last_df_2_8['Risk Measure'] = '3 Year Max Drawdown'
+        last_df_2_9 = df_2risk_TE3yr.iloc[-1].copy()
+        last_df_2_9['Risk Measure'] = '3 Year Tracking Error'
+        last_df_2_6 = df_2risk_sharpe3yr.iloc[-1].copy()
+        last_df_2_6['Risk Measure'] = '3 Year Sharpe Ratio'
+        last_df_2_10 = df_2risk_calmar3yr.iloc[-1].copy()
+        last_df_2_10['Risk Measure'] = '3 Year Calmar Ratio'
+        last_df_2_11 = df_2risk_IR3yr.iloc[-1].copy()
+        last_df_2_11['Risk Measure'] = '3 Year Information Ratio'
+        last_df_2_7 = df_2risk_batting3yr.iloc[-1].copy()
+        last_df_2_7['Risk Measure'] = '3 Year Batting Average'
+
+        df_2risk_summary = pd.concat([last_df_2_2, last_df_2_3, last_df_2_4, last_df_2_5,
+                                      last_df_2_8, last_df_2_6, last_df_2_10, last_df_2_11,
+                                      last_df_2_9, last_df_2_7], axis=1).T
+
+        df_2risk_summary = df_2risk_summary.set_index('Risk Measure')
+        df_2risk_summary = df_2risk_summary.apply(pd.to_numeric, errors='coerce')
+        df_2risk_summary = df_2risk_summary.round(2)
+
+
 
         # 3 FILL
         df_3alloc_sleeves, df_3alloc_BMsleeves, df_3alloc_sleeve_ranges, df_3alloc_OWUW, df_3alloc_weights, df_3alloc_mgr_level, df_3alloc_holding_level = f_FILL_3alloc(
@@ -2827,6 +2927,12 @@ def render_page_content(pathname):
         df_2risk_drawdown = f_CalcDrawdown(
             Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'Peer_TOTAL']])
         df_2risk_drawdown.columns = [Selected_Code, 'Peer Group']
+
+        #4 ATTRIBUTION
+        df_4attrib_total = (((Selected_Portfolio.df_L3_2FAttrib.loc[dt_start_date:dt_end_date,
+                              ['P_TOTAL_G1 -- Allocation Effect',
+                               'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
+        df_4attrib_total.columns = ['Tactical Allocation Effect', 'Manager Effect (net fees)']
 
         #5 CONTRIBUTION
         checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date]
@@ -2919,6 +3025,102 @@ def render_page_content(pathname):
         df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
 
+        performance_html = df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']].T.fillna('').round(2).to_html(index=True, justify="justify")
+
+        # Add CSS style to the HTML content
+        styled_performance_html = f"""
+                            <!DOCTYPE html>
+                            <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <title>Performance Table</title>
+                                <style>
+                                    /* Add CSS style for table */
+                                    table.dataframe {{
+                                        border-collapse: collapse;
+                                        width: 100%;
+                                        border-radius: 10px; /* Adjust the border radius as needed */
+                                        overflow: hidden; /* Ensure the border-radius is applied */
+                                    }}
+
+                                    table.dataframe th,
+                                    table.dataframe td {{
+                                        border: none;
+                                        padding: 8px; /* Adjust padding as needed */
+                                        text-align: center; /* Adjust text alignment as needed */
+                                    }}
+
+                                    table.dataframe th {{
+                                        background-color: #3D555E; /* Optional: Add background color for header */
+                                        color: #E7EAEB;
+                                    }}
+
+                                    /* Add CSS rule for hover effect */
+                                    tr:hover {{
+                                        background-color: #1DC8F2;
+                                    }}
+                                </style>
+                            </head>
+                            <body>
+                                {performance_html}
+                            </body>
+                            </html>
+                            """
+
+        with open(SAVEDIR + "/Charts/" + "1_Performance-Table.html", "w") as file:
+            file.write(styled_performance_html),
+
+
+
+        risk_html = df_2risk_summary[[Selected_Code, 'Peer Group']].fillna('').round(2).to_html(index=True, justify="justify")
+
+        # Add CSS style to the HTML content
+        styled_risk_html = f"""
+                                    <!DOCTYPE html>
+                                    <html lang="en">
+                                    <head>
+                                        <meta charset="UTF-8">
+                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                        <title>Performance Table</title>
+                                        <style>
+                                            /* Add CSS style for table */
+                                            table.dataframe {{
+                                                border-collapse: collapse;
+                                                width: 100%;
+                                                border-radius: 10px; /* Adjust the border radius as needed */
+                                                overflow: hidden; /* Ensure the border-radius is applied */
+                                            }}
+
+                                            table.dataframe th,
+                                            table.dataframe td {{
+                                                border: none;
+                                                padding: 8px; /* Adjust padding as needed */
+                                                text-align: center; /* Adjust text alignment as needed */
+                                            }}
+
+                                            table.dataframe th {{
+                                                background-color: #3D555E; /* Optional: Add background color for header */
+                                                color: #E7EAEB;
+                                            }}
+
+                                            /* Add CSS rule for hover effect */
+                                            tr:hover {{
+                                                background-color: #1DC8F2;
+                                            }}
+                                        </style>
+                                    </head>
+                                    <body>
+                                        {risk_html}
+                                    </body>
+                                    </html>
+                                    """
+
+        with open(SAVEDIR + "/Charts/" + "2_Risk-Table.html", "w") as file:
+            file.write(styled_risk_html),
+
+
+
         ## Populate Charts for Page 21 Reports
         return [
 
@@ -2943,90 +3145,93 @@ def render_page_content(pathname):
 
             ], align="center", className="mb-3"),
 
+            df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']].T.round(2).to_csv(SAVEDIR + "/Charts/" + '1_Performance-Table.csv', index=False),
+
 
             f_create_BAR_figure(
                 df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']],
                 'group', None, "Return (%, %p.a.)",
-                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main.html'),
+                "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main.html'),
 
             f_create_BAR_figure(
                 df_1perf_backtestSet,
                 'group', None, "Return (%, %p.a.)",
-                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
+                "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
 
             f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None,
                                 "Return (%, %p.a.)",
-                                "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Daily.html'),
+                                "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Daily.html'),
 
             f_create_LINE_figure(10000 * (1 + (df_1perf_total[[Selected_Code, 'Peer Group', 'Objective']] / 100)), None,
                                                     "Value of $10,000 Investment ($)", "Date",
-                                                    450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
+                                                    350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
 
-            f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
+            f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
 
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 450).write_html(
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '2_Drawdown.html'),
 
-            f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 450).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Ranges.html'),
+            f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 350).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Ranges.html'),
 
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
+                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
+                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
+                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    800).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
+                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
 
-            f_create_BAR_figure(df_3alloc_OWUW, 'relative', None, "Overweight / Underweight (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '3_Allocation_OW_UW.html'),
-
-            f_create_BAR_figure(df_3alloc_weights, 'stack', "Portfolio Sleeve Weights Through Time",
-                                       "Weight (%)", "Date", 450).write_html(SAVEDIR + "/Charts/" + '3_Allocation_History.html'),
+            f_create_BAR_figure(df_3alloc_weights, 'stack', None,
+                                       "Weight (%)", "Date", 550).write_html(SAVEDIR + "/Charts/" + '3_Allocation_History.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
-                                    "G4",None, None, None, 800,
+                                    "G4",None, None, None, 600,
                                     1.5, x_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_1.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 600, 1.5, x_range=(-250, 250), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_3.html'),
+                                    None, None, None, 600, 1.5, y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_3.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
                                     "GrowthofNetIncome(%)", 'Current Weight', "G4",
-                                    None, None, None, 800, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_4.html'),
+                                    None, None, None, 600, 1.5, x_range=(-0.50, 0.50), y_range=(-1000, 1000)).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Financial_Ratios_4.html'),
 
             f_create_WATERFALL_figure(grouped_df_3A_2_sorted, 'Name', 'Current Weight', None, None,
-                                      None, 800, None, None).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Alloc_Waterfall.html'),
+                                      None, 600, None, None).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Alloc_Waterfall.html'),
 
 
             f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
-                                      "Term", "Date", 800).write_html(SAVEDIR + "/Charts/" + '20_Eco_USInterestRates.html'),
+                                      "Term", "Date", 600).write_html(SAVEDIR + "/Charts/" + '20_Eco_USInterestRates.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.html'),
+                                     600).write_html(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_AESummary, 'group', 'Measure',
                                      'Selected MCap Normalized', 'Category',
                                      None, "Equal Weighted Normalized Score",
                                      "Factor Measure",
-                                     800).write_image(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.svg'),
+                                     600).write_image(SAVEDIR + "/Charts/" + '3a_Aus_Equity_Factor_Ratios.svg'),
 
-            f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+            f_create_LINE_figure(df_4attrib_total, None, "Value-Add Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '4_Attrib_Totals.html'),
+
+            f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html'),
             f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
                 SAVEDIR + "/Charts/" + '5_AusEq_Sleeve_Contribs.html'),
@@ -3043,7 +3248,7 @@ def render_page_content(pathname):
             f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
                 SAVEDIR + "/Charts/" + '5_Cash_Sleeve_Contribs.html'),
 
-            f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 450).write_html(
+            f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_Sleeve_Components.html'),
             f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
                 SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html'),

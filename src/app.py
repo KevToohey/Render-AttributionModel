@@ -694,10 +694,11 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
                      'Cash': color_ACblue60}
 
     try:
+        y_columns = [col for col in df_input.columns if col != df_input.index.name]
         figure_out = px.line(
             df_input,
             x=df_input.index,
-            y=[c for c in df_input.columns if c is not None],
+            y=y_columns,
             labels={"x": "Date", "y": "Values"},
             template="plotly_white",
             color_discrete_map=custom_colors
@@ -726,14 +727,37 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
                 font=dict(size=11)
             ),
         )
-
         return figure_out
+
     except Exception as e:
         print(f"An error occurred in f_create_LINE_figure {in_title}: {e}")
         # Handle the error as needed
-        return []  # or any default return value
-
-
+        figure_out_err = px.line()
+        figure_out_err.update_layout(
+                title=in_title,
+                yaxis_title=in_y_title,
+                xaxis_title=in_x_title,
+                height=in_height if in_height is not None else 800,
+                margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
+                images=[dict(
+                    source="../assets/atchisonlogo.png",
+                    xref="paper", yref="paper",
+                    x=0.98, y=0.02,
+                    sizex=0.1, sizey=0.1,
+                    xanchor="right", yanchor="bottom",
+                    layer="below"
+                )],
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",  # Change this to "top" to move the legend below the chart
+                    y=-0.3,  # Adjust the y value to position the legend below the chart
+                    xanchor="center",  # Center the legend horizontally
+                    x=0.5,  # Center the legend horizontally
+                    title=None,
+                    font=dict(size=11)
+                ),
+            )
+        return figure_out_err
 
 def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_height):
     custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
@@ -2410,95 +2434,87 @@ def render_page_content(pathname):
 
     elif pathname == "/5-Contribution":
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date]
-        if checkData[0] > 0:
-            df_5cont_sleeves = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
-                                         for n in groupList], axis=1)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date]
+        if checkData[0] != 0:
+            df_5cont_sleeves_hasData = True
+            df_5cont_sleeves = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                             ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                          for n in groupList], axis=1)
             df_5cont_sleeves.columns = groupList
 
         else:
+            df_5cont_sleeves_hasData = False
             df_5cont_sleeves = pd.DataFrame()
 
-        # Filter columns with sums not equal to 0
-        '''non_zero_columns = filtered_df_5_1.columns[filtered_df_5_1.sum() != 0].tolist()
-        print(non_zero_columns)
-
-        if not filtered_df_5_1.empty and len(non_zero_columns) > 0:
-            figure_5_1 = px.line(
-                filtered_df_5_1,
-                x=filtered_df_5_1.index,
-                y=[c for c in non_zero_columns if c is not None],
-                labels={"x": "Date", "y": "Values"},
-                template="plotly_white",
-            )
-            figure_5_1.update_layout(
-                yaxis_title="Cumulative Contribution (%)",
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",  # Change this to "top" to move the legend below the chart
-                    y=-0.3,  # Adjust the y value to position the legend below the chart
-                    xanchor="center",  # Center the legend horizontally
-                    x=0.5,  # Center the legend horizontally
-                    title=None,
-                    font=dict(size=11)
-                ),
-                margin=dict(r=0),  # Reduce right margin to maximize visible area
-            )
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] != 0:
+            df_5cont_auseq_hasData = True
+            df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "Australian Shares")] + 1).cumprod() - 1) * 100)
         else:
-            # Create an empty figure
-            df_5cont_sleeves = pd.DataFrame()'''
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
-
-        if checkData[0] > 0:
-            print("Australian Shares > 0")
-            df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
-        else:
-            print("Australian Shares = nil")
+            df_5cont_auseq_hasData = False
             df_5cont_auseq = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
-        if checkData[0] > 0:
-            df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+
+        if checkData[0] != 0:
+            df_5cont_inteq_hasData = True
+            df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "International Shares")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_inteq_hasData = False
             df_5cont_inteq = pd.DataFrame()
 
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
-        if checkData[0] > 0:
-            df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] != 0:
+            df_5cont_real_hasData = True
+            df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Real Assets")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_real_hasData = False
             df_5cont_real = pd.DataFrame()
 
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
-        if checkData[0] > 0:
-            df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] != 0:
+            df_5cont_alts_hasData = True
+            df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Alternatives")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_alts_hasData = False
             df_5cont_alts = pd.DataFrame()
 
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
-        if checkData[0] > 0:
-            df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] != 0:
+            df_5cont_duration_hasData = True
+            df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Long Duration")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_duration_hasData = False
             df_5cont_duration = pd.DataFrame()
 
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
-        if checkData[0] > 0:
-            df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] != 0:
+            df_5cont_floating_hasData = True
+            df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Floating Rate")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_floating_hasData = False
             df_5cont_floating = pd.DataFrame()
 
-
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
-        if checkData[0] > 0:
-            df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] != 0:
+            df_5cont_cash_hasData = True
+            df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_cash_hasData = False
             df_5cont_cash = pd.DataFrame()
-
 
         ## Populate Charts for Page 5 Contribution
         return [
@@ -2518,42 +2534,64 @@ def render_page_content(pathname):
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Weighted Return Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_5cont_sleeves_hasData else None,
+                        # Conditionally include the chart for Australian Shares Sleeve if data is available
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center",
+                            className="mb-3") if df_5cont_auseq_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 3: International Shares Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_5cont_inteq_hasData else None,
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_5cont_real_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center",
+                            className="mb-3") if df_5cont_alts_hasData else None,
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center",
+                            className="mb-3") if df_5cont_duration_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center",
+                            className="mb-3") if df_5cont_floating_hasData else None,
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash Sleeve - Contributions"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date",
+                                                            450))),
+                        ], color="primary", outline=True), align="center",
+                            className="mb-3") if df_5cont_cash_hasData else None,
                     ], align="center", className="mb-3"),
                     # End of Centre Work Area
                 ], width=8, align="center", className="mb-3"),
@@ -2562,20 +2600,76 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
 
             ], align="center", className="mb-3")
-
         ]
     elif pathname == "/6-Component":
 
-        df_6comp_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
-                                     for n in groupList], axis=1)
+        df_6comp_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                         ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
+                                      for n in groupList], axis=1)
         df_6comp_sleeves.columns = groupList
-        df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
-        df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")] + 1).cumprod() - 1) * 100)
-        df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")] + 1).cumprod() - 1) * 100)
-        df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")] + 1).cumprod() - 1) * 100)
-        df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")] + 1).cumprod() - 1) * 100)
-        df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")] + 1).cumprod() - 1) * 100)
-        df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] != 0:
+            df_6comp_auseq_hasData = True
+            df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Australian Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_auseq_hasData = False
+            df_6comp_auseq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+        if checkData[0] != 0:
+            df_6comp_inteq_hasData = True
+            df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "International Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_inteq_hasData = False
+            df_6comp_inteq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] != 0:
+            df_6comp_real_hasData = True
+            df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Real Assets")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_real_hasData = False
+            df_6comp_real = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] != 0:
+            df_6comp_alts_hasData = True
+            df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Alternatives")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_alts_hasData = False
+            df_6comp_alts = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] != 0:
+            df_6comp_duration_hasData = True
+            df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Long Duration")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_duration_hasData = False
+            df_6comp_duration = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] != 0:
+            df_6comp_floating_hasData = True
+            df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Floating Rate")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_floating_hasData = False
+            df_6comp_floating = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] != 0:
+            df_6comp_cash_hasData = True
+            df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_cash_hasData = False
+            df_6comp_cash = pd.DataFrame()
 
         ## Populate Charts for Page 6 Component
         return [
@@ -2602,44 +2696,44 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_auseq_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader(
                                 "Chart 3: International Shares Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_inteq_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 4: Real Assets Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_real_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 5: Alternatives Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_alts_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 6: Long Duration Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_duration_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 7: Floating Rate Sleeve - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_floating_hasData else None,
                     ], align="center", className="mb-3"),
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 8: Cash - Underlying Components"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 450))),
-                        ], color="primary", outline=True), align="center", className="mb-3"),
+                        ], color="primary", outline=True), align="center", className="mb-3") if df_6comp_cash_hasData else None,
                     ], align="center", className="mb-3"),
 
                     # End of Centre Work Area
@@ -2935,99 +3029,170 @@ def render_page_content(pathname):
         df_4attrib_total.columns = ['Tactical Allocation Effect', 'Manager Effect (net fees)']
 
         #5 CONTRIBUTION
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date]
+        if checkData[0] != 0:
+            df_5cont_sleeves_hasData = True
             df_5cont_sleeves = pd.concat([(((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                              ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
                                           for n in groupList], axis=1)
             df_5cont_sleeves.columns = groupList
 
         else:
+            df_5cont_sleeves_hasData = False
             df_5cont_sleeves = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] != 0:
+            df_5cont_auseq_hasData = True
             df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                 f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                     "Australian Shares")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_auseq_hasData = False
             df_5cont_auseq = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+
+        if checkData[0] != 0:
+            df_5cont_inteq_hasData = True
             df_5cont_inteq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                 f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                     "International Shares")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_inteq_hasData = False
             df_5cont_inteq = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] != 0:
+            df_5cont_real_hasData = True
             df_5cont_real = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                    "Real Assets")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_real_hasData = False
             df_5cont_real = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] != 0:
+            df_5cont_alts_hasData = True
             df_5cont_alts = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                    "Alternatives")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_alts_hasData = False
             df_5cont_alts = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] != 0:
+            df_5cont_duration_hasData = True
             df_5cont_duration = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                    f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                        "Long Duration")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_duration_hasData = False
             df_5cont_duration = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] != 0:
+            df_5cont_floating_hasData = True
             df_5cont_floating = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                    f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                        "Floating Rate")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_floating_hasData = False
             df_5cont_floating = pd.DataFrame()
 
-        checkData = Selected_Portfolio.df_L3_w.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
-        if checkData[0] > 0:
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] != 0:
+            df_5cont_cash_hasData = True
             df_5cont_cash = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
         else:
+            df_5cont_cash_hasData = False
             df_5cont_cash = pd.DataFrame()
 
+        # 6 COMPONENTS
         df_6comp_sleeves = pd.concat([(((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
                                          ['P_' + groupName + '_' + n]] + 1).cumprod() - 1) * 100)
                                       for n in groupList], axis=1)
         df_6comp_sleeves.columns = groupList
-        df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                                "Australian Shares")] + 1).cumprod() - 1) * 100)
-        df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                            f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                                "International Shares")] + 1).cumprod() - 1) * 100)
-        df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                               "Real Assets")] + 1).cumprod() - 1) * 100)
-        df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                               "Alternatives")] + 1).cumprod() - 1) * 100)
-        df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                                   "Long Duration")] + 1).cumprod() - 1) * 100)
-        df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
-                                                   "Floating Rate")] + 1).cumprod() - 1) * 100)
-        df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
-                           f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
 
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
+        if checkData[0] != 0:
+            df_6comp_auseq_hasData = True
+            df_6comp_auseq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "Australian Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_auseq_hasData = False
+            df_6comp_auseq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
+        if checkData[0] != 0:
+            df_6comp_inteq_hasData = True
+            df_6comp_inteq = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                    "International Shares")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_inteq_hasData = False
+            df_6comp_inteq = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Real Assets"]]
+        if checkData[0] != 0:
+            df_6comp_real_hasData = True
+            df_6comp_real = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Real Assets")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_real_hasData = False
+            df_6comp_real = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Alternatives"]]
+        if checkData[0] != 0:
+            df_6comp_alts_hasData = True
+            df_6comp_alts = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                   "Alternatives")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_alts_hasData = False
+            df_6comp_alts = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Long Duration"]]
+        if checkData[0] != 0:
+            df_6comp_duration_hasData = True
+            df_6comp_duration = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Long Duration")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_duration_hasData = False
+            df_6comp_duration = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Floating Rate"]]
+        if checkData[0] != 0:
+            df_6comp_floating_hasData = True
+            df_6comp_floating = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                                   f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
+                                                       "Floating Rate")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_floating_hasData = False
+            df_6comp_floating = pd.DataFrame()
+
+        checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Cash"]]
+        if checkData[0] != 0:
+            df_6comp_cash_hasData = True
+            df_6comp_cash = (((Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date,
+                               f_AssetClassContrib(Selected_Portfolio.df_L3_contrib, "Cash")] + 1).cumprod() - 1) * 100)
+        else:
+            df_6comp_cash_hasData = False
+            df_6comp_cash = pd.DataFrame()
+
+
+
+        # CSS STYLED TABLES in HTML
+        # -----------------------------
+        # Add CSS style to the HTML content
         performance_html = df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']].T.fillna('').round(2).to_html(index=True, justify="justify")
 
-        # Add CSS style to the HTML content
         styled_performance_html = f"""
                             <!DOCTYPE html>
                             <html lang="en">
@@ -3168,15 +3333,33 @@ def render_page_content(pathname):
 
             f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
 
+            f_create_LINE_figure(df_2risk_vol90, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol90.html'),
+            f_create_LINE_figure(df_2risk_vol1yr, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol1yr.html'),
+            f_create_LINE_figure(df_2risk_vol3yr, None, "Rolling Vol (%p.a.)", "Date", 30).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol3yr.html'),
             f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '2_Drawdown.html'),
+            f_create_LINE_figure(df_2risk_drawdown3yr, None, "Max Rolling Drawdown (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Drawdown3yr.html'),
+            f_create_LINE_figure(df_2risk_batting3yr, None, "Batting Average (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Batting3yr.html'),
+            f_create_LINE_figure(df_2risk_sharpe3yr, None, "Sharpe Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Sharpe3yr.html'),
+            f_create_LINE_figure(df_2risk_TE3yr, None, "Tracking Error (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_TE3yr.html'),
+            f_create_LINE_figure(df_2risk_calmar3yr, None, "Calmar Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Calmar3yr.html'),
+            f_create_LINE_figure(df_2risk_IR3yr, None, "Information Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_IR3yr.html'),
 
             f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 350).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Ranges.html'),
 
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
+                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
@@ -3184,11 +3367,11 @@ def render_page_content(pathname):
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
+                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    400).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
+                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
 
             f_create_BAR_figure(df_3alloc_weights, 'stack', None,
                                        "Weight (%)", "Date", 550).write_html(SAVEDIR + "/Charts/" + '3_Allocation_History.html'),
@@ -3231,39 +3414,41 @@ def render_page_content(pathname):
             f_create_LINE_figure(df_4attrib_total, None, "Value-Add Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '4_Attrib_Totals.html'),
 
+
+
             f_create_LINE_figure(df_5cont_sleeves, None, "Cumulative Return (%)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_AusEq_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_IntEq_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_Real_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_Alts_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_Duration_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_Floating_Sleeve_Contribs.html'),
-            f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '5_Cash_Sleeve_Contribs.html'),
+                SAVEDIR + "/Charts/" + '5_Sleeve_Contribs.html') if df_5cont_sleeves_hasData else None,
+            f_create_LINE_figure(df_5cont_auseq, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_AusEq_Sleeve_Contribs.html') if df_5cont_auseq_hasData else None,
+            f_create_LINE_figure(df_5cont_inteq, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_IntEq_Sleeve_Contribs.html') if df_5cont_inteq_hasData else None,
+            f_create_LINE_figure(df_5cont_real, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_Real_Sleeve_Contribs.html') if df_5cont_real_hasData else None,
+            f_create_LINE_figure(df_5cont_alts, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_Alts_Sleeve_Contribs.html') if df_5cont_alts_hasData else None,
+            f_create_LINE_figure(df_5cont_duration, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_Duration_Sleeve_Contribs.html') if df_5cont_duration_hasData else None,
+            f_create_LINE_figure(df_5cont_floating, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_Floating_Sleeve_Contribs.html') if df_5cont_floating_hasData else None,
+            f_create_LINE_figure(df_5cont_cash, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '5_Cash_Sleeve_Contribs.html') if df_5cont_cash_hasData else None,
 
             f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_IntEq_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_Real_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_Alts_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_Duration_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_Floating_Sleeve_Components.html'),
-            f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 450).write_html(
-                SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html'),
+            f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html') if df_6comp_auseq_hasData else None,
+            f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_IntEq_Sleeve_Components.html') if df_6comp_inteq_hasData else None,
+            f_create_LINE_figure(df_6comp_real, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_Real_Sleeve_Components.html') if df_6comp_real_hasData else None,
+            f_create_LINE_figure(df_6comp_alts, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_Alts_Sleeve_Components.html') if df_6comp_alts_hasData else None,
+            f_create_LINE_figure(df_6comp_duration, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_Duration_Sleeve_Components.html') if df_6comp_duration_hasData else None,
+            f_create_LINE_figure(df_6comp_floating, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_Floating_Sleeve_Components.html') if df_6comp_floating_hasData else None,
+            f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html') if df_6comp_cash_hasData else None,
 
             f_create_SUMMARY_REPORT_HTML(df_marketCommentary),
 

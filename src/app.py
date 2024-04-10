@@ -36,7 +36,8 @@ pd.set_option('display.max_columns', None)
 
 # LOAD INPUTS ##################
 load_start_date = "2022-12-31"
-load_end_date = "2024-2-29"
+load_end_date = "2024-3-31"
+load_ME_date = "2024-2-29"
 
 measures = [
     'MarketCap',
@@ -113,6 +114,7 @@ class Portfolio:
         self.df_BM_G3 = pd.read_parquet('./ServerData/'+portfolioCode+'/df_BM_G3.parquet')
         self.summaryVariables = pd.read_parquet('./ServerData/'+portfolioCode+'/summaryVariables.parquet')
         self.df_Eco_USInterestRates = pd.read_parquet('./ServerData/'+portfolioCode+'/df_Eco_USInterestRates.parquet')
+        self.df_Eco_CreditSpreads = pd.read_parquet('./ServerData/' + portfolioCode + '/df_Eco_CreditSpreads.parquet')
         # Recreate Category Group Labels for Charts
         self.portfolioCode = self.summaryVariables['portfolioCode'].iloc[0]
         self.portfolioName = self.summaryVariables['portfolioName'].iloc[0]
@@ -172,6 +174,7 @@ Alt2_Type = Alt2_Portfolio.portfolioType
 
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
+text_ME_Date = load_ME_date
 
 Alt1_Switch_On = False
 Alt2_Switch_On = False
@@ -180,6 +183,7 @@ Product_List = Selected_Portfolio.df_productList.index.tolist()
 
 dt_start_date = pd.to_datetime(text_Start_Date)
 dt_end_date = pd.to_datetime(text_End_Date)
+dt_ME_date = pd.to_datetime(text_ME_Date)
 groupName = Selected_Portfolio.groupName
 groupList = Selected_Portfolio.groupList
 
@@ -760,6 +764,64 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             )
         return figure_out_err
 
+
+def f_CREATE_HEATMAP_figure(df_input, in_title, in_y_title, in_x_title, in_height):
+    try:
+        figure_out = px.imshow(
+            df_input.apply(pd.to_numeric, errors='coerce').fillna(0, inplace=True)
+        )
+        figure_out.update_layout(
+            yaxis_title = in_y_title,
+            xaxis_title = in_x_title,
+            height = in_height if in_height is not None else 800,
+            margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
+            images = [dict(
+                source="../assets/atchisonlogo.png",
+                xref="paper", yref="paper",
+                x=0.98, y=1.00,
+                sizex=0.1, sizey=0.1,
+                xanchor="right", yanchor="top",
+                layer="below"
+            )],
+            legend = dict(
+                orientation="h",
+                yanchor="top",  # Change this to "top" to move the legend below the chart
+                y=-0.3,  # Adjust the y value to position the legend below the chart
+                xanchor="center",  # Center the legend horizontally
+                x=0.5,  # Center the legend horizontally
+                title=None,
+                font=dict(size=11)
+            ),
+        )
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_SURFACE_figure {in_title}: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+def f_CREATE_TREEMAP_figure(df_input, in_height):
+    custom_color_scale = [
+        [0.0, 'red'],  # Values < 0
+        [0.5, 'white'],  # Value = 0
+        [1.0, 'green']  # Values > 0
+    ]
+
+    try:
+        figure_out = px.treemap(df_input, path=[px.Constant("Portfolio"), 'G0', 'G1', 'G4', df_input.index], values='Weight',
+                 color='Return', hover_data=[df_input.index, df_input.Name],
+                 color_continuous_scale=custom_color_scale,
+                 color_continuous_midpoint=0,
+                 height = in_height if in_height is not None else 800
+        )
+
+        return figure_out
+    except Exception as e:
+        print(f"An error occurred in f_create_TREEMAP_figure: {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
+
 def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_height):
     custom_colors = {Selected_Code: color_ACdarkblue, 'Peer Group': color_ACblue60, 'Inflation': color_ACorange60,
                      'Objective': color_ACorange60, 'SAA Benchmark': color_ACgreen60,
@@ -1245,10 +1307,11 @@ def f_FILL_1perf(Local_Portfolio):
 
         df_1perf_rMESet = (f_CalcReturnTable(
 
-            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
+            Local_Portfolio.df_L3_r.loc[:, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL', 'Obj_TOTAL']],
             Local_Portfolio.rME_dates) * 100).T
-        df_1perf_rMESet.columns = [Selected_Code, 'Peer Group', 'Inflation']
+        df_1perf_rMESet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']
 
+        df_1perf_rMESet["Outperformance vs SAA"] = df_1perf_rMESet[Selected_Code] - df_1perf_rMESet['SAA Benchmark']
         df_1perf_rMESet["Outperformance vs Peers"] = df_1perf_rMESet[Selected_Code] - df_1perf_rMESet['Peer Group']
         df_1perf_rMESet["Outperformance vs Inflation"] = df_1perf_rMESet[Selected_Code] - df_1perf_rMESet['Inflation']
 
@@ -1390,6 +1453,46 @@ def f_FILL_3alloc(Local_Portfolio):
         print(f"An error occurred in f_create_FILL_3 {e}")
         # Handle the error as needed
         return []  # or any default return value
+
+
+def f_FILL_3Bdebt(Local_Portfolio, BM_DebtUniverse):
+
+    try:
+
+        BM_DebtUniverse_latest = BM_DebtUniverse.df_L3_w.loc[dt_end_date:dt_end_date,
+                                   BM_DebtUniverse.df_L3_w.columns.isin(Product_List)].tail(1)
+        BM_DebtUniverse_latest = BM_DebtUniverse_latest.loc[:, (BM_DebtUniverse_latest != 0).any()].T
+        BM_DebtUniverse_latest = BM_DebtUniverse_latest.rename_axis('Code')
+        BM_DebtUniverse_latest = BM_DebtUniverse_latest.merge(BM_DebtUniverse.df_productList[
+                                                                      ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'PeerGroup', 'OptimiserCategory', 'Type',
+                                                                       'YieldtoMaturity', 'IRDuration',	'CreditDuration', 'AvCreditRating']], on='Code')
+        BM_DebtUniverse_latest = BM_DebtUniverse_latest.rename(columns={dt_end_date: 'Current Weight'})
+
+        df_3Bdebt_detail_0 = Local_Portfolio.df_L3_w.loc[dt_end_date:dt_end_date,
+                               Local_Portfolio.df_L3_w.columns.isin(Product_List)].tail(1)
+        df_3Bdebt_detail_0 = df_3Bdebt_detail_0.loc[:, (df_3Bdebt_detail_0 != 0).any()].T
+        df_3Bdebt_detail_0 = df_3Bdebt_detail_0.rename_axis('Code')
+        df_3Bdebt_detail_0 = df_3Bdebt_detail_0.merge(Local_Portfolio.df_productList[
+                                                              ['Name', 'G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'PeerGroup', 'OptimiserCategory', 'Type',
+                                                               'YieldtoMaturity', 'IRDuration',	'CreditDuration', 'AvCreditRating']], on='Code')
+        df_3Bdebt_detail_0 = df_3Bdebt_detail_0.rename(columns={dt_end_date: 'Current Weight'})
+
+        # filter for only Listed Securities
+        filtered_df_3B_1 = df_3Bdebt_detail_0[
+            (df_3Bdebt_detail_0['G1'] == 'Long Duration') | (df_3Bdebt_detail_0['G1'] == 'Floating Rate')].copy()
+        assetClassWeight = filtered_df_3B_1['Current Weight'].sum()
+
+        if assetClassWeight != 0:
+            filtered_df_3B_1['Current Weight'] = filtered_df_3B_1['Current Weight'] / (assetClassWeight / 100)
+        else:
+            # Handle the case where assetClassWeight is zero
+            filtered_df_3B_1['Current Weight'] = np.nan
+
+    except Exception as e:
+        print(f"An error occurred in f_create_FILL_3b {e}")
+        # Handle the error as needed
+        return []  # or any default return value
+
 
 
 def f_FILL_3Aequity(Local_Portfolio, BM_SharesUniverse):
@@ -1774,7 +1877,7 @@ def render_page_content(pathname):
                                         "Chart 1: Total Portfolio Performance - as at " +
                                         Selected_Portfolio.rME_dates.loc[0, 'Date'].strftime("%d %b %Y")),
                                     dbc.CardBody([dcc.Graph(
-                                        figure=f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None, "Return (%, %p.a.)",
+                                        figure=f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']], 'group', None, "Return (%, %p.a.)",
 
                                                                    "Date", 450)),
                                                   html.Hr(),
@@ -1812,7 +1915,7 @@ def render_page_content(pathname):
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Portfolio Cumulative Total Returns"),
                             dbc.CardBody(dcc.Graph(
-                                figure=f_create_LINE_figure(10000*(1+(df_1perf_total/100)), None, "Value of $10,000 Investment ($)", "Date",
+                                figure=f_create_LINE_figure(100000*(1+(df_1perf_total/100)), None, "Value of $100,000 Investment ($)", "Date",
                                                             450))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
@@ -2177,12 +2280,14 @@ def render_page_content(pathname):
 
 
     elif pathname == "/3A-Equity":
-
-        BM_AustShares_Universe = All_Portfolios[availablePortfolios.index("IOZ-AU")]
-        BM_IntShares_Universe = All_Portfolios[availablePortfolios.index("VGS-AU")]
-        #BM_CombinedShares_Portfolio = BM_AustShares_Universe + BM_IntShares_Universe
         # toggle to include Aus and/or Int eq
-        BM_SharesUniverse = BM_AustShares_Universe
+        if Selected_ReportGroup == "Australian Shares":
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("IOZ-AU")]
+        elif Selected_ReportGroup == "International Shares":
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("VGS-AU")]
+        else:
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("IOZ-AU")]
+
         ## Populate dataframes for Page 3A-Equity
         # f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
 
@@ -2668,6 +2773,82 @@ def render_page_content(pathname):
                                       for n in groupList], axis=1)
         df_6comp_sleeves.columns = groupList
 
+        #Calc the period returns for any manager with a current portfolio weight>0
+
+        # Find common columns between df_L3_r and df_L3_w
+        # Step 1: Create a boolean mask for columns in df_L3_w where the last row's value is > 0
+        mask = Selected_Portfolio.df_L3_w.iloc[-1] > 0
+        # Step 2: Apply this mask to filter columns in df_L3_w and then find common columns with df_L3_r
+        filtered_columns_df_L3_w = Selected_Portfolio.df_L3_w.columns[mask]
+        common_columns = Selected_Portfolio.df_L3_r.columns.intersection(filtered_columns_df_L3_w)
+        print(common_columns)
+        # Filter both DataFrames to only include common columns
+        df_L3_r2 = Selected_Portfolio.df_L3_r[common_columns]
+        df_L3_w2 = Selected_Portfolio.df_L3_w[common_columns]
+        # Step 1: Calculate compound returns for each column
+        #compound_returns_per_column = (1 + df_L3_r2).cumprod(axis=0).iloc[-1] - 1
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_start_date, dt_end_date)
+        print(compound_returns_per_column.shape)
+        # Extract portfolio weights for columns with a value greater than 0 at dt_end_date
+        # This step ensures that the boolean series used for filtering matches the columns of the DataFrame
+        columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
+        portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
+        # Now, ensure compound_returns_per_column only includes those columns
+        # This may be redundant given your filtering, but it ensures alignment
+        compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
+        # Create the new DataFrame with aligned data
+        df_6comp_alldirect = pd.DataFrame({
+            'Return': compound_returns_per_column,
+            'Weight': portfolio_weights_on_end_date,
+        })
+        if 'P_TOTAL' in df_6comp_alldirect.index:
+            position = df_6comp_alldirect.index.get_loc('P_TOTAL')
+            df_6comp_alldirect_only = df_6comp_alldirect.iloc[:position]
+        else:
+            df_6comp_alldirect_only = df_6comp_alldirect.copy()
+        df_6comp_alldirect_only = df_6comp_alldirect_only.copy()
+        df_6comp_alldirect_only.loc[:, 'Name'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['Name'])
+        df_6comp_alldirect_only.loc[:, 'G0'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['G0'])
+        df_6comp_alldirect_only.loc[:, 'G1'] = df_6comp_alldirect_only.index.map(Selected_Portfolio.df_productList['G1'])
+        df_6comp_alldirect_only.loc[:, 'G4'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['G4'])
+        print("Test 101")
+        print(df_6comp_alldirect_only)
+
+        ## Month version repeated
+
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_ME_date, dt_end_date)
+        print(compound_returns_per_column.shape)
+        # Extract portfolio weights for columns with a value greater than 0 at dt_end_date
+        # This step ensures that the boolean series used for filtering matches the columns of the DataFrame
+        columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
+        portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
+        # Now, ensure compound_returns_per_column only includes those columns
+        # This may be redundant given your filtering, but it ensures alignment
+        compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
+        # Create the new DataFrame with aligned data
+        df_6comp_alldirectMONTH = pd.DataFrame({
+            'Return': compound_returns_per_column,
+            'Weight': portfolio_weights_on_end_date,
+        })
+        if 'P_TOTAL' in df_6comp_alldirectMONTH.index:
+            position = df_6comp_alldirectMONTH.index.get_loc('P_TOTAL')
+            df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH.iloc[:position]
+        else:
+            df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH.copy()
+        df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH_only.copy()
+        df_6comp_alldirectMONTH_only.loc[:, 'Name'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['Name'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G0'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G0'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G1'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G1'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G4'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G4'])
+
+
         checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
         if checkData[0] != 0:
             df_6comp_auseq_hasData = True
@@ -2745,13 +2926,21 @@ def render_page_content(pathname):
                 dbc.Col("", width=2, align="center", className="mb-3"),
                 # Centre Work Area
                 dbc.Col([
-                    # Tab 5- Contribution Analysis
+                    # Tab 6- Component Analysis
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 1: Asset Sleeve Performance"),
                             dbc.CardBody(dcc.Graph(figure=f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 600))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 2: Component Returns"),
+                            dbc.CardBody(dcc.Graph(figure=f_CREATE_TREEMAP_figure(df_6comp_alldirect_only, 1000))),
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
                     dbc.Row([
                         dbc.Col(dbc.Card([
                             dbc.CardHeader("Chart 2: Australian Shares Sleeve - Underlying Components"),
@@ -2864,6 +3053,122 @@ def render_page_content(pathname):
         ]
     elif pathname == "/20-Markets":
 
+        SAVEDIR = "./Outputs/MarketsOverview"
+        CHECK_FOLDER = os.path.isdir(SAVEDIR)
+        if not CHECK_FOLDER: os.makedirs(SAVEDIR)
+        CHECK_FOLDER = os.path.isdir(SAVEDIR + "/Charts")
+        if not CHECK_FOLDER: os.makedirs(SAVEDIR + "/Charts")
+
+        # THESE LISTS MUST BE PAIRED AND SAME LENGTH!!!!
+        PrimaryEqIndexList = ["IOZ-AU", "VGS-AU", "IVV-AU", "IEU-AU"]
+        SecondaryEqIndexList = ["VGS-AU", "IOZ-AU", "VGS-AU", "VGS-AU"]
+
+        for primary_measure, secondary_measure in zip(PrimaryEqIndexList, SecondaryEqIndexList):
+
+            SUB_SAVEDIR = (SAVEDIR + "/Charts/" + primary_measure + "vs" + secondary_measure + '/')
+            CHECK_FOLDER = os.path.isdir(SUB_SAVEDIR)
+            if not CHECK_FOLDER: os.makedirs(SUB_SAVEDIR)
+
+            df_3alloc_sleeves, df_3alloc_BMsleeves, df_3alloc_sleeve_ranges, df_3alloc_OWUW, df_3alloc_weights, df_3alloc_mgr_level, df_3alloc_holding_level = f_FILL_3alloc(
+                All_Portfolios[availablePortfolios.index(primary_measure)])
+
+            df_3Aequity_Summary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_3_sorted, averages, BM_SharesUniverse_latest = f_FILL_3Aequity(
+                All_Portfolios[availablePortfolios.index(primary_measure)], All_Portfolios[availablePortfolios.index(secondary_measure)])
+
+            # Grouping Subtotals = G7 = Country
+            G7_P_weights = grouped_df_3A_3_sorted.groupby('G7')['Current Weight'].sum()
+            G7_BM_weights = BM_SharesUniverse_latest.groupby('G7')['Current Weight'].sum()
+            G7_PBM_weights = pd.DataFrame({Selected_Portfolio.df_productList.loc[primary_measure, 'Name']: G7_P_weights, Selected_Portfolio.df_productList.loc[secondary_measure, 'Name']: G7_BM_weights})
+
+            # Grouping Subtotals = G4 = Industry Lv 1
+            G4_P_weights = grouped_df_3A_3_sorted.groupby('G4')['Current Weight'].sum()
+            G4_BM_weights = BM_SharesUniverse_latest.groupby('G4')['Current Weight'].sum()
+            G4_PBM_weights = pd.DataFrame({Selected_Portfolio.df_productList.loc[primary_measure, 'Name']: G4_P_weights, Selected_Portfolio.df_productList.loc[secondary_measure, 'Name']: G4_BM_weights})
+
+            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
+                                     'Current Weight', '',
+                                     720).write_html(SUB_SAVEDIR + '3_Alloc_Mgr_Level_1.html'),
+
+            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
+                                     '',
+                                     720).write_html(SUB_SAVEDIR + '3_Alloc_Mgr_Level_2.html'),
+
+            f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
+                                     '',
+                                     720).write_html(SUB_SAVEDIR + '3_Alloc_Holding_Level_1.html'),
+
+            f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
+                                     'Current Weight', '',
+                                     720).write_html(SUB_SAVEDIR + '3_Alloc_Holding_Level_2.html'),
+
+            f_create_BAR_figure(df_3alloc_weights, 'stack', None,
+                                "Weight (%)", "Date", 550).write_html(
+                SUB_SAVEDIR + '3_Allocation_History.html'),
+
+            f_create_BAR_figure(G7_PBM_weights, 'group', '',
+                                'Weight', 'Country', 550).write_html(SUB_SAVEDIR + '3a_CountryOWUW.html'),
+
+            f_create_BAR_figure(G4_PBM_weights, 'group',
+                                '',
+                                'Weight', '', 550).write_html(SUB_SAVEDIR + '3a_IndustryOWUW.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "ReturnonTotalEquity(%)", "MarketCap", 'Current Weight',
+                                    "G4", None, None, None, 600,
+                                    1.5, x_range=(-150, 150)).write_html(
+                SUB_SAVEDIR + '3a_Equity_Financial_Ratios_1.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
+                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                    None, None, None, 600, 1.5, x_range=(-200, 200), y_range=(-150, 200)).write_html(
+                SUB_SAVEDIR + '3a_Equity_Financial_Ratios_2.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
+                                    "ReturnonTotalEquity(%)", 'Current Weight', "G4",
+                                    None, None, None, 600, 1.5, x_range=(-200, 200), y_range=(-150, 150)).write_html(
+                SUB_SAVEDIR + '3a_Equity_Financial_Ratios_3.html'),
+
+            f_create_SCATTER_figure(grouped_df_3A_2, averages, "EarningsYield",
+                                    "GrowthofNetIncome(%)", 'Current Weight', "G4",
+                                    None, None, None, 600, 1.5, x_range=(-0.50, 0.50),
+                                    y_range=(-1000, 1000)).write_html(
+                SUB_SAVEDIR + '3a_Equity_Financial_Ratios_4.html'),
+
+            f_create_WATERFALL_figure(grouped_df_3A_3_sorted, 'Name', 'Current Weight', None, None,
+                                      None, 600, None, None).write_html(
+                SUB_SAVEDIR + '3a_Equity_Alloc_Waterfall.html'),
+
+            f_create_COLORBAR_figure(df_3Aequity_Summary, 'group', 'Measure',
+                                     'Selected EW Normalized', 'Category',
+                                     None, "Equal Weighted Normalized Score",
+                                     "Factor Measure",
+                                     600).write_html(SUB_SAVEDIR + '3a_Equity_Factor_Ratios_EW.html'),
+
+            f_create_COLORBAR_figure(df_3Aequity_Summary, 'group', 'Measure',
+                                     'Selected MCap Normalized', 'Category',
+                                     None, "Marker Cap Weighted Normalized Score",
+                                     "Factor Measure",
+                                     600).write_html(SUB_SAVEDIR + '3a_Equity_Factor_Ratios_MCap.html'),
+
+        print("**** Atchison Analytics Dash App Has Downloaded A Report to: " + SAVEDIR)
+
+        # ----- MARKET OVERVIEW CHARTS --------------
+        f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
+                                  "Term", "Date", 1200).write_html(
+            SAVEDIR + "/Charts/" + '20_Eco_USInterestRates3D.html'),
+
+        f_create_LINE_figure(Selected_Portfolio.df_Eco_USInterestRates, "",
+                             "Interest Rate", "Date", 800).write_html(
+            SAVEDIR + "/Charts/" + '20_Eco_USInterestRatesLINE.html'),
+
+        f_create_LINE_figure(Selected_Portfolio.df_Eco_CreditSpreads, "",
+                             "Spread to Government", "Date", 800).write_html(
+            SAVEDIR + "/Charts/" + '20_Eco_CreditSpreadsLINE.html'),
+
+        f_create_SUMMARY_REPORT_HTML(df_marketCommentary),
+
+
+
+
         ## Populate Charts for Page 20 Markets
         return [
             html.Div(style={'height': '2rem'}),
@@ -2881,8 +3186,26 @@ def render_page_content(pathname):
 
                     dbc.Row([
                         dbc.Col(dbc.Card([
-                            dbc.CardHeader("Chart 1: US Interest Rates"),
-                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate", "Term", "Date", 1200))),
+                            dbc.CardHeader("Chart 1: US Government Yield Curve"),
+                            dbc.CardBody(dcc.Graph(figure=f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "", "Interest Rate", "Term", "Date", 1200))),
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 1b: US Government Yield Curve"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(Selected_Portfolio.df_Eco_USInterestRates, "",
+                                                            "Interest Rate", "Date", 800))),
+                        ], color="primary", outline=True), align="center", className="mb-3"),
+                    ], align="center", className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(dbc.Card([
+                            dbc.CardHeader("Chart 2b: Option-Adjusted Credit Spreads"),
+                            dbc.CardBody(dcc.Graph(
+                                figure=f_create_LINE_figure(Selected_Portfolio.df_Eco_CreditSpreads, "",
+                                                                 "Spread to Government", "Date", 800))),
                         ], color="primary", outline=True), align="center", className="mb-3"),
                     ], align="center", className="mb-3"),
 
@@ -2968,12 +3291,12 @@ def render_page_content(pathname):
 
         df_1perf_backtestSet = df_1perf_tMESet
         df_1perf_backtestSet.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']
-        df_1perf_backtestSet = df_1perf_backtestSet[[Selected_Code, 'Peer Group', 'Inflation']]
+        df_1perf_backtestSet = df_1perf_backtestSet[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']]
 
         # RISK FILL
         df_2risk_drawdown = f_CalcDrawdown(
-            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'Peer_TOTAL']])
-        df_2risk_drawdown.columns = [Selected_Code, 'Peer Group']
+            Selected_Portfolio.df_L3_r.loc[dt_start_date:dt_end_date, ['P_TOTAL', 'BM_G1_TOTAL', 'Peer_TOTAL']])
+        df_2risk_drawdown.columns = [Selected_Code, 'SAA Benchmark', 'Peer Group']
 
         # Based on 30 day Window - Daily Data annualised (252 trading days)
         df_2risk_vol30 = f_CalcRollingDailyVol(
@@ -3075,16 +3398,21 @@ def render_page_content(pathname):
 
 
         #3A FILL
-        BM_AustShares_Universe = All_Portfolios[availablePortfolios.index("IOZ-AU")]
-        BM_IntShares_Universe = All_Portfolios[availablePortfolios.index("VGS-AU")]
-        # BM_CombinedShares_Portfolio = BM_AustShares_Universe + BM_IntShares_Universe
         # toggle to include Aus and/or Int eq
-        BM_SharesUniverse = BM_AustShares_Universe
+        if Selected_ReportGroup == "Australian Shares":
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("IOZ-AU")]
+        elif Selected_ReportGroup == "International Shares":
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("VGS-AU")]
+        else:
+            BM_SharesUniverse = All_Portfolios[availablePortfolios.index("IOZ-AU")]
+
         ## Populate dataframes for Page 3A-Equity
         # f_FILL_3Aequity(Selected_Portfolio, BM_SharesUniverse)
 
         df_3Aequity_Summary, filtered_df_3A_1, grouped_df_3A_2, grouped_df_3A_3_sorted, averages, BM_SharesUniverse_latest = f_FILL_3Aequity(
             Selected_Portfolio, BM_SharesUniverse)
+
+
 
         # Grouping Subtotals = G7 = Country
         G7_P_weights = grouped_df_3A_3_sorted.groupby('G7')['Current Weight'].sum()
@@ -3193,6 +3521,102 @@ def render_page_content(pathname):
                                       for n in groupList], axis=1)
         df_6comp_sleeves.columns = groupList
 
+        mask = Selected_Portfolio.df_L3_w.iloc[-1] > 0
+        filtered_columns_df_L3_w = Selected_Portfolio.df_L3_w.columns[mask]
+        common_columns = Selected_Portfolio.df_L3_r.columns.intersection(filtered_columns_df_L3_w)
+        print(common_columns)
+        df_L3_r2 = Selected_Portfolio.df_L3_r[common_columns]
+        df_L3_w2 = Selected_Portfolio.df_L3_w[common_columns]
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_start_date, dt_end_date)
+        print(compound_returns_per_column.shape)
+        columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
+        portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
+        compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
+        df_6comp_alldirect = pd.DataFrame({
+            'Return': compound_returns_per_column,
+            'Weight': portfolio_weights_on_end_date,
+        })
+        if 'P_TOTAL' in df_6comp_alldirect.index:
+            position = df_6comp_alldirect.index.get_loc('P_TOTAL')
+            df_6comp_alldirect_only = df_6comp_alldirect.iloc[:position]
+        else:
+            df_6comp_alldirect_only = df_6comp_alldirect.copy()
+        df_6comp_alldirect_only = df_6comp_alldirect_only.copy()
+        df_6comp_alldirect_only.loc[:, 'Name'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['Name'])
+        df_6comp_alldirect_only.loc[:, 'G0'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['G0'])
+        df_6comp_alldirect_only.loc[:, 'G1'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['G1'])
+        df_6comp_alldirect_only.loc[:, 'G4'] = df_6comp_alldirect_only.index.map(
+            Selected_Portfolio.df_productList['G4'])
+
+        ## Month version repeated
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_ME_date, dt_end_date)
+        columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
+        portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
+        compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
+        df_6comp_alldirectMONTH = pd.DataFrame({
+            'Return': compound_returns_per_column,
+            'Weight': portfolio_weights_on_end_date,
+        })
+        if 'P_TOTAL' in df_6comp_alldirectMONTH.index:
+            position = df_6comp_alldirectMONTH.index.get_loc('P_TOTAL')
+            df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH.iloc[:position]
+        else:
+            df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH.copy()
+        df_6comp_alldirectMONTH_only = df_6comp_alldirectMONTH_only.copy()
+        df_6comp_alldirectMONTH_only.loc[:, 'Name'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['Name'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G0'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G0'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G1'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G1'])
+        df_6comp_alldirectMONTH_only.loc[:, 'G4'] = df_6comp_alldirectMONTH_only.index.map(
+            Selected_Portfolio.df_productList['G4'])
+
+        #Look Through Version
+        print("Here NOw")
+
+        grouped_df_3A_3_sorted2 = df_3alloc_holding_level[['Current Weight']]
+        grouped_df_3A_3_sorted2 = grouped_df_3A_3_sorted2.rename(columns={'Current Weight': dt_end_date})
+        filtered_columns_df_L3_w = grouped_df_3A_3_sorted2.T
+        filtered_columns_df_L3_w.index = [dt_end_date]
+        #print(grouped_df_3A_3_sorted2_transposed)
+
+        print(filtered_columns_df_L3_w)
+        common_columns = Selected_Portfolio.df_L3_r.columns.intersection(filtered_columns_df_L3_w.columns)
+        #print(common_columns)
+        df_L3_r2 = Selected_Portfolio.df_L3_r[common_columns]
+        df_L3_w2 = filtered_columns_df_L3_w[common_columns]
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_start_date, dt_end_date)
+        #print(compound_returns_per_column.shape)
+        columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
+        portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
+        compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
+        df_6comp_alldirect2 = pd.DataFrame({
+            'Return': compound_returns_per_column,
+            'Weight': portfolio_weights_on_end_date,
+        })
+        if 'P_TOTAL' in df_6comp_alldirect2.index:
+            position = df_6comp_alldirect2.index.get_loc('P_TOTAL')
+            df_6comp_lookthrough_only = df_6comp_alldirect2.iloc[:position]
+        else:
+            df_6comp_lookthrough_only = df_6comp_alldirect2.copy()
+
+        df_6comp_lookthrough_only = df_6comp_lookthrough_only.copy()
+        df_6comp_lookthrough_only.loc[:, 'Name'] = df_6comp_lookthrough_only.index.map(
+            Selected_Portfolio.df_productList['Name'])
+        df_6comp_lookthrough_only.loc[:, 'G0'] = df_6comp_lookthrough_only.index.map(
+            Selected_Portfolio.df_productList['G0'])
+        df_6comp_lookthrough_only.loc[:, 'G1'] = df_6comp_lookthrough_only.index.map(
+            Selected_Portfolio.df_productList['G1'])
+        df_6comp_lookthrough_only.loc[:, 'G4'] = df_6comp_lookthrough_only.index.map(
+            Selected_Portfolio.df_productList['G4'])
+
+
+
+
         checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "Australian Shares"]]
         if checkData[0] != 0:
             df_6comp_auseq_hasData = True
@@ -3264,12 +3688,10 @@ def render_page_content(pathname):
 
 
 
-
-
         # CSS STYLED TABLES in HTML
         # -----------------------------
         # Add CSS style to the HTML content
-        performance_html = df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']].T.fillna('').round(2).to_html(index=True, justify="justify")
+        performance_html = df_1perf_rMESet[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']].T.fillna('').round(2).to_html(index=True, justify="justify")
 
         styled_performance_html = f"""
                             <!DOCTYPE html>
@@ -3312,11 +3734,57 @@ def render_page_content(pathname):
                             """
 
         with open(SAVEDIR + "/Charts/" + "1_Performance-Table.html", "w") as file:
-            file.write(styled_performance_html),
+            file.write(styled_performance_html)
+
+                # Assuming df_1perf_rMESet is your DataFrame
+        styled_df = df_1perf_rMESet[["Outperformance vs SAA", "Outperformance vs Peers", "Outperformance vs Inflation"]].T.fillna('').round(2).to_html(index=True, justify="justify")
+
+        styled_relperformance_html = f"""
+                                    <!DOCTYPE html>
+                                    <html lang="en">
+                                    <head>
+                                        <meta charset="UTF-8">
+                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                        <title>Performance Table</title>
+                                        <style>
+                                            /* Add CSS style for table */
+                                            table.dataframe {{
+                                                border-collapse: collapse;
+                                                width: 100%;
+                                                border-radius: 10px; /* Adjust the border radius as needed */
+                                                overflow: hidden; /* Ensure the border-radius is applied */
+                                            }}
+
+                                            table.dataframe th,
+                                            table.dataframe td {{
+                                                border: none;
+                                                padding: 8px; /* Adjust padding as needed */
+                                                text-align: center; /* Adjust text alignment as needed */
+                                            }}
+
+                                            table.dataframe th {{
+                                                background-color: #3D555E; /* Optional: Add background color for header */
+                                                color: #E7EAEB;
+                                            }}
+
+                                            /* Add CSS rule for hover effect */
+                                            tr:hover {{
+                                                background-color: #1DC8F2;
+                                            }}
+                                        </style>
+                                    </head>
+                                    <body>
+                                        {styled_df}
+                                    </body>
+                                    </html>
+                                    """
+
+        with open(SAVEDIR + "/Charts/" + "1_Performance-RelTable.html", "w") as file:
+            file.write(styled_relperformance_html),
 
 
 
-        risk_html = df_2risk_summary[[Selected_Code, 'Peer Group']].fillna('').round(2).to_html(index=True, justify="justify")
+        risk_html = df_2risk_summary[[Selected_Code, 'SAA Benchmark', 'Peer Group']].fillna('').round(2).to_html(index=True, justify="justify")
 
         # Add CSS style to the HTML content
         styled_risk_html = f"""
@@ -3526,16 +3994,117 @@ def render_page_content(pathname):
             text_SI_perf1 = ''
             text_SI_perf2 = ''
 
+
+
+
+        # Conditional HTML OUTPUT Frameworks
+        # Define all as blank them populate if relevant
+        heading_underlying_returns = ''
+        chart_underlying_returns = ''
+        heading_AA_ranges = ''
+        chart_AA_ranges = ''
+        heading_portfolio_construct = ''
+        chart_portfolio_construct = ''
+        heading_look_through = ''
+        chart_look_through1 = ''
+        chart_look_through2 = ''
+        chart_look_through3 = ''
+        chart_look_through4 = ''
+        chart_look_through5 = ''
+        chart_look_through6 = ''
+        key_driver_comments = '## Under Construction ##'
+
+
         if Selected_ReportGroup == "Multi Asset":
+            heading_underlying_returns = f'<h4>Aggregate Returns of Underlying Sector Sleeves</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_Sleeve_Components.html" height="380px" width="950px"></iframe>'
             heading_AA_ranges = f'<h2>CURRENT POSITIONING vs TYPICAL HOLDING RANGE</h2>'
             chart_AA_ranges = f'<iframe src = "./Charts/3_Alloc_Ranges.html" height = "400px" width = "950px" > </iframe>'
             heading_portfolio_construct = f'<h2>PORTFOLIO CONSTRUCTION</h2>'
             chart_portfolio_construct = f'<h4>Allocation Adjustments Through Time</h4><iframe src = "./Charts/3_Allocation_History.html" height = "600px" width = "950px"></iframe><h4>Portfolio Construction - Manager Level </h4><iframe src = "./Charts/3_Alloc_Mgr_Level_2.html" height = "800px" width = "950px" ></iframe>'
-        else:
-            heading_AA_ranges = ''
-            chart_AA_ranges = ''
-            heading_portfolio_construct = ''
-            chart_portfolio_construct = ''
+            key_driver_comments = f'<ul><li>Held overweight position to international shares for the bulk of 2023, biased to US equity markets.</li><li>Avoided the bulk of underperformance of longer duration fixed interest through use of floating credit.</li><li>Increasing allocation to alternative and real asset (property & infrastructure) positions into the last quarter of 2023.</li><li>Asian equities has generally been a detractor.</li></ul>'
+
+        if Selected_ReportGroup == "Australian Shares":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_AusEq_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "International Shares":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_IntEq_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "Real Assets":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_Real_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "Alternatives":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_Alts_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "Long Duration":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_Duration_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "Floating Rate":
+            heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
+            chart_underlying_returns = f'<iframe src="./Charts/6_Floating_Sleeve_Components.html" height="380px" width="950px"></iframe>'
+
+            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmax(), 'Name']
+            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmin(), 'Name']
+            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmax(), 'Name']
+            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmin(), 'Name']
+            key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
+
+        if Selected_ReportGroup == "Australian Shares" or Selected_ReportGroup == "International Shares":
+            heading_portfolio_construct = f'<h2>PORTFOLIO CONSTRUCTION</h2>'
+            chart_portfolio_construct = f'<h4>Portfolio Construction - Look Through Exposures</h4><iframe src="./Charts/3_Alloc_Holding_Level_2.html" height="770px" width="950px"></iframe></div><h4>Portfolio Construction - Manager Level</h4><iframe src="./Charts/3_Alloc_Mgr_Level_2.html" height="770px" width="950px"></iframe>'
+            heading_look_through = f'<h2>PORTFOLIO LOOK THROUGH ANALYSIS</h2>'
+            chart_look_through1 = f'<h4>Portfolio vs Benchmark Weights by Industry Segment (GICS level 1)</h4><iframe src="./Charts/3a_IndustryOWUW.html" height="650px" width="950px"></iframe>'
+            chart_look_through2 = f'<h4>Portfolio vs Benchmark Weights by Country</h4><iframe src="./Charts/3a_CountryOWUW.html" height="650px" width="950px"></iframe>'
+            chart_look_through3 = f'<h4>Portfolio Factor Exposure (Normalised Benchmark Constituents)</h4><iframe src="./Charts/3a_Equity_Factor_Ratios_MCap.html" height="650px" width="950px"></iframe>'
+            chart_look_through4 = f'<h4>Look Through Exposures - Company Size vs ROE (Dot size = Portfolio Weight; Dot Colour = Industry)</h4><iframe src="./Charts/3a_Equity_Financial_Ratios_1.html" height="650px" width="950px"></iframe>'
+            chart_look_through5 = f'<h4>Look Through Exposures - ROE vs Price/Earnings Ratio (Dot size = Portfolio Weight; Dot Colour = Industry)</h4><iframe src="./Charts/3a_Equity_Financial_Ratios_3.html" height="650px" width="950px"></iframe>'
+            chart_look_through6 = f'<h4>Look Through Exposures - Earnings Growth vs Earnings Yield (Dot size = Portfolio Weight; Dot Colour = Industry)</h4><iframe src="./Charts/3a_Equity_Financial_Ratios_4.html" height="650px" width="950px"></iframe>'
+
+        if Selected_ReportGroup == "Real Assets" or Selected_ReportGroup == "Alternatives":
+            heading_portfolio_construct = f'<h2>PORTFOLIO CONSTRUCTION</h2>'
+            chart_portfolio_construct = f'<h4>Portfolio Construction - Look Through Exposures</h4><iframe src="./Charts/3_Alloc_Holding_Level_2.html" height="750px" width="950px"></iframe></div><h4>Portfolio Construction - Manager Level</h4><iframe src="./Charts/3_Alloc_Mgr_Level_2.html" height="750px" width="950px"></iframe>'
+            heading_look_through = ''
+
+        if Selected_ReportGroup == "Long Duration" or Selected_ReportGroup == "Floating Rate":
+            heading_portfolio_construct = f'<h2>PORTFOLIO CONSTRUCTION</h2>'
+            chart_portfolio_construct = f'<h4>Portfolio Construction - Look Through Exposures</h4><iframe src="./Charts/3_Alloc_Holding_Level_2.html" height="750px" width="950px"></iframe></div><h4>Portfolio Construction - Manager Level</h4><iframe src="./Charts/3_Alloc_Mgr_Level_2.html" height="750px" width="950px"></iframe>'
+            heading_look_through = ''
+
 
 
         main_report_html = f"""
@@ -3633,7 +4202,9 @@ def render_page_content(pathname):
                     <div class="content">
                         <iframe src="../assetsHTML/Atchison-logo.png" height="50px" width="auto" style="float: left;">></iframe>
                         <div style="clear: left;"></div>
-                        <h1>{Selected_Name} - Portfolio Update {dt_end_date.strftime('%d %B %Y')}</h1>
+                        <h1>{Selected_Name}</h1>
+                        <h2>{dt_end_date.strftime('%d %B %Y')}</h2>
+                        <br>
             
                         <h2>PORTFOLIO PERFORMANCE</h2>
                         {text_3m_perf1}
@@ -3645,35 +4216,42 @@ def render_page_content(pathname):
                         {text_5yr_perf2}
                         {text_SI_perf1}
                         {text_SI_perf2}
-                        <p>All performance metrics listed above are net of appointed investment management fees but before tax.</p?
-                                                
-                        <br>
+                        <p>All performance metrics listed above are net of appointed investment management fees but before tax.</p?           
                         <h4>Returns vs Benchmarks</h4>
                         <iframe src="./Charts/1_Performance-Daily.html" height="370px" width="950px"></iframe>
-                        <iframe src="./Charts/1_Performance-Table.html" height="180px" width="950px"></iframe>
-                        <h4>Performance of $10,000 Investment</h4>
+                        <iframe src="./Charts/1_Performance-Table.html" height="200px" width="950px"></iframe>
+                               
+                        <br>
+                        <h4>Performance of $100,000 Investment</h4>
                         <iframe src="./Charts/1_Performance-Cum.html" height="370px" width="950px"></iframe>
-            
                         <div class="page-break"></div>
                         <br>
                         <h2>KEY CONTRIBUTORS, DETRACTORS & ATTRIBUTION</h2>
-                        <ul>
-                            <li>Held overweight position to international shares for the bulk of 2023, biased to US equity markets.</li>
-                            <li>Avoided the bulk of underperfomance of longer duration fixed interest through use of floating credit.</li>
-                            <li>Increasing allocation to alternative and real asset (propery & infrastructure) positions into the last quarter of 2023.</li>
-                            <li>Asian equities has generally been a detractor.</li>
-                        </ul>
-                        <h4>Attribtion Analysis of Asset Allocation vs Manager/Security Selection</h4>
+                        {key_driver_comments}
+                        <h4>Daily Return Analysis</h4>
+                        <iframe src="./Charts/1_Performance-Bar30.html" height="370px" width="950px"></iframe>
+                        <h4>Portfolio Performance Heatmap</h4>
+                        <iframe src="./Charts/6_Sleeve_Treemap1.html" height="1020px" width="950px"></iframe>
+                        
+                        <div class="page-break"></div>
+                        <h4>Attribution Analysis of Asset Allocation vs Manager/Security Selection</h4>
                         <iframe src="./Charts/4_Attrib_Totals.html" height="380px" width="950px"></iframe>
-                        <h4>Aggregate Returns of Underlying Sector Sleeves</h4>
-                        <iframe src="./Charts/6_Sleeve_Components.html" height="380px" width="950px"></iframe>
-                        <br>
+                        {heading_underlying_returns}
+                        {chart_underlying_returns}
                         {heading_AA_ranges}
-                        {chart_AA_ranges}    
+                        {chart_AA_ranges}  
+                        <div class="page-break"></div>  
                         {heading_portfolio_construct}
                         {chart_portfolio_construct}       
-                        <div class="page-break"></div>
-            
+                        
+                        {heading_look_through}
+                        {chart_look_through1}
+                        {chart_look_through2}
+                        {chart_look_through4}
+                        {chart_look_through5}
+                        {chart_look_through6}
+                        
+                        <div class="page-break"></div>            
                         <h2>RISK ANALYSIS</h2>
                         <h4>Drawdown Periods & Recovery</h4>
                         <iframe src="./Charts/2_Drawdown.html" height="400px" width="950px"></iframe>
@@ -3689,19 +4267,18 @@ def render_page_content(pathname):
                         <h4>Risk Metrics</h4>
                         <iframe src="./Charts/2_Risk-Table.html" height="500px" width="950px"></iframe>
             
+                        <div class="page-break"></div>
                         <h2>UNDERLYING SECTOR SLEEVE ANALYSIS</h2>
                         <p>Please find below links to detail of underlying asset class sleeves: </p>
                         <ul>
                             <li><a href="../AtchisonAusShares/AtchisonAusShares-Monthly.html">Atchison Australian Shares Sleeve</a></li>
-                            <li>Atchison International Shares Sleeve [under construction]</li>
-                            <li>Atchison Real Assets Sleeve [under construction]</li>
-                            <li>Atchison Alternatives Sleeve [under construction]</li>
-                            <li>Atchison Long Duration Sleeve [under construction]</li>
-                            <li>Atchison Floating Rate Sleeve [under construction]</li>
+                            <li><a href="../AtchisonIntShares/AtchisonIntShares-Monthly.html">Atchison International Shares Sleeve</a></li>
+                            <li><a href="../AtchisonRealAssets/AtchisonRealAssets-Monthly.html">Atchison Real Assets Sleeve</a></li>
+                            <li><a href="../AtchisonAlts/AtchisonAlts-Monthly.html">Atchison Alternatives Sleeve</a></li>
+                            <li><a href="../AtchisonLongDuration/AtchisonLongDuration-Monthly.html">Atchison Long Duration Sleeve</a></li>
+                            <li><a href="../AtchisonFloatingRate/AtchisonFloatingRate-Monthly.html">Atchison Floating Rate Sleeve</a></li>
                         </ul>
                         <br>
-                        <div class="page-break"></div>
-            
                         <h2>MARKET OVERVIEW</h2>
                         <ul>
                             <li>RBA cash rate has been left unchanged at 4.35 per cent, as the RBA remains data dependent, not ruling out the possibility of future rate hikes. Despite hawkish tones from the RBA, the market is choosing to look past this, expecting rate cuts to occur in Q4 this year. The volatility and apprehension of what the future holds is evident as markets only lifted 0.8 per cent in the month of February.</li>
@@ -3747,7 +4324,7 @@ def render_page_content(pathname):
                 
         """
 
-        with open(SAVEDIR + "/auto_" + Selected_Code + "-Monthly.html", "w") as file:
+        with open(SAVEDIR + "/"+ Selected_Code + "-Monthly.html", "w") as file:
             file.write(main_report_html),
 
         print("OUTPUT ---- Report HTML Framework Created")
@@ -3781,24 +4358,30 @@ def render_page_content(pathname):
 
 
             f_create_BAR_figure(
-                df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']],
+                df_1perf_rMESet[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']],
                 'group', None, "Return (%, %p.a.)",
                 "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main.html'),
 
             f_create_BAR_figure(
                 df_1perf_backtestSet,
                 'group', None, "Return (%, %p.a.)",
-                "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar-Backtest.html'),
+                "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Main-Backtest.html'),
 
-            f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'Peer Group', 'Inflation']], 'group', None,
+
+            f_create_BAR_figure(df_1perf_rMESet[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Inflation']], 'group', None,
                                 "Return (%, %p.a.)",
                                 "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Daily.html'),
 
-            f_create_LINE_figure(10000 * (1 + (df_1perf_total[[Selected_Code, 'Peer Group', 'Objective']] / 100)), None,
-                                                    "Value of $10,000 Investment ($)", "Date",
+            f_create_LINE_figure(100000 * (1 + (df_1perf_total[[Selected_Code, 'SAA Benchmark', 'Peer Group', 'Objective']] / 100)), None,
+                                                    "Value of $100,000 Investment ($)", "Date",
                                                     350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Cum.html'),
 
             f_create_BAR_figure(df_1perf_daily, 'stack', None, "Daily Return (%)", "Date", 350).write_html(SAVEDIR + "/Charts/" + '1_Performance-Bar.html'),
+            f_create_BAR_figure(df_1perf_daily.tail(30), 'stack', None, "Daily Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '1_Performance-Bar30.html'),
+
+            #f_CREATE_HEATMAP_figure(relative_html, None, Selected_Code+" Relative Return", "Performance Period", 350).write_html(
+            #    SAVEDIR + "/Charts/" + '1_Performance-RelHeatmap.html'),
 
             f_create_LINE_figure(df_2risk_vol90, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '2_Vol90.html'),
@@ -3826,47 +4409,19 @@ def render_page_content(pathname):
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
+                                                    700).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
+                                                    700).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Mgr_Level_2.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'Name'], 'Name', 'Current Weight',
                                                     '',
-                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
+                                                    700).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_1.html'),
 
             f_create_SUNBURST_figure(df_3alloc_holding_level, ['G1', 'G4', 'Name'], 'Name',
                                                     'Current Weight', '',
-                                                    750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
-
-            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4'], 'G4',
-                                            'Current Weight','',
-                                            750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders1.html'),
-
-            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'PeerGroup'], 'PeerGroup',
-                                                    'Current Weight','',
-                                     750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders2.html'),
-
-            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'OptimiserCategory'],
-                                                    'OptimiserCategory',
-                                                    'Current Weight',
-                                                    '',
-                                     750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders3.html'),
-
-            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G7'],
-                                     'G7',
-                                     'Current Weight',
-                                     '',
-                                     750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders4.html'),
-
-
-
-            f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'G7'],
-                                     'G7',
-                                     'Current Weight',
-                                     '',
-                                     750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders5.html'),
+                                                    700).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Holding_Level_2.html'),
 
 
 
@@ -3887,7 +4442,7 @@ def render_page_content(pathname):
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "NetProfitMargin(%)",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
-                                    None, None, None, 600, 1.5, x_range=(-200, 200), y_range=(-150, 150)).write_html(SAVEDIR + "/Charts/" + '3a_Equity_Financial_Ratios_2.html'),
+                                    None, None, None, 600, 1.5, x_range=(-200, 200), y_range=(-150, 200)).write_html(SAVEDIR + "/Charts/" + '3a_Equity_Financial_Ratios_2.html'),
 
             f_create_SCATTER_figure(grouped_df_3A_2, averages, "PE_Ratio",
                                     "ReturnonTotalEquity(%)", 'Current Weight', "G4",
@@ -3901,8 +4456,6 @@ def render_page_content(pathname):
                                       None, 600, None, None).write_html(SAVEDIR + "/Charts/" + '3a_Equity_Alloc_Waterfall.html'),
 
 
-            f_create_3DSURFACE_figure(Selected_Portfolio.df_Eco_USInterestRates, "US Interest Rates", "Interest Rate",
-                                      "Term", "Date", 1200).write_html(SAVEDIR + "/Charts/" + '20_Eco_USInterestRates.html'),
 
             f_create_COLORBAR_figure(df_3Aequity_Summary, 'group', 'Measure',
                                      'Selected EW Normalized', 'Category',
@@ -3940,6 +4493,16 @@ def render_page_content(pathname):
 
             f_create_LINE_figure(df_6comp_sleeves, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_Sleeve_Components.html'),
+
+            f_CREATE_TREEMAP_figure(df_6comp_alldirect_only, 1000).write_html(
+                SAVEDIR + "/Charts/" + '6_Sleeve_Treemap1.html'),
+
+            f_CREATE_TREEMAP_figure(df_6comp_lookthrough_only, 1000).write_html(
+                SAVEDIR + "/Charts/" + '6_Sleeve_Treemap2.html'),
+
+            f_CREATE_TREEMAP_figure(df_6comp_alldirectMONTH_only, 1000).write_html(
+                SAVEDIR + "/Charts/" + '6_Sleeve_Treemap1MONTH.html'),
+
             f_create_LINE_figure(df_6comp_auseq, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_AusEq_Sleeve_Components.html') if df_6comp_auseq_hasData else None,
             f_create_LINE_figure(df_6comp_inteq, None, "Cumulative Return (%)", "Date", 350).write_html(
@@ -3955,7 +4518,7 @@ def render_page_content(pathname):
             f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html') if df_6comp_cash_hasData else None,
 
-            f_create_SUMMARY_REPORT_HTML(df_marketCommentary),
+
 
         ]
     elif pathname == "/30-Help":
@@ -4206,3 +4769,31 @@ if __name__ == '__main__':
     #app.run_server(debug=True)
     app.run_server(host = '0.0.0.0', port = port_number, debug=True)
     #app.run_server(host='0.0.0.0', port=port_number)
+
+#f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4'], 'G4',
+#                         'Current Weight', '',
+#                         750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders1.html'),
+
+#f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'PeerGroup'], 'PeerGroup',
+#                         'Current Weight', '',
+#                         750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders2.html'),
+
+#f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'OptimiserCategory'],
+#                         'OptimiserCategory',
+#                         'Current Weight',
+#                         '',
+#                         750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders3.html'),
+
+#f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G7'],
+#                         'G7',
+#                        'Current Weight',
+#                        '',
+#                         750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders4.html'),
+
+
+
+#f_create_SUNBURST_figure(df_3alloc_mgr_level, ['G0', 'G1', 'G4', 'G7'],
+#                         'G7',
+#                         'Current Weight',
+#                         '',
+#                         750).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Insiders5.html'),

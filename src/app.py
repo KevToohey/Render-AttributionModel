@@ -36,8 +36,8 @@ pd.set_option('display.max_columns', None)
 
 # LOAD INPUTS ##################
 load_start_date = "2022-12-31"
-load_end_date = "2024-3-31"
-load_ME_date = "2024-2-29"
+load_end_date = "2024-3-28"
+load_Prior_ME_date = "2024-2-28"
 
 measures = [
     'MarketCap',
@@ -174,7 +174,7 @@ Alt2_Type = Alt2_Portfolio.portfolioType
 
 text_Start_Date = load_start_date
 text_End_Date = load_end_date
-text_ME_Date = load_ME_date
+text_Prior_ME_Date = load_Prior_ME_date
 
 Alt1_Switch_On = False
 Alt2_Switch_On = False
@@ -183,7 +183,7 @@ Product_List = Selected_Portfolio.df_productList.index.tolist()
 
 dt_start_date = pd.to_datetime(text_Start_Date)
 dt_end_date = pd.to_datetime(text_End_Date)
-dt_ME_date = pd.to_datetime(text_ME_Date)
+dt_Prior_ME_date = pd.to_datetime(text_Prior_ME_Date)
 groupName = Selected_Portfolio.groupName
 groupList = Selected_Portfolio.groupList
 
@@ -662,7 +662,7 @@ def f_create_3DSURFACE_figure(df_input, in_title, in_z_title, in_y_title, in_x_t
             height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source=f"data:image/png;base64,{base64.b64encode(open('./assets/atchisonlogo.png', 'rb').read()).decode()}",
+                source=f"data:image/png;base64,{base64.b64encode(open('https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png', 'rb').read()).decode()}",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.2, sizey=0.2,
@@ -715,7 +715,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
             height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
@@ -745,7 +745,7 @@ def f_create_LINE_figure(df_input, in_title, in_y_title, in_x_title, in_height):
                 height=in_height if in_height is not None else 800,
                 margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
                 images=[dict(
-                    source="../assets/atchisonlogo.png",
+                    source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                     xref="paper", yref="paper",
                     x=0.98, y=0.02,
                     sizex=0.1, sizey=0.1,
@@ -776,7 +776,7 @@ def f_CREATE_HEATMAP_figure(df_input, in_title, in_y_title, in_x_title, in_heigh
             height = in_height if in_height is not None else 800,
             margin = dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images = [dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
@@ -848,7 +848,7 @@ def f_create_BAR_figure(df_input, in_type, in_title, in_y_title, in_x_title, in_
             height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
@@ -898,7 +898,7 @@ def f_create_COLORBAR_figure(df_input, in_type, in_x, in_y, in_color, in_title, 
             height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
@@ -946,7 +946,7 @@ def f_create_WATERFALL_figure(df_input, in_x, in_y, in_title, in_y_title, in_x_t
             "height": in_height if in_height is not None else 800,
             "margin": dict(r=0, l=0),  # Reduce right margin to maximize visible area
             "images": [{
-                "source": "../assets/atchisonlogo.png",
+                "source": "https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 "xref": "paper", "yref": "paper",
                 "x": 0.98, "y": 0.02,
                 "sizex": 0.1, "sizey": 0.1,
@@ -1003,7 +1003,7 @@ def f_create_RANGE_figure(df_input, in_title, in_y_title, in_x_title, in_height)
             height=in_height,
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=1.00,
                 sizex=0.1, sizey=0.1,
@@ -1075,7 +1075,7 @@ def f_create_SCATTER_figure(df_input, in_averages, in_x, in_y, in_size, in_color
             height=in_height if in_height is not None else 800,
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
@@ -1115,7 +1115,7 @@ def f_create_PIE_figure(df_input, in_values, in_names, in_title, in_height):
             height=in_height,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
@@ -1163,7 +1163,7 @@ def f_create_SUNBURST_figure(df_input, in_path, in_names, in_values, in_title, i
             height=in_height,
             margin=dict(r=0, l=0, b=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
@@ -1237,7 +1237,7 @@ def f_create_POLAR_figure(df_input, in_Portfolioname, in_BMname, in_title, in_he
             },
             margin=dict(r=0, l=0),  # Reduce right margin to maximize visible area
             images=[dict(
-                source="../assets/atchisonlogo.png",
+                source="https://atchisonanalytics.github.io/assetsHTML/atchisonlogo.png",
                 xref="paper", yref="paper",
                 x=0.98, y=0.02,
                 sizex=0.1, sizey=0.1,
@@ -2819,7 +2819,7 @@ def render_page_content(pathname):
 
         ## Month version repeated
 
-        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_ME_date, dt_end_date)
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_Prior_ME_date, dt_end_date)
         print(compound_returns_per_column.shape)
         # Extract portfolio weights for columns with a value greater than 0 at dt_end_date
         # This step ensures that the boolean series used for filtering matches the columns of the DataFrame
@@ -3432,6 +3432,8 @@ def render_page_content(pathname):
                                'P_TOTAL_G1 -- Selection Effect']] + 1).cumprod() - 1) * 100)
         df_4attrib_total.columns = ['Tactical Allocation Effect', 'Manager Effect (net fees)']
 
+
+
         #5 CONTRIBUTION
         checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date]
         if checkData[0] != 0:
@@ -3451,9 +3453,13 @@ def render_page_content(pathname):
             df_5cont_auseq = (((Selected_Portfolio.df_L3_contrib.loc[dt_start_date:dt_end_date,
                                 f_AssetClassContrib(Selected_Portfolio.df_L3_contrib,
                                                     "Australian Shares")] + 1).cumprod() - 1) * 100)
+            print("YES KEV there was data")
         else:
             df_5cont_auseq_hasData = False
             df_5cont_auseq = pd.DataFrame()
+            print("NO KEV there wasnt any data")
+
+
 
         checkData = Selected_Portfolio.df_L3_contrib.loc[dt_end_date, ['P_' + groupName + '_' + "International Shares"]]
 
@@ -3552,7 +3558,7 @@ def render_page_content(pathname):
             Selected_Portfolio.df_productList['G4'])
 
         ## Month version repeated
-        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_ME_date, dt_end_date)
+        compound_returns_per_column = f_CalcReturnValues(df_L3_r2, dt_Prior_ME_date, dt_end_date)
         columns_with_positive_weights = (df_L3_w2.loc[dt_end_date] > 0)
         portfolio_weights_on_end_date = df_L3_w2.loc[dt_end_date][columns_with_positive_weights]
         compound_returns_per_column = compound_returns_per_column[columns_with_positive_weights.index]
@@ -3613,6 +3619,9 @@ def render_page_content(pathname):
             Selected_Portfolio.df_productList['G1'])
         df_6comp_lookthrough_only.loc[:, 'G4'] = df_6comp_lookthrough_only.index.map(
             Selected_Portfolio.df_productList['G4'])
+
+
+
 
 
 
@@ -4016,6 +4025,7 @@ def render_page_content(pathname):
 
 
         if Selected_ReportGroup == "Multi Asset":
+
             heading_underlying_returns = f'<h4>Aggregate Returns of Underlying Sector Sleeves</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_Sleeve_Components.html" height="380px" width="950px"></iframe>'
             heading_AA_ranges = f'<h2>CURRENT POSITIONING vs TYPICAL HOLDING RANGE</h2>'
@@ -4028,60 +4038,108 @@ def render_page_content(pathname):
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_AusEq_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-4].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_auseq.iloc[-4].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-4].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_auseq.iloc[-4].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "International Shares":
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_IntEq_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_inteq.iloc[-1].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_inteq.iloc[-1].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "Real Assets":
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_Real_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_real.iloc[-1].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_real.iloc[-1].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "Alternatives":
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_Alts_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_alts.iloc[-1].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_alts.iloc[-1].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "Long Duration":
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_Duration_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_duration.iloc[-1].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_duration.iloc[-1].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "Floating Rate":
             heading_underlying_returns = f'<h4>Individual Returns of Underlying Manager/Security Holdings</h4>'
             chart_underlying_returns = f'<iframe src="./Charts/6_Floating_Sleeve_Components.html" height="380px" width="950px"></iframe>'
 
-            largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmax(), 'Name']
-            smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmin(), 'Name']
-            largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmax(), 'Name']
-            smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmin(), 'Name']
+            try:
+                largest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmax(), 'Name']
+                smallest_cont_mgr = Selected_Portfolio.df_productList.loc[df_5cont_floating.iloc[-1].idxmin(), 'Name']
+                largest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmax(), 'Name']
+                smallest_comp_mgr = Selected_Portfolio.df_productList.loc[df_6comp_floating.iloc[-1].idxmin(), 'Name']
+            except:
+                largest_cont_mgr = "ERROR IDENTIFYING"
+                smallest_cont_mgr = "ERROR IDENTIFYING"
+                largest_comp_mgr = "ERROR IDENTIFYING"
+                smallest_comp_mgr = "ERROR IDENTIFYING"
+                print("ERROR : Something else went wrong locating consituent drivers commentary - CANNOT USE Auto Commentary")
+
             key_driver_comments = f'<ul><li>On a weighted basis, the largest contributor to the portfolio outcome has been {largest_cont_mgr}</li><li>The manager that contributed the least to portfolio return was {smallest_cont_mgr}</li><li>The holding with the highest absolute return has been {largest_comp_mgr}<li>Whilst the holding with the lowest absolute return has been {smallest_comp_mgr}</li></ul>'
 
         if Selected_ReportGroup == "Australian Shares" or Selected_ReportGroup == "International Shares":
@@ -4281,15 +4339,18 @@ def render_page_content(pathname):
                         <br>
                         <h2>MARKET OVERVIEW</h2>
                         <ul>
-                            <li>RBA cash rate has been left unchanged at 4.35 per cent, as the RBA remains data dependent, not ruling out the possibility of future rate hikes. Despite hawkish tones from the RBA, the market is choosing to look past this, expecting rate cuts to occur in Q4 this year. The volatility and apprehension of what the future holds is evident as markets only lifted 0.8 per cent in the month of February.</li>
-                            <li>Australian inflation continues to moderate downward, whilst sticky services, wage increases, and household rents continue to provide headwinds to headline inflation (sitting at 4.1 percent month on month in January).</li>
-                            <li>Wallstreet continues to be bolstered by Mega-Caps for the month of February, particularly key components of the Magnificent Seven including, Meta +26 per cent, Amazon +14 per cent, and NVIDIA +29 per cent.</li>
-                            <li>75 per cent of the S&P500 broadly beat market expectations. Economic data also continues to be resilient, as measured by PMI data, along with strong jobs growth with 353,000 jobs added in the month of January.</li>
-                            <li>European markets underperformed the global average in February, even though a key economic indicator (eurozone PMI) showed signs of improvement. This suggests European stocks might be facing challenges beyond the broader economic climate.</li>
-                            <li>UK equities represented by the FTSE 100 finished in the red, down -1.2 per cent year-to-date. This slump follows a technical recession in the latter half of 2023, with the UK economy shrinking for the fourth quarter. Disappointing earnings reports from UK companies further dampened investor sentiment, leading analysts to lower their profit growth forecasts for 2024 to just 4.7 per cent.</li>
-                            <li>Japan's stock market, measured by the TOPIX Index, defied expectations and climbed 4.9 per cent in February. This gain came even though the country's economy entered a technical recession, with GDP shrinking slightly in the fourth quarter of 2023. A weaker yen, the Japanese currency, played a role in the stock market's rise. The yen fell 2.4 per cent against the US dollar in February, making Japanese exports cheaper and more attractive to international buyers.</li>
-                            <li>Chinese stocks have been on a downward spiral, reaching five-year lows in early February. However, the market saw a significant turnaround in the latter part of the month. This upswing was likely fuelled by government enforced temporary prevention of short-selling Chinese equities, lower interest rates, rumoured government support measures, and a rebound in the battered Chinese equity market. As a result, the CSI 300 Index, a benchmark for Chinese stocks, surged 7.3 per cent in February. However, its important to note over 12 months the index is down -14.1 per cent.</li>
-                            <li>After two years of increasing and higher interest rates, inflation seems to be waning. As we have experienced, high inflation is bad for investment markets because it means, higher interest rates, higher economic ambiguity, and for shares, a reduced quality of earnings.  All of which means that shares tend to trade on lower price to earnings multiples (PEs) when inflation is high. Conversely, when rates are falling, borrowing costs reduce, spending increases, and future company profits become less valuable especially on new or growing companies where most profits are still years away, and P/E multiples increase, as witnessed with some of the technology companies.</li>
+                            <li>Another record high for share markets at March end, on the back of expectations of US interest rate cuts later this year along with hopes of continued resilient economic growth. </li>
+                            <li>In local currency terms the US S&P 500 gained +3.1%,  the  ASX 200 rallied +3.3% whilst the MSCI World ex-Australia Net Total Return Index rose +3.1% in AUD terms</li>
+                            <li>Reserve Bank of Australia (RBA) left interest rates unchanged at 4.35% as headline inflation data remained broadly stable at 3.4% y-on-y, with the services component sticky.</li>
+                            <li>RBA Governor Michele Bullock indicated a flexible approach to curb inflation amid economic growth slowdown, emphasizing that the interest rate path remains uncertain and data dependent. Headline inflation stood at 4.1% in Q4 2023, down from 5.4% in Q3 and a peak of 7.8% in Q4 2022.</li>
+                            <li>Australian Consumer Inflation Expectations dipped to 4.3% in March 2024: from 4.5% in February, the lowest level since October 2021. This easing is attributed to a moderation in goods prices following rate hikes totalling 425bps over the past two years by the central bank.</li>
+                            <li>Australian jobs data came in better than expected with the unemployment rate falling to 3.7%., and job vacancies dropped 6.1% in the three months to February. National houses prices rose +0.6% m-on-m in March to be up +9.7% y-on-y.</li>
+                            <li>Several Central Banks met during March. The US Federal Reserve maintained the Fed Funds rate at 5.25%-5.5% for a fifth straight meeting. The market is expecting the first rate cut in July but seems to be pushing it out due to robust economic data and sticky services inflation.</li>
+                            <li>European Central Bank indicated it could cut interest rates as soon as June, given the fall in inflation and continued subdued economic growth.</li>
+                            <li>China’s economy shows signs of awakening with manufacturing data showing signs of improvement for the first time in five months. But property investment and consumer confidence remain restrained.</li>
+                            <li>Bank of Japan increased short-term interest rates to 0-0.1%, the first time since 2007, while the Swiss National Bank unexpectantly cut rates 0.25%.</li>
+                            <li>Risks to the outlook for the global economy have become more balanced as inflation has eased, but global financial stability risks remain elevated.</li>
+                            <li>Many market participants have priced in an easing in monetary policy, likely later this year, with inflation returning to central banks’ targets. This leaves markets vulnerable to an adverse shock, including from inflation proving more persistent than expected or a severe geopolitical event. </li>
                         </ul>
                         <br>
             
@@ -4383,26 +4444,7 @@ def render_page_content(pathname):
             #f_CREATE_HEATMAP_figure(relative_html, None, Selected_Code+" Relative Return", "Performance Period", 350).write_html(
             #    SAVEDIR + "/Charts/" + '1_Performance-RelHeatmap.html'),
 
-            f_create_LINE_figure(df_2risk_vol90, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Vol90.html'),
-            f_create_LINE_figure(df_2risk_vol1yr, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Vol1yr.html'),
-            f_create_LINE_figure(df_2risk_vol3yr, None, "Rolling Vol (%p.a.)", "Date", 30).write_html(
-                SAVEDIR + "/Charts/" + '2_Vol3yr.html'),
-            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Drawdown.html'),
-            f_create_LINE_figure(df_2risk_drawdown3yr, None, "Max Rolling Drawdown (%)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Drawdown3yr.html'),
-            f_create_LINE_figure(df_2risk_batting3yr, None, "Batting Average (%)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Batting3yr.html'),
-            f_create_LINE_figure(df_2risk_sharpe3yr, None, "Sharpe Ratio", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Sharpe3yr.html'),
-            f_create_LINE_figure(df_2risk_TE3yr, None, "Tracking Error (%)", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_TE3yr.html'),
-            f_create_LINE_figure(df_2risk_calmar3yr, None, "Calmar Ratio", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_Calmar3yr.html'),
-            f_create_LINE_figure(df_2risk_IR3yr, None, "Information Ratio", "Date", 350).write_html(
-                SAVEDIR + "/Charts/" + '2_IR3yr.html'),
+
 
             f_create_RANGE_figure(df_3alloc_sleeve_ranges, "", "Weight (%)", "Asset Class", 350).write_html(SAVEDIR + "/Charts/" + '3_Alloc_Ranges.html'),
 
@@ -4518,7 +4560,26 @@ def render_page_content(pathname):
             f_create_LINE_figure(df_6comp_cash, None, "Cumulative Return (%)", "Date", 350).write_html(
                 SAVEDIR + "/Charts/" + '6_Cash_Sleeve_Components.html') if df_6comp_cash_hasData else None,
 
-
+            f_create_LINE_figure(df_2risk_vol90, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol90.html'),
+            f_create_LINE_figure(df_2risk_vol1yr, None, "Rolling Vol (%p.a.)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol1yr.html'),
+            f_create_LINE_figure(df_2risk_vol3yr, None, "Rolling Vol (%p.a.)", "Date", 30).write_html(
+                SAVEDIR + "/Charts/" + '2_Vol3yr.html'),
+            f_create_LINE_figure(df_2risk_drawdown, None, "Drawdown Return (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Drawdown.html'),
+            f_create_LINE_figure(df_2risk_drawdown3yr, None, "Max Rolling Drawdown (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Drawdown3yr.html'),
+            f_create_LINE_figure(df_2risk_batting3yr, None, "Batting Average (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Batting3yr.html'),
+            f_create_LINE_figure(df_2risk_sharpe3yr, None, "Sharpe Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Sharpe3yr.html'),
+            f_create_LINE_figure(df_2risk_TE3yr, None, "Tracking Error (%)", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_TE3yr.html'),
+            f_create_LINE_figure(df_2risk_calmar3yr, None, "Calmar Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_Calmar3yr.html'),
+            f_create_LINE_figure(df_2risk_IR3yr, None, "Information Ratio", "Date", 350).write_html(
+                SAVEDIR + "/Charts/" + '2_IR3yr.html'),
 
         ]
     elif pathname == "/30-Help":
